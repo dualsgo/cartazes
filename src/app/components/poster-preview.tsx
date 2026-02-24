@@ -63,10 +63,10 @@ export function PosterPreview({
                 <span className="font-headline text-lg font-bold">POR</span>
                 <div className="flex items-baseline">
                   <span className="font-headline text-base mr-1">R$</span>
-                  <span className="font-headline text-4xl leading-none">
+                  <span className="font-headline text-5xl leading-none">
                     {porInteger}
                   </span>
-                  <span className="font-headline text-xl">
+                  <span className="font-headline text-2xl">
                     ,{porDecimal}
                   </span>
                 </div>
@@ -93,9 +93,9 @@ export function PosterPreview({
             >
               {discount > 0 && (
                 <div>
-                  <span className="text-xl leading-none">DESCONTO DE</span>
+                  <span className="text-2xl leading-none">DESCONTO DE</span>
                   <br />
-                  <span className="text-3xl leading-none">{discount}%</span>
+                  <span className="text-4xl leading-none">{discount}%</span>
                 </div>
               )}
             </div>
