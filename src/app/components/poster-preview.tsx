@@ -46,20 +46,23 @@ export function PosterPreview({
           </div>
 
           <div className="flex-shrink-0">
-            <div className="flex justify-around items-center gap-1 text-sm">
-              <div
-                className={cn(
-                  'text-black transition-opacity',
-                  valDe > valPor ? 'opacity-100' : 'opacity-0'
-                )}
-              >
-                <span className="text-xs block">DE:</span>
-                <span className="font-bold line-through">
-                  R$ {formatCurrency(valDe)}
-                </span>
-              </div>
+            <div
+              className={cn(
+                'text-black transition-opacity text-center mb-1',
+                valDe > valPor ? 'opacity-100' : 'opacity-0'
+              )}
+            >
+              <span className="text-xs block">DE:</span>
+              <span className="font-bold line-through text-lg">
+                R$ {formatCurrency(valDe)}
+              </span>
+            </div>
 
+            <div className="flex justify-center items-center gap-1 text-sm">
               <div className="text-black font-bold flex flex-col items-center">
+                <span className="font-headline text-xl font-bold">
+                  POR
+                </span>
                 <div className="flex items-baseline">
                   <span className="font-headline text-lg mr-1">R$</span>
                   <span className="font-headline text-5xl leading-none">
@@ -69,9 +72,6 @@ export function PosterPreview({
                     ,{porDecimal}
                   </span>
                 </div>
-                <span className="font-headline text-xl font-bold -mt-1">
-                  POR
-                </span>
               </div>
             </div>
 
