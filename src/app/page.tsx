@@ -54,7 +54,7 @@ export default function Home() {
                 P%
               </span>
             </div>
-            <h1 className="font-headline text-2xl font-bold">PromoPrint</h1>
+            <h1 className="font-headline text-2xl font-bold">CARTAZES</h1>
           </div>
           <Button
             onClick={handlePrint}

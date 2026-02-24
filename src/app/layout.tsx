@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'PromoPrint',
+  title: 'CARTAZES',
   description: 'Gerador de Cartaz A4 Horizontal',
 };
 
