@@ -85,26 +85,32 @@
 
 @layer utilities {
   @media print {
+    body * {
+      visibility: hidden;
+    }
+    .print-container,
+    .print-container * {
+      visibility: visible;
+    }
+    .print-container {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      padding: 0;
+      margin: 0;
+      box-shadow: none !important;
+      border: none !important;
+      border-radius: 0;
+    }
     .no-print {
-      display: none;
+      display: none !important;
     }
     body {
       background-color: white;
       margin: 0;
       padding: 0;
-    }
-    .container {
-      max-width: none !important;
-      padding: 0 !important;
-      margin: 0 !important;
-    }
-    .print-container {
-      position: static !important;
-      box-shadow: none !important;
-      border: none !important;
-      border-radius: 0;
-      margin: 0 !important;
-      padding: 0 !important;
     }
     @page {
       size: A4 landscape;
