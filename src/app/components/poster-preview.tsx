@@ -33,6 +33,7 @@ export function PosterPreview({
 
   const numInstallments = Math.floor(valPor / 30);
   const maxInstallments = Math.min(numInstallments, 6);
+  const installmentValue = maxInstallments > 1 ? valPor / maxInstallments : 0;
 
   return (
     <Card className="w-full h-full overflow-hidden shadow-none border-none rounded-none bg-white text-black font-body">
@@ -62,33 +63,24 @@ export function PosterPreview({
               </span>
             </div>
 
-            <div className="flex justify-center items-center gap-1 text-sm">
-              {paymentOption === 'installment' && maxInstallments > 1 ? (
-                <div className="flex items-baseline text-black font-bold">
+            <div className="flex flex-col justify-center items-center gap-1 text-sm">
+              <div className="text-black font-bold flex flex-col items-center">
+                <span className="font-headline text-xl font-bold">POR</span>
+                <div className="flex items-baseline">
+                  <span className="font-headline text-base mr-1">R$</span>
                   <span className="font-headline text-6xl leading-none">
-                    {maxInstallments}x
+                    {porInteger}
                   </span>
-                  <div className="flex flex-col items-start ml-2 text-left">
-                    <span className="font-headline text-xl leading-none">
-                      DE R$
-                    </span>
-                    <span className="font-headline text-3xl leading-tight">
-                      30,00
-                    </span>
-                  </div>
+                  <span className="font-headline text-3xl">,{porDecimal}</span>
                 </div>
-              ) : (
-                <div className="text-black font-bold flex flex-col items-center">
-                  <span className="font-headline text-xl font-bold">POR</span>
-                  <div className="flex items-baseline">
-                    <span className="font-headline text-base mr-1">R$</span>
-                    <span className="font-headline text-6xl leading-none">
-                      {porInteger}
-                    </span>
-                    <span className="font-headline text-3xl">
-                      ,{porDecimal}
-                    </span>
-                  </div>
+              </div>
+
+              {paymentOption === 'installment' && maxInstallments > 1 && (
+                <div className="text-center text-black font-bold">
+                  <span className="text-sm">
+                    à vista ou em até {maxInstallments}x de R${' '}
+                    {formatCurrency(installmentValue)}
+                  </span>
                 </div>
               )}
             </div>
