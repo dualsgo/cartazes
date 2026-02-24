@@ -33,7 +33,8 @@ export function PosterPreview({
 
   const numInstallments = Math.floor(valPor / 30);
   const maxInstallments = Math.min(numInstallments, 6);
-  const installmentValue = maxInstallments > 1 ? valPor / maxInstallments : 0;
+  const installmentValue =
+    maxInstallments > 1 && valPor > 0 ? valPor / maxInstallments : 0;
 
   return (
     <Card className="w-full h-full overflow-hidden shadow-none border-none rounded-none bg-white text-black font-body">
@@ -73,18 +74,16 @@ export function PosterPreview({
                   </span>
                   <span className="font-headline text-3xl">,{porDecimal}</span>
                   {valPor > 0 && (
-                    <span className="text-sm font-bold ml-2">à vista</span>
+                    <span className="text-lg font-bold self-end mb-1 ml-1">
+                      un.
+                    </span>
+                  )}
+                  {valPor > 0 && (
+                    <span className="text-sm font-bold ml-2 self-end mb-1">
+                      à vista
+                    </span>
                   )}
                 </div>
-              </div>
-
-              <div className="text-center text-black font-bold text-sm">
-                {paymentOption === 'installment' && maxInstallments > 1 && (
-                  <span>
-                    ou em até {maxInstallments}x de R${' '}
-                    {formatCurrency(installmentValue)}
-                  </span>
-                )}
               </div>
             </div>
 
@@ -115,6 +114,16 @@ export function PosterPreview({
               )}
             </div>
           </div>
+
+          <div className="text-center text-black font-bold text-sm h-[2em] flex items-center justify-center">
+            {paymentOption === 'installment' && maxInstallments > 1 && (
+              <span>
+                ou em até {maxInstallments}x de R${' '}
+                {formatCurrency(installmentValue)}
+              </span>
+            )}
+          </div>
+
           <div className="flex-shrink-0 text-xs text-right">
             <span>
               Referencia: <b className="font-bold">{reference}</b>
