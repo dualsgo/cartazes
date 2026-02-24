@@ -30,53 +30,53 @@ export function PosterPreview({
   const [porInteger, porDecimal] = formatCurrency(valPor).split(',');
 
   return (
-    <Card className="aspect-[297/210] w-full overflow-hidden transition-all">
-      <div className="w-full h-full bg-white text-black p-[1cm] flex flex-col justify-between font-body">
+    <Card className="w-full h-full overflow-hidden transition-all shadow-none border-none rounded-none bg-white text-black">
+      <div className="w-full h-full p-[0.5cm] flex flex-col justify-between font-body">
         <div
           className={cn(
             'bg-primary text-primary-foreground text-center font-headline font-black rounded-md transition-all duration-300 ease-in-out',
-            'py-1 md:py-2 text-4xl md:text-6xl lg:text-7xl',
+            'py-0.5 text-2xl',
             discount > 0
               ? 'opacity-100 visible scale-100'
               : 'opacity-0 invisible scale-90'
           )}
         >
-          {discount}% DE DESCONTO
+          {discount > 0 ? `${discount}% DE DESCONTO` : ''}
         </div>
 
-        <div className="text-center my-4">
-          <h2 className="font-headline font-bold uppercase text-4xl md:text-5xl lg:text-6xl leading-tight break-words">
+        <div className="text-center my-2">
+          <h2 className="font-headline font-bold uppercase text-2xl leading-tight break-words">
             {description}
           </h2>
         </div>
 
-        <div className="flex justify-around items-center gap-4">
+        <div className="flex justify-around items-center gap-2">
           <div
             className={cn(
               'text-neutral-500 transition-opacity',
               valDe > valPor ? 'opacity-100' : 'opacity-0'
             )}
           >
-            <span className="text-xl md:text-2xl lg:text-3xl block">DE:</span>
-            <span className="text-3xl md:text-4xl lg:text-5xl font-bold line-through">
+            <span className="text-base block">DE:</span>
+            <span className="text-xl font-bold line-through">
               R$ {formatCurrency(valDe)}
             </span>
           </div>
 
           <div className="text-black font-bold flex items-start">
-            <span className="font-headline text-3xl md:text-4xl lg:text-5xl mt-2 mr-1">
+            <span className="font-headline text-xl mt-1 mr-0.5">
               R$
             </span>
-            <span className="font-headline text-8xl md:text-9xl leading-none">
+            <span className="font-headline text-6xl leading-none">
               {porInteger}
             </span>
-            <span className="font-headline text-3xl md:text-4xl lg:text-5xl mt-2">
+            <span className="font-headline text-xl mt-1">
               ,{porDecimal}
             </span>
           </div>
         </div>
 
-        <div className="border-t-4 border-black mt-6 pt-2 flex justify-between text-xl md:text-2xl lg:text-3xl">
+        <div className="border-t-2 border-black mt-2 pt-1 flex justify-between text-base">
           <span>
             COD: <b className="font-bold">{code}</b>
           </span>

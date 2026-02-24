@@ -42,8 +42,13 @@ export default function Home() {
             <PosterForm data={posterData} setData={setPosterData} />
           </div>
           <div className="lg:col-span-3">
-            <div className="print-container sticky top-8">
-              <PosterPreview {...posterData} />
+            <div className="print-container sticky top-8 aspect-[297/210] w-full">
+              <div className="grid grid-cols-2 grid-rows-2 h-full w-full">
+                <PosterPreview {...posterData} />
+                <PosterPreview {...posterData} />
+                <PosterPreview {...posterData} />
+                <PosterPreview {...posterData} />
+              </div>
             </div>
           </div>
         </div>
