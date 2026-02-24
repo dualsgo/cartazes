@@ -4,4 +4,5 @@ export type PosterData = {
   priceFor: string;
   code: string;
   reference: string;
+  paymentOption: 'normal' | 'installment';
 };

@@ -15,6 +15,7 @@ export default function Home() {
     priceFor: '',
     code: '',
     reference: '',
+    paymentOption: 'normal',
   };
 
   const [postersData, setPostersData] = useState<PosterData[]>(() =>

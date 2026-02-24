@@ -19,6 +19,7 @@ export function PosterPreview({
   priceFor,
   code,
   reference,
+  paymentOption,
 }: PosterData) {
   const valDe = parsePrice(priceFrom);
   const valPor = parsePrice(priceFor);
@@ -29,6 +30,9 @@ export function PosterPreview({
   }
 
   const [porInteger, porDecimal] = formatCurrency(valPor).split(',');
+
+  const numInstallments = Math.floor(valPor / 30);
+  const maxInstallments = Math.min(numInstallments, 6);
 
   return (
     <Card className="w-full h-full overflow-hidden shadow-none border-none rounded-none bg-white text-black font-body">
@@ -59,18 +63,34 @@ export function PosterPreview({
             </div>
 
             <div className="flex justify-center items-center gap-1 text-sm">
-              <div className="text-black font-bold flex flex-col items-center">
-                <span className="font-headline text-lg font-bold">POR</span>
-                <div className="flex items-baseline">
-                  <span className="font-headline text-base mr-1">R$</span>
-                  <span className="font-headline text-5xl leading-none">
-                    {porInteger}
+              {paymentOption === 'installment' && maxInstallments > 1 ? (
+                <div className="flex items-baseline text-black font-bold">
+                  <span className="font-headline text-6xl leading-none">
+                    {maxInstallments}x
                   </span>
-                  <span className="font-headline text-2xl">
-                    ,{porDecimal}
-                  </span>
+                  <div className="flex flex-col items-start ml-2 text-left">
+                    <span className="font-headline text-xl leading-none">
+                      DE R$
+                    </span>
+                    <span className="font-headline text-3xl leading-tight">
+                      30,00
+                    </span>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="text-black font-bold flex flex-col items-center">
+                  <span className="font-headline text-xl font-bold">POR</span>
+                  <div className="flex items-baseline">
+                    <span className="font-headline text-base mr-1">R$</span>
+                    <span className="font-headline text-6xl leading-none">
+                      {porInteger}
+                    </span>
+                    <span className="font-headline text-3xl">
+                      ,{porDecimal}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="mt-1 pt-0.5 text-xs flex justify-start">

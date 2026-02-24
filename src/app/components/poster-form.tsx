@@ -11,6 +11,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { PosterData } from '@/app/lib/types';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 type PosterFormProps = {
   data: PosterData;
@@ -21,6 +22,13 @@ export function PosterForm({ data, setData }: PosterFormProps) {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     setData(prev => ({ ...prev, [id]: value }));
+  };
+
+  const handlePaymentOptionChange = (value: string) => {
+    setData(prev => ({
+      ...prev,
+      paymentOption: value as 'normal' | 'installment',
+    }));
   };
 
   return (
@@ -63,6 +71,29 @@ export function PosterForm({ data, setData }: PosterFormProps) {
               />
             </div>
           </div>
+
+          <div className="space-y-2">
+            <Label>Forma de Pagamento</Label>
+            <RadioGroup
+              value={data.paymentOption}
+              onValueChange={handlePaymentOptionChange}
+              className="flex space-x-4 pt-2"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="normal" id="r1" />
+                <Label htmlFor="r1" className="font-normal">
+                  Preço Normal
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="installment" id="r2" />
+                <Label htmlFor="r2" className="font-normal">
+                  Parcelado
+                </Label>
+              </div>
+            </RadioGroup>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="code">EAN ou SAP</Label>
