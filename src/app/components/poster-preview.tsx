@@ -60,15 +60,13 @@ export function PosterPreview({
 
             <div className="flex justify-center items-center gap-1 text-sm">
               <div className="text-black font-bold flex flex-col items-center">
-                <span className="font-headline text-xl font-bold">
-                  POR
-                </span>
+                <span className="font-headline text-lg font-bold">POR</span>
                 <div className="flex items-baseline">
-                  <span className="font-headline text-lg mr-1">R$</span>
-                  <span className="font-headline text-5xl leading-none">
+                  <span className="font-headline text-base mr-1">R$</span>
+                  <span className="font-headline text-4xl leading-none">
                     {porInteger}
                   </span>
-                  <span className="font-headline text-2xl">
+                  <span className="font-headline text-xl">
                     ,{porDecimal}
                   </span>
                 </div>
@@ -95,9 +93,9 @@ export function PosterPreview({
             >
               {discount > 0 && (
                 <div>
-                  <span className="text-2xl leading-none">DESCONTO DE</span>
+                  <span className="text-xl leading-none">DESCONTO DE</span>
                   <br />
-                  <span className="text-4xl leading-none">{discount}%</span>
+                  <span className="text-3xl leading-none">{discount}%</span>
                 </div>
               )}
             </div>
