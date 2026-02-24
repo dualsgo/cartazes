@@ -63,7 +63,7 @@ export function PosterPreview({
                 <span className="font-headline text-xs mt-1 mr-0.5">
                   R$
                 </span>
-                <span className="font-headline text-3xl leading-none">
+                <span className="font-headline text-2xl leading-none">
                   {porInteger}
                 </span>
                 <span className="font-headline text-xs mt-1">
@@ -72,34 +72,37 @@ export function PosterPreview({
               </div>
             </div>
 
-            <div className="border-t-2 border-black mt-1 pt-0.5 text-xs flex justify-between">
+            <div className="mt-1 pt-0.5 text-xs flex justify-start">
               <span>
                 COD: <b className="font-bold">{code}</b>
-              </span>
-              <span>
-                REF: <b className="font-bold">{reference}</b>
               </span>
             </div>
           </div>
         </div>
 
         {/* Right Column */}
-        <div className="w-1/2 flex flex-col">
-          <div className="flex-grow flex items-center justify-center p-[0.25cm] py-0">
+        <div className="w-1/2 flex flex-col p-[0.25cm]">
+          <div className="flex-grow flex items-center justify-center">
             <div
               className={cn(
                 'bg-black text-white text-center font-headline font-black transition-opacity w-full flex flex-col items-center justify-center print:color-adjust-exact py-1',
                 discount > 0 ? 'opacity-100' : 'opacity-0'
               )}
+              style={{ height: '50%' }}
             >
               {discount > 0 && (
                 <div>
-                  <span className="text-lg">DESCONTO DE</span>
+                  <span className="text-lg leading-none">DESCONTO DE</span>
                   <br />
-                  <span className="text-4xl leading-none">{discount}%</span>
+                  <span className="text-2xl leading-none">{discount}%</span>
                 </div>
               )}
             </div>
+          </div>
+          <div className="flex-shrink-0 text-xs text-right">
+            <span>
+              REF: <b className="font-bold">{reference}</b>
+            </span>
           </div>
         </div>
       </div>
