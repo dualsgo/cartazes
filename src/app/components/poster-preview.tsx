@@ -63,7 +63,7 @@ export function PosterPreview({
                 <span className="font-headline text-xs mt-1 mr-0.5">
                   R$
                 </span>
-                <span className="font-headline text-2xl leading-none">
+                <span className="font-headline text-3xl leading-none">
                   {porInteger}
                 </span>
                 <span className="font-headline text-xs mt-1">
@@ -92,9 +92,9 @@ export function PosterPreview({
             >
               {discount > 0 && (
                 <div>
-                  <span className="text-lg leading-none">DESCONTO DE</span>
+                  <span className="text-xl leading-none">DESCONTO DE</span>
                   <br />
-                  <span className="text-2xl leading-none">{discount}%</span>
+                  <span className="text-3xl leading-none">{discount}%</span>
                 </div>
               )}
             </div>

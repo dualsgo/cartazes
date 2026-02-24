@@ -87,7 +87,7 @@ export default function Home() {
           </div>
           <div className="lg:col-span-3">
             <div className="print-container sticky top-8 aspect-[297/210] w-full">
-              <div className="grid grid-cols-2 grid-rows-2 h-full w-full gap-px bg-black border border-black">
+              <div className="grid grid-cols-2 grid-rows-2 h-full w-full">
                 {postersData.map((data, index) => (
                   <PosterPreview key={index} {...data} />
                 ))}
