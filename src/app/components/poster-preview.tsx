@@ -10,7 +10,10 @@ function parsePrice(price: string): number {
 }
 
 function formatCurrency(value: number): string {
-  return value.toLocaleString('pt-br', { minimumFractionDigits: 2 });
+  return value.toLocaleString('pt-br', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 }
 
 export function PosterPreview({
@@ -31,7 +34,7 @@ export function PosterPreview({
 
   const [porInteger, porDecimal] = formatCurrency(valPor).split(',');
 
-  const numInstallments = Math.floor(valPor / 30);
+  const numInstallments = Math.floor(valPor / 29);
   const maxInstallments = Math.min(numInstallments, 6);
   const installmentValue =
     maxInstallments > 1 && valPor > 0 ? valPor / maxInstallments : 0;
@@ -69,10 +72,10 @@ export function PosterPreview({
                 <span className="font-headline text-xl font-bold">POR</span>
                 <div className="flex items-baseline">
                   <span className="font-headline text-base mr-1">R$</span>
-                  <span className="font-headline text-6xl leading-none">
+                  <span className="font-headline text-5xl leading-none">
                     {porInteger}
                   </span>
-                  <span className="font-headline text-3xl">,{porDecimal}</span>
+                  <span className="font-headline text-2xl">,{porDecimal}</span>
                   {valPor > 0 && (
                     <span className="text-lg font-bold self-end mb-1 ml-1">
                       un.
