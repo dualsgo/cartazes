@@ -1,4 +1,4 @@
-export function OfertasHeader() {
+export function OfertasHeader({ textSize = 50 }: { textSize?: number }) {
   return (
     <svg
       viewBox="0 0 320 100"
@@ -51,7 +51,7 @@ export function OfertasHeader() {
         dominantBaseline="middle"
         textAnchor="middle"
         className="font-headline font-black"
-        style={{ fontSize: '50px', letterSpacing: '-2px' }}
+        style={{ fontSize: `${textSize}px`, letterSpacing: '-2px' }}
         fill="black"
       >
         OFERTAS
