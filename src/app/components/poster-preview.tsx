@@ -31,34 +31,30 @@ export function PosterPreview({
   const [porInteger, porDecimal] = formatCurrency(valPor).split(',');
 
   return (
-    <Card className="w-full h-full overflow-hidden shadow-none border-none rounded-none bg-white text-black font-body flex">
-      {/* Discount sidebar */}
-      <div
-        className={cn(
-          'flex items-center justify-center bg-black text-white transition-all duration-300 ease-in-out print:color-adjust-exact',
-          discount > 0 ? 'w-12' : 'w-0'
-        )}
-      >
-        {discount > 0 && (
-          <div
-            className="flex flex-col items-center justify-center h-full p-1"
-            style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
-          >
-            <span className="font-headline font-black text-base tracking-tighter whitespace-nowrap">
-              DESCONTO DE
-            </span>
-            <span className="font-headline font-black text-2xl">
-              {discount}%
-            </span>
-          </div>
-        )}
-      </div>
-
+    <Card className="w-full h-full overflow-hidden shadow-none border-none rounded-none bg-white text-black font-body">
       {/* Main content */}
-      <div className="flex-1 w-full p-[0.25cm] flex flex-col justify-between">
-        <OfertasHeader />
+      <div className="relative w-full p-[0.25cm] flex flex-col justify-between">
+        <div className="absolute top-[0.25cm] right-[0.25cm] z-10 flex flex-col items-end">
+          <div className="w-48">
+            <OfertasHeader />
+          </div>
+          <div
+            className={cn(
+              'bg-black text-white text-center font-headline p-2 font-black transition-opacity print:color-adjust-exact mt-1',
+              discount > 0 ? 'opacity-100' : 'opacity-0'
+            )}
+          >
+            {discount > 0 && (
+              <div>
+                <span className="text-sm">DESCONTO DE</span>
+                <br />
+                <span className="text-3xl leading-none">{discount}%</span>
+              </div>
+            )}
+          </div>
+        </div>
 
-        <div className="text-center my-1">
+        <div className="text-center my-1 pt-24">
           <h2 className="font-headline font-bold uppercase text-xl leading-tight break-words">
             {description}
           </h2>
