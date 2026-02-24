@@ -87,7 +87,7 @@ export function PosterPreview({
         <div className="w-1/2 p-0 flex items-center justify-center">
           <div
             className={cn(
-              'bg-black text-white text-center font-headline font-black transition-opacity w-full h-full flex flex-col items-center justify-center print:color-adjust-exact',
+              'bg-black text-white text-center font-headline font-black transition-opacity w-full flex flex-col items-center justify-center print:color-adjust-exact py-6',
               discount > 0 ? 'opacity-100' : 'opacity-0'
             )}
           >

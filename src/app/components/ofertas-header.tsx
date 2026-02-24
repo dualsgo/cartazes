@@ -10,27 +10,27 @@ export function OfertasHeader() {
         y="50%"
         dominantBaseline="middle"
         textAnchor="middle"
-        className="font-headline font-black text-4xl"
+        className="font-headline font-black text-5xl"
         fill="black"
       >
         OFERTAS
       </text>
-      {/* Simplified decorations */}
+      {/* Decorations moved to avoid overlap */}
       <path
-        d="M 40 5 A 20 20 0 0 1 80 5"
+        d="M 20 5 A 20 20 0 0 1 60 5"
         stroke="black"
         strokeWidth="2"
         fill="none"
       />
       <path
-        d="M 45 12 A 15 15 0 0 1 75 12"
+        d="M 25 12 A 15 15 0 0 1 55 12"
         stroke="black"
         strokeWidth="2"
         fill="none"
       />
-      <path d="M 240 5 L 270 35" stroke="black" strokeWidth="2" fill="none" />
-      <path d="M 245 5 L 275 35" stroke="black" strokeWidth="2" fill="none" />
-      <path d="M 250 5 L 280 35" stroke="black" strokeWidth="2" fill="none" />
+      <path d="M 260 5 L 290 35" stroke="black" strokeWidth="2" fill="none" />
+      <path d="M 265 5 L 295 35" stroke="black" strokeWidth="2" fill="none" />
+      <path d="M 270 5 L 300 35" stroke="black" strokeWidth="2" fill="none" />
       <polyline
         points="10,55 25,45 40,55 55,45 70,55"
         stroke="black"
