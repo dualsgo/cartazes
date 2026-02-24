@@ -4,6 +4,7 @@ import type { PosterData } from '@/app/lib/types';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { OfertasHeader } from './ofertas-header';
+import { RiHappyHeader } from './ri-happy-header';
 
 function parsePrice(price: string): number {
   return parseFloat(price.replace('.', '').replace(',', '.')) || 0;
@@ -27,8 +28,10 @@ export function PosterPreviewAereo({
   const valDe = parsePrice(priceFrom);
   const valPor = parsePrice(priceFor);
 
+  const isOffer = valDe > valPor;
+
   let discount = 0;
-  if (valDe > 0 && valPor > 0 && valDe > valPor) {
+  if (isOffer) {
     discount = Math.round(((valDe - valPor) / valDe) * 100);
   }
 
@@ -45,7 +48,11 @@ export function PosterPreviewAereo({
         {/* Left Column */}
         <div className="w-1/2 p-[0.15cm] flex flex-col">
           <div className="w-full">
-            <OfertasHeader textSize={30} />
+            {isOffer ? (
+              <OfertasHeader textSize={30} />
+            ) : (
+              <RiHappyHeader textSize={30} />
+            )}
           </div>
 
           <div className="text-center my-1 flex-grow flex items-center justify-center">
@@ -55,41 +62,65 @@ export function PosterPreviewAereo({
           </div>
 
           <div className="flex-shrink-0">
-            <div
-              className={cn(
-                'text-black transition-opacity text-center mb-1',
-                valDe > valPor ? 'opacity-100' : 'opacity-0'
-              )}
-            >
-              <span className="text-[8px] block">DE:</span>
-              <span className="font-bold line-through text-base">
-                R$ {formatCurrency(valDe)}
-              </span>
-            </div>
-
-            <div className="flex flex-col justify-center items-center gap-0">
-              <div className="text-black font-bold flex flex-col items-center">
-                <span className="font-headline text-lg font-bold">POR</span>
-                <div className="flex items-baseline">
-                  <span className="font-headline text-sm mr-1">R$</span>
-                  <span className="font-headline text-4xl leading-none">
-                    {porInteger}
+            {isOffer ? (
+              <>
+                <div
+                  className={cn(
+                    'text-black transition-opacity text-center mb-1',
+                    'opacity-100'
+                  )}
+                >
+                  <span className="text-[8px] block">DE:</span>
+                  <span className="font-bold line-through text-base">
+                    R$ {formatCurrency(valDe)}
                   </span>
-                  <span className="font-headline text-lg">,{porDecimal}</span>
-                  {valPor > 0 && (
-                    <span className="text-sm font-bold self-end mb-1 ml-1">
-                      un.
+                </div>
+
+                <div className="flex flex-col justify-center items-center gap-0">
+                  <div className="text-black font-bold flex flex-col items-center">
+                    <span className="font-headline text-lg font-bold">POR</span>
+                    <div className="flex items-baseline">
+                      <span className="font-headline text-sm mr-1">R$</span>
+                      <span className="font-headline text-4xl leading-none">
+                        {porInteger}
+                      </span>
+                      <span className="font-headline text-lg">
+                        ,{porDecimal}
+                      </span>
+                      {valPor > 0 && (
+                        <span className="text-sm font-bold self-end mb-1 ml-1">
+                          un.
+                        </span>
+                      )}
+                      {valPor > 0 && (
+                        <span className="text-[10px] font-bold ml-1 self-end mb-1">
+                          à vista
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-col justify-center items-center gap-0 pt-4 pb-1">
+                <div className="text-black font-bold flex flex-col items-center">
+                  <div className="flex items-baseline">
+                    <span className="font-headline text-sm mr-1">R$</span>
+                    <span className="font-headline text-4xl leading-none">
+                      {porInteger}
                     </span>
-                  )}
-                  {valPor > 0 && (
-                    <span className="text-[10px] font-bold ml-1 self-end mb-1">
-                      à vista
+                    <span className="font-headline text-lg">
+                      ,{porDecimal}
                     </span>
-                  )}
+                    {valPor > 0 && (
+                      <span className="text-sm font-bold self-end mb-1 ml-1">
+                        un.
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-
+            )}
             <div className="mt-1 pt-0.5 text-[8px] flex justify-start">
               <span>
                 EAN/SAP: <b className="font-bold">{code}</b>
@@ -104,11 +135,11 @@ export function PosterPreviewAereo({
             <div
               className={cn(
                 'bg-black text-white text-center font-headline font-black transition-opacity w-full flex flex-col items-center justify-center print:color-adjust-exact py-1',
-                discount > 0 ? 'opacity-100' : 'opacity-0'
+                isOffer && discount > 0 ? 'opacity-100' : 'opacity-0'
               )}
               style={{ height: '50%' }}
             >
-              {discount > 0 && (
+              {isOffer && discount > 0 && (
                 <div>
                   <span className="text-lg leading-none">DESCONTO DE</span>
                   <br />
@@ -119,7 +150,7 @@ export function PosterPreviewAereo({
           </div>
 
           <div className="text-center text-black font-bold text-xs h-[2em] flex items-center justify-center">
-            {paymentOption === 'installment' && maxInstallments > 1 && (
+            {isOffer && paymentOption === 'installment' && maxInstallments > 1 && (
               <span className="text-[10px]">
                 ou em até {maxInstallments}x de R${' '}
                 {formatCurrency(installmentValue)}
