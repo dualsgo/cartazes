@@ -10,7 +10,7 @@ export function OfertasHeader() {
         y="50%"
         dominantBaseline="middle"
         textAnchor="middle"
-        className="font-headline font-black text-5xl"
+        className="font-headline font-black text-6xl"
         fill="black"
       >
         OFERTAS
