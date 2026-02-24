@@ -59,15 +59,18 @@ export function PosterPreview({
                 </span>
               </div>
 
-              <div className="text-black font-bold flex items-start">
-                <span className="font-headline text-xs mt-1 mr-0.5">
-                  R$
-                </span>
-                <span className="font-headline text-4xl leading-none">
-                  {porInteger}
-                </span>
-                <span className="font-headline text-lg mt-1">
-                  ,{porDecimal}
+              <div className="text-black font-bold flex flex-col items-center">
+                <div className="flex items-baseline">
+                  <span className="font-headline text-lg mr-1">R$</span>
+                  <span className="font-headline text-5xl leading-none">
+                    {porInteger}
+                  </span>
+                  <span className="font-headline text-2xl">
+                    ,{porDecimal}
+                  </span>
+                </div>
+                <span className="font-headline text-xl font-bold -mt-1">
+                  POR
                 </span>
               </div>
             </div>
