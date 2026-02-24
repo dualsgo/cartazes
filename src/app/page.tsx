@@ -11,10 +11,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 export default function Home() {
   const initialPosterData: PosterData = {
     description: 'DESCRIÇÃO DO PRODUTO',
-    priceFrom: '0,00',
-    priceFor: '0,00',
-    code: '---',
-    reference: '---',
+    priceFrom: '',
+    priceFor: '',
+    code: '',
+    reference: '',
   };
 
   const [postersData, setPostersData] = useState<PosterData[]>(() =>

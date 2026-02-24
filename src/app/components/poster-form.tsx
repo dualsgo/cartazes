@@ -43,7 +43,7 @@ export function PosterForm({ data, setData }: PosterFormProps) {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="priceFrom">Preço DE (R$)</Label>
+              <Label htmlFor="priceFrom">DE (R$)</Label>
               <Input
                 id="priceFrom"
                 type="text"
@@ -53,7 +53,7 @@ export function PosterForm({ data, setData }: PosterFormProps) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="priceFor">Preço POR (R$)</Label>
+              <Label htmlFor="priceFor">POR (R$)</Label>
               <Input
                 id="priceFor"
                 type="text"
@@ -65,15 +65,21 @@ export function PosterForm({ data, setData }: PosterFormProps) {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="code">Cód.</Label>
-              <Input id="code" value={data.code} onChange={handleInputChange} />
+              <Label htmlFor="code">EAN ou SAP</Label>
+              <Input
+                id="code"
+                value={data.code}
+                onChange={handleInputChange}
+                placeholder="Código de barras"
+              />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="reference">Ref.</Label>
+              <Label htmlFor="reference">Referencia</Label>
               <Input
                 id="reference"
                 value={data.reference}
                 onChange={handleInputChange}
+                placeholder="Ref. do produto"
               />
             </div>
           </div>

@@ -63,10 +63,10 @@ export function PosterPreview({
                 <span className="font-headline text-xs mt-1 mr-0.5">
                   R$
                 </span>
-                <span className="font-headline text-3xl leading-none">
+                <span className="font-headline text-4xl leading-none">
                   {porInteger}
                 </span>
-                <span className="font-headline text-xs mt-1">
+                <span className="font-headline text-lg mt-1">
                   ,{porDecimal}
                 </span>
               </div>
@@ -74,7 +74,7 @@ export function PosterPreview({
 
             <div className="mt-1 pt-0.5 text-xs flex justify-start">
               <span>
-                COD: <b className="font-bold">{code}</b>
+                EAN/SAP: <b className="font-bold">{code}</b>
               </span>
             </div>
           </div>
@@ -92,16 +92,16 @@ export function PosterPreview({
             >
               {discount > 0 && (
                 <div>
-                  <span className="text-xl leading-none">DESCONTO DE</span>
+                  <span className="text-2xl leading-none">DESCONTO DE</span>
                   <br />
-                  <span className="text-3xl leading-none">{discount}%</span>
+                  <span className="text-4xl leading-none">{discount}%</span>
                 </div>
               )}
             </div>
           </div>
           <div className="flex-shrink-0 text-xs text-right">
             <span>
-              REF: <b className="font-bold">{reference}</b>
+              Referencia: <b className="font-bold">{reference}</b>
             </span>
           </div>
         </div>
