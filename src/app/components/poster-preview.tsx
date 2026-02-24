@@ -31,7 +31,7 @@ export function PosterPreview({
 
   const [porInteger, porDecimal] = formatCurrency(valPor).split(',');
 
-  const numInstallments = Math.floor(valPor / 30);
+  const numInstallments = Math.round(valPor / 30);
   const maxInstallments = Math.min(numInstallments, 6);
   const installmentValue = maxInstallments > 1 ? valPor / maxInstallments : 0;
 
@@ -63,7 +63,7 @@ export function PosterPreview({
               </span>
             </div>
 
-            <div className="flex flex-col justify-center items-center gap-1 text-sm">
+            <div className="flex flex-col justify-center items-center gap-1">
               <div className="text-black font-bold flex flex-col items-center">
                 <span className="font-headline text-xl font-bold">POR</span>
                 <div className="flex items-baseline">
@@ -75,14 +75,15 @@ export function PosterPreview({
                 </div>
               </div>
 
-              {paymentOption === 'installment' && maxInstallments > 1 && (
-                <div className="text-center text-black font-bold">
-                  <span className="text-sm">
-                    à vista ou em até {maxInstallments}x de R${' '}
+              <div className="text-center text-black font-bold mt-1 text-sm">
+                {valPor > 0 && <span className="block">à vista</span>}
+                {paymentOption === 'installment' && maxInstallments > 1 && (
+                  <span className="block">
+                    ou em até {maxInstallments}x de R${' '}
                     {formatCurrency(installmentValue)}
                   </span>
-                </div>
-              )}
+                )}
+              </div>
             </div>
 
             <div className="mt-1 pt-0.5 text-xs flex justify-start">
