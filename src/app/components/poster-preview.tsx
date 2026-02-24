@@ -31,7 +31,7 @@ export function PosterPreview({
 
   const [porInteger, porDecimal] = formatCurrency(valPor).split(',');
 
-  const numInstallments = Math.round(valPor / 30);
+  const numInstallments = Math.floor(valPor / 30);
   const maxInstallments = Math.min(numInstallments, 6);
   const installmentValue = maxInstallments > 1 ? valPor / maxInstallments : 0;
 
@@ -72,13 +72,15 @@ export function PosterPreview({
                     {porInteger}
                   </span>
                   <span className="font-headline text-3xl">,{porDecimal}</span>
+                  {valPor > 0 && (
+                    <span className="text-sm font-bold ml-2">à vista</span>
+                  )}
                 </div>
               </div>
 
-              <div className="text-center text-black font-bold mt-1 text-sm">
-                {valPor > 0 && <span className="block">à vista</span>}
+              <div className="text-center text-black font-bold text-sm">
                 {paymentOption === 'installment' && maxInstallments > 1 && (
-                  <span className="block">
+                  <span>
                     ou em até {maxInstallments}x de R${' '}
                     {formatCurrency(installmentValue)}
                   </span>
