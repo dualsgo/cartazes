@@ -35,7 +35,7 @@ export function PosterPreview({
       {/* Discount sidebar */}
       <div
         className={cn(
-          'flex items-center justify-center bg-black text-white transition-all duration-300 ease-in-out',
+          'flex items-center justify-center bg-black text-white transition-all duration-300 ease-in-out print:color-adjust-exact',
           discount > 0 ? 'w-12' : 'w-0'
         )}
       >
