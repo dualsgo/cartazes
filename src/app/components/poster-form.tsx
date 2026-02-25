@@ -12,13 +12,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { PosterData } from '@/app/lib/types';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { cn } from '@/lib/utils';
 
 type PosterFormProps = {
   data: PosterData;
   setData: Dispatch<SetStateAction<PosterData>>;
+  posterType: 'reliquias' | 'aereo';
 };
 
-export function PosterForm({ data, setData }: PosterFormProps) {
+export function PosterForm({ data, setData, posterType }: PosterFormProps) {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     setData(prev => ({ ...prev, [id]: value }));
@@ -28,6 +30,14 @@ export function PosterForm({ data, setData }: PosterFormProps) {
     setData(prev => ({
       ...prev,
       paymentOption: value as 'normal' | 'installment',
+    }));
+  };
+
+  const handleSubTypeChange = (value: string) => {
+    setData(prev => ({
+      ...prev,
+      posterSubType: value as 'offer' | 'normal',
+      priceFrom: value === 'normal' ? '' : prev.priceFrom,
     }));
   };
 
@@ -41,6 +51,29 @@ export function PosterForm({ data, setData }: PosterFormProps) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {posterType === 'aereo' && (
+            <div className="space-y-2">
+              <Label>Tipo de Cartaz</Label>
+              <RadioGroup
+                value={data.posterSubType}
+                onValueChange={handleSubTypeChange}
+                className="flex space-x-4 pt-2"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="normal" id="st-normal" />
+                  <Label htmlFor="st-normal" className="font-normal">
+                    Preço Normal
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="offer" id="st-offer" />
+                  <Label htmlFor="st-offer" className="font-normal">
+                    Oferta
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="description">Descrição do Produto</Label>
             <Input
@@ -50,18 +83,27 @@ export function PosterForm({ data, setData }: PosterFormProps) {
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="priceFrom">DE (R$)</Label>
-              <Input
-                id="priceFrom"
-                type="text"
-                value={data.priceFrom}
-                onChange={handleInputChange}
-                placeholder="Ex: 19,99"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="priceFor">POR (R$)</Label>
+            {data.posterSubType === 'offer' && (
+              <div className="space-y-2">
+                <Label htmlFor="priceFrom">DE (R$)</Label>
+                <Input
+                  id="priceFrom"
+                  type="text"
+                  value={data.priceFrom}
+                  onChange={handleInputChange}
+                  placeholder="Ex: 19,99"
+                />
+              </div>
+            )}
+            <div
+              className={cn(
+                'space-y-2',
+                data.posterSubType === 'normal' && 'col-span-2'
+              )}
+            >
+              <Label htmlFor="priceFor">
+                {data.posterSubType === 'offer' ? 'POR (R$)' : 'Preço (R$)'}
+              </Label>
               <Input
                 id="priceFor"
                 type="text"

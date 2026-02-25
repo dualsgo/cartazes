@@ -5,4 +5,5 @@ export type PosterData = {
   code: string;
   reference: string;
   paymentOption: 'normal' | 'installment';
+  posterSubType: 'offer' | 'normal';
 };

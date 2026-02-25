@@ -23,6 +23,7 @@ export function PosterPreview({
   code,
   reference,
   paymentOption,
+  posterSubType,
 }: PosterData) {
   const valDe = parsePrice(priceFrom);
   const valPor = parsePrice(priceFor);
@@ -34,7 +35,7 @@ export function PosterPreview({
 
   const [porInteger, porDecimal] = formatCurrency(valPor).split(',');
 
-  const numInstallments = Math.floor(valPor / 29);
+  const numInstallments = Math.floor(valPor / 29.99);
   const maxInstallments = Math.min(numInstallments, 6);
   const installmentValue =
     maxInstallments > 1 && valPor > 0 ? valPor / maxInstallments : 0;

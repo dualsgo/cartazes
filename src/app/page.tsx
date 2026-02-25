@@ -22,6 +22,7 @@ export default function Home() {
     code: '',
     reference: '',
     paymentOption: 'normal',
+    posterSubType: 'offer',
   };
 
   const posterCounts = {
@@ -39,6 +40,7 @@ export default function Home() {
         .fill(null)
         .map((_, i) => ({
           ...initialPosterData,
+          posterSubType: posterType === 'reliquias' ? 'offer' : 'normal',
           description: `DESCRIÇÃO DO PRODUTO ${i + 1}`,
         }))
     );
@@ -156,6 +158,7 @@ export default function Home() {
                   <PosterForm
                     data={poster}
                     setData={handlePosterDataChange(index)}
+                    posterType={posterType}
                   />
                 </TabsContent>
               ))}

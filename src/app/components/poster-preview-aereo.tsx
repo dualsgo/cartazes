@@ -24,11 +24,12 @@ export function PosterPreviewAereo({
   code,
   reference,
   paymentOption,
+  posterSubType,
 }: PosterData) {
   const valDe = parsePrice(priceFrom);
   const valPor = parsePrice(priceFor);
 
-  const isOffer = valDe > valPor;
+  const isOffer = posterSubType === 'offer' && valDe > valPor;
 
   let discount = 0;
   if (isOffer) {
