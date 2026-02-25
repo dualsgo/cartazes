@@ -56,13 +56,13 @@ export function PosterPreviewAereo({
             )}
           </div>
 
-          <div className="text-center my-1 flex-grow flex items-center justify-center">
+          <div className="text-center my-1 flex items-center justify-center">
             <h2 className="font-headline font-bold uppercase text-base leading-tight break-words">
               {description}
             </h2>
           </div>
 
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 flex-grow flex flex-col justify-center">
             {isOffer ? (
               <>
                 <div
@@ -82,10 +82,10 @@ export function PosterPreviewAereo({
                     <span className="font-headline text-lg font-bold">POR</span>
                     <div className="flex items-baseline">
                       <span className="font-headline text-sm mr-1">R$</span>
-                      <span className="font-headline text-4xl leading-none">
+                      <span className="font-headline text-5xl leading-none">
                         {porInteger}
                       </span>
-                      <span className="font-headline text-lg">
+                      <span className="font-headline text-2xl">
                         ,{porDecimal}
                       </span>
                       {valPor > 0 && (
@@ -107,10 +107,10 @@ export function PosterPreviewAereo({
                 <div className="text-black font-bold flex flex-col items-center">
                   <div className="flex items-baseline">
                     <span className="font-headline text-sm mr-1">R$</span>
-                    <span className="font-headline text-4xl leading-none">
+                    <span className="font-headline text-5xl leading-none">
                       {porInteger}
                     </span>
-                    <span className="font-headline text-lg">
+                    <span className="font-headline text-2xl">
                       ,{porDecimal}
                     </span>
                     {valPor > 0 && (
@@ -131,14 +131,13 @@ export function PosterPreviewAereo({
         </div>
 
         {/* Right Column */}
-        <div className="w-1/2 flex flex-col p-[0.15cm]">
-          <div className="flex-grow flex items-center justify-center">
+        <div className="w-1/2 flex flex-col justify-between p-[0.15cm]">
+          <div className="flex items-center justify-center">
             <div
               className={cn(
-                'bg-black text-white text-center font-headline font-black transition-opacity w-full flex flex-col items-center justify-center print:color-adjust-exact py-1',
+                'bg-black text-white text-center font-headline font-black transition-opacity w-full flex flex-col items-center justify-center print:color-adjust-exact py-2',
                 isOffer && discount > 0 ? 'opacity-100' : 'opacity-0'
               )}
-              style={{ height: '50%' }}
             >
               {isOffer && discount > 0 && (
                 <div>
@@ -150,9 +149,9 @@ export function PosterPreviewAereo({
             </div>
           </div>
 
-          <div className="text-center text-black font-bold text-xs h-[2em] flex items-center justify-center">
+          <div className="text-center text-black font-bold text-xs flex items-center justify-center">
             {isOffer && paymentOption === 'installment' && maxInstallments > 1 && (
-              <span className="text-[10px]">
+              <span className="text-sm">
                 ou em até {maxInstallments}x de R${' '}
                 {formatCurrency(installmentValue)}
               </span>
