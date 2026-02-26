@@ -42,7 +42,7 @@ export function PosterPreview({
 
   const installmentText =
     paymentOption === 'installment' && maxInstallments > 1 ? (
-      <div className="font-headline text-center font-bold text-lg mt-1">
+      <div className="font-headline text-center font-bold text-base mt-1">
         ou em até {maxInstallments}x de R$ {formatCurrency(installmentValue)}
       </div>
     ) : null;
@@ -54,7 +54,7 @@ export function PosterPreview({
         <div className="w-1/2 p-[0.25cm] flex flex-col justify-between">
           <div>
             <OfertasHeader textSize={40} />
-            <h2 className="font-headline font-black uppercase text-xl leading-tight break-words text-center my-4">
+            <h2 className="font-headline font-black uppercase text-lg leading-tight break-words text-center my-4">
               {description}
             </h2>
 
@@ -66,7 +66,7 @@ export function PosterPreview({
               )}
             >
               <span className="text-lg block font-headline">DE:</span>
-              <span className="font-bold line-through text-3xl font-headline">
+              <span className="font-bold line-through text-2xl font-headline">
                 R$ {formatCurrency(valDe)}
               </div>
             </div>
@@ -98,23 +98,22 @@ export function PosterPreview({
             </div>
           </div>
 
-          {/* Preço POR — máximo possível */}
-          <div className="flex-1 flex flex-col items-center justify-center min-h-0">
-
-            {/* POR + valor */}
-            <div className="flex items-end justify-center gap-1 flex-wrap">
-              <span className="font-headline text-2xl font-black self-end mb-1">POR</span>
+          <div className="flex flex-col items-center">
+            <div className="flex items-end">
+              <span className="font-headline text-2xl font-black mr-2">
+                POR
+              </span>
               <div className="flex items-baseline">
-                <span className="font-headline text-xl mr-1">R$</span>
-                <span className="font-headline text-7xl leading-none font-black">
+                <span className="font-headline text-lg mr-1">R$</span>
+                <span className="font-headline text-6xl leading-none font-black">
                   {porInteger}
                 </span>
-                <span className="font-headline text-4xl font-black">
+                <span className="font-headline text-3xl font-black">
                   ,{porDecimal}
                 </span>
                 {valPor > 0 && (
                   <div className="ml-1 font-bold self-end mb-2 flex items-baseline space-x-1">
-                    <span className="text-lg">un.</span>
+                    <span className="text-base">un.</span>
                     <span className="text-xs">à vista</span>
                   </div>
                 )}
