@@ -114,7 +114,7 @@
     }
     @page {
       size: A4 landscape;
-      margin: 1cm;
+      margin: 3cm;
     }
     * {
       -webkit-print-color-adjust: exact !important;
