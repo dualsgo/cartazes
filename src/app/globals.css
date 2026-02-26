@@ -38,6 +38,7 @@
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
   .dark {
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
@@ -78,27 +79,35 @@
   * {
     @apply border-border;
   }
+
+  html,
   body {
+    height: 100%;
+    overflow: hidden;
     @apply bg-background text-foreground;
   }
 }
 
 @layer utilities {
+
   /* Oculto na tela — aparece apenas na impressão */
   .print-container {
     display: none;
   }
 
   @media print {
+
     /* Esconde tudo exceto o container de impressão */
     body * {
       visibility: hidden;
     }
+
     .print-container,
     .print-container * {
       visibility: visible;
       display: revert;
     }
+
     .print-container {
       display: block !important;
       position: fixed;
@@ -112,19 +121,21 @@
       border-radius: 0;
       background: white;
     }
+
     .no-print,
     header {
       display: none !important;
     }
+
     body {
       background-color: white;
       margin: 0;
       padding: 0;
     }
+
     * {
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
     }
   }
 }
-

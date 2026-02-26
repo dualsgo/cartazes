@@ -97,10 +97,10 @@ export default function Home() {
   const activeData = postersData[activeIndex] ?? postersData[0];
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="h-screen flex flex-col bg-background text-foreground overflow-hidden">
       {/* ── Cabeçalho (oculto na impressão) ── */}
-      <header className="no-print p-4 border-b bg-card">
-        <div className="container mx-auto flex justify-between items-center">
+      <header className="no-print shrink-0 px-4 py-3 border-b bg-card">
+        <div className="flex justify-between items-center">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <span className="text-primary-foreground font-bold text-sm">
@@ -161,11 +161,11 @@ export default function Home() {
       </div>
 
       {/* ── Interface de edição + Pré-visualização individual ── */}
-      <main className="no-print container mx-auto p-4 md:p-8">
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
+      <main className="no-print flex-1 overflow-hidden">
+        <div className="h-full grid grid-cols-1 lg:grid-cols-5">
 
-          {/* Formulário */}
-          <div className="lg:col-span-2 flex flex-col gap-8">
+          {/* Formulário — rola internamente se necessário */}
+          <div className="lg:col-span-2 h-full overflow-y-auto border-r border-border px-4 py-4 flex flex-col gap-4">
             {/* Escolha do tipo */}
             <Tabs
               defaultValue="reliquias"
@@ -210,39 +210,51 @@ export default function Home() {
             </Tabs>
           </div>
 
-          {/* ── Pré-visualização individual do cartaz ativo ── */}
-          <div className="lg:col-span-3">
-            <p className="text-xs text-muted-foreground mb-2 text-center">
+          {/* ── Pré-visualização — preenche toda a altura disponível ── */}
+          <div className="lg:col-span-3 h-full flex flex-col px-4 py-4 gap-2 overflow-hidden">
+            <p className="text-xs text-muted-foreground text-center shrink-0">
               Pré-visualização — Cartaz {activeIndex + 1} de {postersData.length}
             </p>
-            {posterType === 'reliquias' ? (
-              /* A4 paisagem: proporção 297×210 */
-              <div
-                className="w-full border border-border rounded shadow-sm overflow-hidden bg-white"
-                style={{ aspectRatio: '297 / 210' }}
-              >
-                <PosterPreview {...activeData} />
-              </div>
-            ) : (
-              /* A4 retrato: proporção 210×297, cartaz ocupa metade da altura */
-              <div
-                className="w-full border border-border rounded shadow-sm overflow-hidden bg-white relative"
-                style={{ aspectRatio: '210 / 297' }}
-              >
-                {/* Área do cartaz: metade da folha, centralizada */}
+
+            {/* Área do preview: ocupa todo o espaço disponível */}
+            <div className="flex-1 min-h-0 flex items-center justify-center">
+              {posterType === 'reliquias' ? (
+                /* A4 paisagem — max-height controla para não sair da tela */
                 <div
-                  className="absolute inset-0 flex flex-col"
+                  className="border border-border shadow-sm overflow-hidden bg-white w-full"
+                  style={{
+                    aspectRatio: '297 / 210',
+                    maxHeight: '100%',
+                    maxWidth: '100%',
+                    width: 'auto',
+                  }}
                 >
-                  <div className="flex-1" />
-                  <div className="flex-1">
-                    <PosterPreviewAereo {...activeData} />
-                  </div>
-                  <div className="flex-1" />
-                  <div className="flex-1" />
+                  <PosterPreview {...activeData} />
                 </div>
-              </div>
-            )}
-            <p className="text-xs text-muted-foreground mt-2 text-center">
+              ) : (
+                /* A4 retrato */
+                <div
+                  className="border border-border shadow-sm overflow-hidden bg-white relative"
+                  style={{
+                    aspectRatio: '210 / 297',
+                    maxHeight: '100%',
+                    maxWidth: '100%',
+                    width: 'auto',
+                  }}
+                >
+                  <div className="absolute inset-0 flex flex-col">
+                    <div className="flex-1" />
+                    <div className="flex-1">
+                      <PosterPreviewAereo {...activeData} />
+                    </div>
+                    <div className="flex-1" />
+                    <div className="flex-1" />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <p className="text-xs text-muted-foreground text-center shrink-0">
               Ao imprimir, todos os {postersData.length} cartazes serão
               {posterType === 'reliquias' ? ' dispostos em grade 2×2' : ' impressos em folha A4 retrato'}.
             </p>
