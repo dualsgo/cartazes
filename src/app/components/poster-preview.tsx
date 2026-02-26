@@ -40,23 +40,21 @@ export function PosterPreview({
   const installmentValue =
     maxInstallments > 1 && valPor > 0 ? valPor / maxInstallments : 0;
 
-  const hasInstallment = paymentOption === 'installment' && maxInstallments > 1;
+  const installmentText =
+    paymentOption === 'installment' && maxInstallments > 1 ? (
+      <div className="font-headline text-center font-bold text-lg mt-1">
+        ou em até {maxInstallments}x de R$ {formatCurrency(installmentValue)}
+      </div>
+    ) : null;
 
   return (
     <Card className="w-full h-full overflow-hidden shadow-none border-none rounded-none bg-white text-black font-body">
       <div className="flex h-full w-full">
-
-        {/* ══ COLUNA ESQUERDA ══════════════════════════════ */}
-        <div className="w-[45%] flex flex-col p-[0.3cm]">
-
-          {/* OFERTAS */}
-          <div className="shrink-0">
-            <OfertasHeader textSize={52} />
-          </div>
-
-          {/* Descrição + DE agrupados ao centro */}
-          <div className="flex-1 flex flex-col items-center justify-center py-1 gap-2">
-            <h2 className="font-headline font-black uppercase text-xl leading-tight break-words text-center">
+        {/* Left Column */}
+        <div className="w-1/2 p-[0.25cm] flex flex-col justify-between">
+          <div>
+            <OfertasHeader textSize={40} />
+            <h2 className="font-headline font-black uppercase text-xl leading-tight break-words text-center my-4">
               {description}
             </h2>
 
@@ -67,8 +65,8 @@ export function PosterPreview({
                 valDe > valPor ? 'opacity-100' : 'opacity-0'
               )}
             >
-              <span className="text-[10px] uppercase tracking-wide text-black/50 font-headline">DE:</span>
-              <div className="font-headline font-bold line-through text-2xl leading-tight text-black/60">
+              <span className="text-lg block font-headline">DE:</span>
+              <span className="font-bold line-through text-3xl font-headline">
                 R$ {formatCurrency(valDe)}
               </div>
             </div>
@@ -81,18 +79,23 @@ export function PosterPreview({
           </div>
         </div>
 
-        {/* ══ COLUNA DIREITA ═══════════════════════════════ */}
-        <div className="w-[55%] flex flex-col p-[0.3cm]">
-
-          {/* Bloco de desconto — fundo preto, % dominante */}
-          <div
-            className={cn(
-              'shrink-0 w-full bg-black text-white font-headline font-black text-center flex flex-col items-center justify-center py-3 print:color-adjust-exact transition-opacity',
-              discount > 0 ? 'opacity-100' : 'opacity-0'
-            )}
-          >
-            <span className="text-lg leading-none tracking-wide">DESCONTO DE</span>
-            <span className="text-[4.5rem] leading-none">{discount}%</span>
+        {/* Right Column */}
+        <div className="w-1/2 flex flex-col justify-between p-[0.25cm]">
+          <div className="flex justify-center">
+            <div
+              className={cn(
+                'bg-black text-white text-center font-headline font-black transition-opacity flex flex-col items-center justify-center print:color-adjust-exact px-4 py-2',
+                discount > 0 ? 'opacity-100' : 'opacity-0'
+              )}
+            >
+              {discount > 0 && (
+                <div>
+                  <span className="text-xl leading-none">DESCONTO DE</span>
+                  <br />
+                  <span className="text-5xl leading-none">{discount}%</span>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Preço POR — máximo possível */}
@@ -102,28 +105,19 @@ export function PosterPreview({
             <div className="flex items-end justify-center gap-1 flex-wrap">
               <span className="font-headline text-2xl font-black self-end mb-1">POR</span>
               <div className="flex items-baseline">
-                <span className="font-headline font-black text-xl mr-0.5">R$</span>
-                <span className="font-headline font-black leading-none" style={{ fontSize: 'clamp(2.5rem, 8vw, 5rem)' }}>
+                <span className="font-headline text-xl mr-1">R$</span>
+                <span className="font-headline text-7xl leading-none font-black">
                   {porInteger}
                 </span>
-                <span className="font-headline font-black" style={{ fontSize: 'clamp(1.5rem, 5vw, 3rem)' }}>
+                <span className="font-headline text-4xl font-black">
                   ,{porDecimal}
                 </span>
-              </div>
-            </div>
-
-            {/* un. à vista */}
-            {valPor > 0 && (
-              <div className="flex items-baseline gap-1 text-black/80">
-                <span className="font-bold text-base">un.</span>
-                <span className="text-xs">à vista</span>
-              </div>
-            )}
-
-            {/* Parcelamento */}
-            {hasInstallment && (
-              <div className="font-headline font-bold text-base text-center mt-1 leading-tight">
-                ou em até {maxInstallments}x de R$ {formatCurrency(installmentValue)}
+                {valPor > 0 && (
+                  <div className="ml-1 font-bold self-end mb-2 flex items-baseline space-x-1">
+                    <span className="text-lg">un.</span>
+                    <span className="text-xs">à vista</span>
+                  </div>
+                )}
               </div>
             )}
           </div>
