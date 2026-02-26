@@ -61,7 +61,7 @@ export default function Home() {
         @media print {
           @page {
             size: A4 portrait;
-            margin: 3cm;
+            margin: 1cm;
           }
         }
       `;
@@ -70,7 +70,7 @@ export default function Home() {
         @media print {
           @page {
             size: A4 landscape;
-            margin: 3cm;
+            margin: 1cm;
           }
         }
       `;
