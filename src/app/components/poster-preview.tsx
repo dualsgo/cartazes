@@ -77,40 +77,38 @@ export function PosterPreview({
 
         {/* Right Column */}
         <div className="w-1/2 flex flex-col justify-between p-[0.25cm]">
-          <div className="flex justify-center">
-            <div
-              className={cn(
-                'bg-black text-white text-center font-headline font-black transition-opacity flex flex-col items-center justify-center print:color-adjust-exact px-4 py-2',
-                discount > 0 ? 'opacity-100' : 'opacity-0'
-              )}
-            >
-              {discount > 0 && (
-                <div>
-                  <span className="text-xl leading-none">DESCONTO DE</span>
-                  <br />
-                  <span className="text-5xl leading-none">{discount}%</span>
-                </div>
-              )}
-            </div>
+          {/* Bloco de desconto — ocupa toda a largura da coluna */}
+          <div
+            className={cn(
+              'w-full bg-black text-white text-center font-headline font-black transition-opacity flex flex-col items-center justify-center print:color-adjust-exact py-4',
+              discount > 0 ? 'opacity-100' : 'opacity-0'
+            )}
+          >
+            {discount > 0 && (
+              <div className="leading-tight">
+                <span className="text-2xl leading-none block">DESCONTO DE</span>
+                <span className="text-7xl leading-none font-black">{discount}%</span>
+              </div>
+            )}
           </div>
 
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center mt-2">
             <div className="flex items-end">
-              <span className="font-headline text-2xl font-black mr-2">
+              <span className="font-headline text-3xl font-black mr-2">
                 POR
               </span>
               <div className="flex items-baseline">
-                <span className="font-headline text-xl mr-1">R$</span>
-                <span className="font-headline text-7xl leading-none font-black">
+                <span className="font-headline text-2xl mr-1">R$</span>
+                <span className="font-headline text-8xl leading-none font-black">
                   {porInteger}
                 </span>
-                <span className="font-headline text-4xl font-black">
+                <span className="font-headline text-5xl font-black">
                   ,{porDecimal}
                 </span>
                 {valPor > 0 && (
                   <div className="ml-1 font-bold self-end mb-2 flex items-baseline space-x-1">
-                    <span className="text-lg">un.</span>
-                    <span className="text-xs">à vista</span>
+                    <span className="text-xl">un.</span>
+                    <span className="text-sm">à vista</span>
                   </div>
                 )}
               </div>
