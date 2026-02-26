@@ -175,11 +175,19 @@ export default function Home() {
               </div>
             ) : (
               <div className="print-container sticky top-8 aspect-[210/297] w-full">
-                <div className="grid grid-rows-4 h-full w-full">
-                  <div />
-                  {postersData[0] && <PosterPreviewAereo {...postersData[0]} />}
-                  <div />
-                  {postersData[1] && <PosterPreviewAereo {...postersData[1]} />}
+                <div className="flex h-full w-full flex-col">
+                  <div className="basis-1/4" />
+                  <div className="basis-1/4">
+                    {postersData[0] && (
+                      <PosterPreviewAereo {...postersData[0]} />
+                    )}
+                  </div>
+                  <div className="basis-1/4" />
+                  <div className="basis-1/4">
+                    {postersData[1] && (
+                      <PosterPreviewAereo {...postersData[1]} />
+                    )}
+                  </div>
                 </div>
               </div>
             )}

@@ -22,6 +22,7 @@ export function PosterPreview({
   priceFor,
   code,
   reference,
+  paymentOption,
 }: PosterData) {
   const valDe = parsePrice(priceFrom);
   const valPor = parsePrice(priceFor);
@@ -32,6 +33,18 @@ export function PosterPreview({
   }
 
   const [porInteger, porDecimal] = formatCurrency(valPor).split(',');
+
+  const numInstallments = Math.floor(valPor / 29.99);
+  const maxInstallments = Math.min(numInstallments, 6);
+  const installmentValue =
+    maxInstallments > 1 && valPor > 0 ? valPor / maxInstallments : 0;
+
+  const installmentText =
+    paymentOption === 'installment' && maxInstallments > 1 ? (
+      <div className="font-headline text-center font-bold text-lg mt-1">
+        ou em até {maxInstallments}x de R$ {formatCurrency(installmentValue)}
+      </div>
+    ) : null;
 
   return (
     <Card className="w-full h-full overflow-hidden shadow-none border-none rounded-none bg-white text-black font-body">
@@ -94,12 +107,15 @@ export function PosterPreview({
                 <span className="font-headline text-4xl font-black">
                   ,{porDecimal}
                 </span>
-                <div className="ml-2 font-bold self-end mb-2 flex items-baseline space-x-1">
-                  <span className="text-xl">un.</span>
-                  <span className="text-sm">à vista</span>
-                </div>
+                {valPor > 0 && (
+                  <div className="ml-1 font-bold self-end mb-2 flex items-baseline space-x-1">
+                    <span className="text-lg">un.</span>
+                    <span className="text-xs">à vista</span>
+                  </div>
+                )}
               </div>
             </div>
+            {installmentText}
           </div>
 
           <div className="text-xs text-right">
