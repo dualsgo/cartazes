@@ -5,9 +5,10 @@ import * as path from 'path';
 type ProdutoEntry = {
     description: string;
     reference: string;
+    code?: string;  // COD_PRODUTO — quando buscado pelo EAN
+    ean?: string;   // EAN — quando buscado pelo COD
 };
 
-// Cache em nível de módulo — carregado uma única vez por instância serverless
 let produtosCache: Record<string, ProdutoEntry> | null = null;
 
 function loadProdutos(): Record<string, ProdutoEntry> {
@@ -24,7 +25,7 @@ function loadProdutos(): Record<string, ProdutoEntry> {
     try {
         const raw = fs.readFileSync(filePath, 'utf8');
         produtosCache = JSON.parse(raw);
-        console.log(`[api/produto] ${Object.keys(produtosCache!).length} produtos carregados.`);
+        console.log(`[api/produto] ${Object.keys(produtosCache!).length} entradas carregadas.`);
     } catch (err) {
         console.error('[api/produto] Erro ao ler produtos.json:', err);
         produtosCache = {};
@@ -47,10 +48,7 @@ export async function GET(request: NextRequest) {
     const produto = produtos[q];
 
     if (!produto) {
-        return NextResponse.json(
-            { error: 'Produto não encontrado.' },
-            { status: 404 }
-        );
+        return NextResponse.json({ error: 'Produto não encontrado.' }, { status: 404 });
     }
 
     return NextResponse.json(produto);

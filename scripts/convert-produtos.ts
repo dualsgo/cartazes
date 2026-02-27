@@ -21,6 +21,8 @@ const OUTPUT_FILE = path.join(__dirname, '../src/data/produtos.json');
 type ProdutoEntry = {
     description: string;
     reference: string;
+    code?: string;  // COD_PRODUTO — preenchido quando buscado pelo EAN
+    ean?: string;   // EAN — preenchido quando buscado pelo COD
 };
 
 type ProdutoIndex = Record<string, ProdutoEntry>;
@@ -36,15 +38,11 @@ async function convert() {
     let lineCount = 0;
     let skipped = 0;
 
-    const rl = readline.createInterface({
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        input: fs.createReadStream(INPUT_FILE, { encoding: 'utf8' }) as any,
-        crlfDelay: Infinity,
-    });
-
+    const fileStream = fs.createReadStream(INPUT_FILE, { encoding: 'utf8' });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rl = readline.createInterface({ input: fileStream as any, crlfDelay: Infinity });
 
     let isHeader = true;
-    // Índices das colunas (detectados pelo cabeçalho)
     let idxCod = 0, idxDesc = 1, idxRef = 2, idxEan = 4;
 
     for await (const line of rl) {
@@ -53,7 +51,6 @@ async function convert() {
         const cols = line.split('\t');
 
         if (isHeader) {
-            // Detecta colunas dinamicamente pelo nome do cabeçalho
             idxCod = cols.findIndex(c => c.trim() === 'COD_PRODUTO');
             idxDesc = cols.findIndex(c => c.trim() === 'DESCRICAO');
             idxRef = cols.findIndex(c => c.trim() === 'REFERENCIA');
@@ -64,19 +61,21 @@ async function convert() {
 
         lineCount++;
         const cod = cols[idxCod]?.trim();
-        const desc = cols[idxDesc]?.trim();
-        const ref = cols[idxRef]?.trim();
+        const desc = cols[idxDesc]?.trim() ?? '';
+        const ref = cols[idxRef]?.trim() ?? '';
         const ean = cols[idxEan]?.trim();
 
         if (!cod && !ean) { skipped++; continue; }
 
-        const entry: ProdutoEntry = {
-            description: desc ?? '',
-            reference: ref ?? '',
-        };
+        // Ao buscar pelo COD → retorna o EAN correspondente
+        if (cod) {
+            index[cod] = { description: desc, reference: ref, ean: ean ?? '' };
+        }
 
-        if (cod) index[cod] = entry;
-        if (ean && ean !== cod) index[ean] = entry;
+        // Ao buscar pelo EAN → retorna o COD correspondente
+        if (ean && ean !== cod) {
+            index[ean] = { description: desc, reference: ref, code: cod ?? '' };
+        }
     }
 
     fs.writeFileSync(OUTPUT_FILE, JSON.stringify(index), 'utf8');
