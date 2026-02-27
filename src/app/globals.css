@@ -80,24 +80,13 @@
     @apply border-border;
   }
 
-  html,
   body {
-    height: 100%;
-    overflow: hidden;
     @apply bg-background text-foreground;
   }
 }
 
 @layer utilities {
-
-  /* Oculto na tela — aparece apenas na impressão */
-  .print-container {
-    display: none;
-  }
-
   @media print {
-
-    /* Esconde tudo exceto o container de impressão */
     body * {
       visibility: hidden;
     }
@@ -105,13 +94,13 @@
     .print-container,
     .print-container * {
       visibility: visible;
-      display: revert;
     }
 
     .print-container {
       display: block !important;
-      position: fixed;
-      inset: 0;
+      position: absolute;
+      left: 0;
+      top: 0;
       width: 100%;
       height: 100%;
       padding: 0;
@@ -119,11 +108,9 @@
       box-shadow: none !important;
       border: none !important;
       border-radius: 0;
-      background: white;
     }
 
-    .no-print,
-    header {
+    .no-print {
       display: none !important;
     }
 
@@ -131,6 +118,11 @@
       background-color: white;
       margin: 0;
       padding: 0;
+    }
+
+    @page {
+      size: A4 landscape;
+      margin: 1cm;
     }
 
     * {

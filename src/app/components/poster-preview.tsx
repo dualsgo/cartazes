@@ -47,28 +47,30 @@ export function PosterPreview({
     ) : null;
 
   return (
-    <Card className="w-full h-full overflow-hidden shadow-none border-none rounded-none bg-white text-black font-body">
+    <Card className="w-full h-full overflow-hidden shadow-none border-none rounded-none bg-white text-black font-body scale-90">
       <div className="flex h-full w-full">
         {/* Left Column */}
-        <div className="w-1/2 p-[0.25cm] flex flex-col justify-between">
+        <div className="w-1/2 p-[0.25cm] flex flex-col">
           <div>
-            <OfertasHeader textSize={40} />
-            <h2 className="font-headline font-black uppercase text-xl leading-tight break-words text-center my-4">
+            <OfertasHeader textSize={50} />
+            <h2 className="font-headline font-black uppercase text-lg leading-tight break-words text-center my-2">
               {description}
             </h2>
+          </div>
+          <div className="my-auto">
             <div
               className={cn(
                 'text-black transition-opacity text-left',
                 valDe > valPor ? 'opacity-100' : 'opacity-0'
               )}
             >
-              <span className="text-lg block font-headline">DE:</span>
-              <span className="font-bold line-through text-3xl font-headline">
+              <span className="text-base block font-headline">DE:</span>
+              <span className="font-bold line-through text-2xl font-headline">
                 R$ {formatCurrency(valDe)}
               </span>
             </div>
           </div>
-          <div className="text-xs">
+          <div className="text-[10px]">
             <span>
               EAN/SAP: <b className="font-bold">{code}</b>
             </span>
@@ -76,39 +78,38 @@ export function PosterPreview({
         </div>
 
         {/* Right Column */}
-        <div className="w-1/2 flex flex-col justify-between p-[0.25cm]">
-          {/* Bloco de desconto — ocupa toda a largura da coluna */}
-          <div
-            className={cn(
-              'w-full bg-black text-white text-center font-headline font-black transition-opacity flex flex-col items-center justify-center print:color-adjust-exact py-4',
-              discount > 0 ? 'opacity-100' : 'opacity-0'
-            )}
-          >
-            {discount > 0 && (
-              <div className="leading-tight">
-                <span className="text-2xl leading-none block">DESCONTO DE</span>
-                <span className="text-7xl leading-none font-black">{discount}%</span>
-              </div>
-            )}
-          </div>
+        <div className="w-1/2 flex flex-col p-[0.25cm]">
+            <div
+              className={cn(
+                'w-full bg-black text-white text-center font-headline font-black transition-opacity flex flex-col items-center justify-center print:color-adjust-exact px-4 py-3',
+                discount > 0 ? 'opacity-100' : 'opacity-0'
+              )}
+            >
+              {discount > 0 && (
+                <div className="leading-tight">
+                  <span className="text-2xl leading-none block">DESCONTO DE</span>
+                  <span className="text-6xl leading-none">{discount}%</span>
+                </div>
+              )}
+            </div>
 
-          <div className="flex flex-col items-center mt-2">
-            <div className="flex items-end">
-              <span className="font-headline text-3xl font-black mr-2">
+          <div className="my-auto flex flex-col items-center">
+            <div className="flex items-end justify-center flex-wrap">
+              <span className="font-headline text-2xl font-black mr-3">
                 POR
               </span>
               <div className="flex items-baseline">
-                <span className="font-headline text-2xl mr-1">R$</span>
-                <span className="font-headline text-8xl leading-none font-black">
+                <span className="font-headline text-xl mr-1">R$</span>
+                <span className="font-headline text-7xl leading-none font-black">
                   {porInteger}
                 </span>
-                <span className="font-headline text-5xl font-black">
+                <span className="font-headline text-4xl font-black">
                   ,{porDecimal}
                 </span>
                 {valPor > 0 && (
-                  <div className="ml-1 font-bold self-end mb-2 flex items-baseline space-x-1">
-                    <span className="text-xl">un.</span>
-                    <span className="text-sm">à vista</span>
+                  <div className="ml-2 font-bold self-end mb-1 flex items-baseline space-x-1">
+                    <span className="text-lg">un.</span>
+                    <span className="text-xs">à vista</span>
                   </div>
                 )}
               </div>
@@ -116,7 +117,7 @@ export function PosterPreview({
             {installmentText}
           </div>
 
-          <div className="text-xs text-right">
+          <div className="text-[10px] text-right">
             <span>
               Referencia: <b className="font-bold">{reference}</b>
             </span>

@@ -124,7 +124,7 @@ export default function Home() {
           Relíquias: grade 2×2 em A4 paisagem.
           Aéreo: 2 cartazes centralizados em A4 retrato.
       ══════════════════════════════════════════ */}
-      <div className="print-container">
+      <div className="print-container" style={{ display: 'none' }}>
         {posterType === 'reliquias' ? (
           <div
             style={{
