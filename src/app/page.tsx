@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { PosterForm } from '@/app/components/poster-form';
 import { PosterPreview } from '@/app/components/poster-preview';
 import { PosterPreviewAereo } from '@/app/components/poster-preview-aereo';
@@ -154,7 +154,7 @@ export default function Home() {
     }
   }, [posterType]);
 
-  const handlePosterDataChange =
+  const handlePosterDataChange = useCallback(
     (index: number) => (updater: React.SetStateAction<PosterData>) => {
       setPostersData(prevData => {
         const newPostersData = [...prevData];
@@ -166,7 +166,9 @@ export default function Home() {
         newPostersData[index] = newPosterDataValue;
         return newPostersData;
       });
-    };
+    },
+    []
+  );
 
   const handlePrint = () => {
     window.print();
