@@ -82,11 +82,11 @@ export function PosterForm({ data, setData, posterType }: PosterFormProps) {
 
   useEffect(() => {
     setData(prev => ({ ...prev, priceFor: priceFor.display }));
-  }, [priceFor.display, setData]);
+  }, [priceFor.display]);
 
   useEffect(() => {
     setData(prev => ({ ...prev, priceFrom: priceFrom.display }));
-  }, [priceFrom.display, setData]);
+  }, [priceFrom.display]);
   
   useEffect(() => {
     if (posterType !== 'avaria') return;
@@ -114,7 +114,7 @@ export function PosterForm({ data, setData, posterType }: PosterFormProps) {
     } else {
       priceFor.setValue('');
     }
-  }, [priceFrom.cents, data.defectType, data.customDefectDiscount, posterType, priceFor.setValue]);
+  }, [priceFrom.cents, data.defectType, data.customDefectDiscount, posterType, priceFor, setData]);
 
 
   useEffect(() => {
