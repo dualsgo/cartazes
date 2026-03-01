@@ -114,7 +114,7 @@ export function PosterForm({ data, setData, posterType }: PosterFormProps) {
     } else {
       priceFor.setValue('');
     }
-  }, [priceFrom.cents, data.defectType, data.customDefectDiscount, posterType, priceFor, data.priceFrom]);
+  }, [priceFrom.cents, data.defectType, data.customDefectDiscount, posterType, priceFor.setValue]);
 
 
   useEffect(() => {
