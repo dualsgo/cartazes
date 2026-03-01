@@ -2,29 +2,30 @@ import { NextRequest, NextResponse } from 'next/server';
 import * as fs from 'fs';
 import * as path from 'path';
 
-// Reutiliza o mesmo cache do route principal
-let keysCache: string[] | null = null;
+type SuggestItem = { key: string; description: string };
 
-function loadKeys(): string[] {
-    if (keysCache) return keysCache;
+let cacheAll: SuggestItem[] | null = null;
+
+function loadAll(): SuggestItem[] {
+    if (cacheAll) return cacheAll;
 
     const filePath = path.join(process.cwd(), 'src', 'data', 'produtos.json');
     if (!fs.existsSync(filePath)) {
-        keysCache = [];
-        return keysCache;
+        cacheAll = [];
+        return cacheAll;
     }
 
     try {
         const raw = fs.readFileSync(filePath, 'utf8');
-        const obj = JSON.parse(raw) as Record<string, unknown>;
-        // Mantém apenas chaves numéricas curtas (COD_PRODUTO) para sugestão
-        // EANs (>= 8 dígitos) ficam de fora para não poluir a lista
-        keysCache = Object.keys(obj).filter(k => /^\d+$/.test(k) && k.length < 8);
+        const obj = JSON.parse(raw) as Record<string, { description?: string }>;
+        cacheAll = Object.entries(obj)
+            .filter(([k]) => /^\d+$/.test(k))   // apenas chaves numéricas (SAP e EAN)
+            .map(([k, v]) => ({ key: k, description: v?.description ?? '' }));
     } catch {
-        keysCache = [];
+        cacheAll = [];
     }
 
-    return keysCache;
+    return cacheAll;
 }
 
 export async function GET(request: NextRequest) {
@@ -34,13 +35,13 @@ export async function GET(request: NextRequest) {
         return NextResponse.json([]);
     }
 
-    const keys = loadKeys();
-    const matches: string[] = [];
+    const all = loadAll();
+    const matches: SuggestItem[] = [];
 
-    for (const key of keys) {
-        if (key.startsWith(prefix)) {
-            matches.push(key);
-            if (matches.length >= 10) break; // Máximo 10 sugestões
+    for (const item of all) {
+        if (item.key.startsWith(prefix)) {
+            matches.push(item);
+            if (matches.length >= 10) break; // máximo 10 sugestões
         }
     }
 

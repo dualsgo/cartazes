@@ -34,6 +34,7 @@ export function PosterPreviewDefeito({
   defectType,
   customDefectReason,
   customDefectDiscount,
+  defectNote,
 }: PosterData) {
   const valDe = parsePrice(priceFrom);
   const valPor = parsePrice(priceFor);
@@ -41,8 +42,8 @@ export function PosterPreviewDefeito({
   const selectedDefect = defectOptions.find(opt => opt.value === defectType);
   
   const discount = defectType === 'outro' 
-    ? customDefectDiscount 
-    : selectedDefect?.discount ?? 0;
+    ? (customDefectDiscount ?? 0)
+    : (selectedDefect?.discount ?? 0);
 
   const reasonText = defectType === 'outro' 
     ? customDefectReason 
@@ -61,13 +62,18 @@ export function PosterPreviewDefeito({
       </div>
     ) : null;
   
-  const priceFontSize = description.length > 50 ? '3.5rem' : '4rem';
+  let priceFontSize = description.length > 50 ? '3.5rem' : '4rem';
+  if (porInteger.length >= 6) {
+    priceFontSize = '2.4rem';
+  } else if (porInteger.length === 5) {
+    priceFontSize = '3rem';
+  }
 
   return (
     <Card className="w-full h-full overflow-hidden shadow-none border-none rounded-none bg-white text-black font-body relative">
       <div className="flex h-full w-full">
         {/* Left Column */}
-        <div className="w-1/2 p-[0.35cm] flex flex-col justify-between border-r-2 border-dashed border-gray-300">
+        <div className="w-1/2 p-[0.35cm] flex flex-col justify-between">
           <div className="flex flex-col h-full">
             <AvariaHeader textSize={38} />
             <h2 className="font-headline font-black uppercase text-[1.4em] leading-tight break-words text-center my-2 grow flex items-center justify-center">
@@ -138,8 +144,15 @@ export function PosterPreviewDefeito({
           </div>
         </div>
       </div>
-      <div className="absolute bottom-1 left-0 right-0 text-center text-[0.55em] text-gray-600 px-2">
-        Item de ponta de estoque, vendido no estado. Não possui direito a troca.
+      <div className="absolute bottom-1 left-0 right-0 px-2 flex flex-col items-center gap-0.5">
+        {defectNote && (
+          <p className="text-[0.5em] text-gray-500 italic text-center leading-tight max-w-full">
+            {defectNote}
+          </p>
+        )}
+        <p className="text-[0.5em] text-gray-400 text-center leading-tight">
+          Item de ponta de estoque, vendido no estado. Não possui direito a troca.
+        </p>
       </div>
     </Card>
   );

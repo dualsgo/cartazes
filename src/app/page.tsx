@@ -10,7 +10,7 @@ import { Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
-import { useScaleFactor } from '@/hooks/useScaleFactor';
+
 
 /** Escala o strip Aéreo (190mm×69mm = 718×261px) para caber no container pai */
 function AereoScaleWrapper({ children }: { children: React.ReactNode }) {
@@ -61,25 +61,62 @@ function AereoScaleWrapper({ children }: { children: React.ReactNode }) {
   );
 }
 
+/** Escala um cartaz Relíquias/Avaria (148,5mm × 105mm ≈ 561 × 397 px a 96 dpi) para caber no container pai */
 function ReliquiasScaleWrapper({ children }: { children: React.ReactNode }) {
-    const { containerRef, scale } = useScaleFactor(1385, 990); // 297mm/210mm a 120dpi = 1403x992
+  const outerRef = useRef<HTMLDivElement>(null);
+  const innerRef = useRef<HTMLDivElement>(null);
 
-    return (
-        <div ref={containerRef} className="w-full h-full flex items-center justify-center">
-            <div
-                className="overflow-hidden bg-white border border-border shadow-sm"
-                style={{
-                    width: `1385px`,
-                    height: `990px`,
-                    transform: `scale(${scale})`,
-                    transformOrigin: 'center',
-                }}
-            >
-                {children}
-            </div>
-        </div>
-    );
+  // 148,5mm × 105mm a 96 dpi (1 mm = 3.7795 px)
+  const BASE_W = 561; // ≈ 148.5 * 3.7795
+  const BASE_H = 397; // ≈ 105 * 3.7795
+
+  useEffect(() => {
+    const outer = outerRef.current;
+    const inner = innerRef.current;
+    if (!outer || !inner) return;
+
+    const applyScale = () => {
+      const scaleX = outer.clientWidth / BASE_W;
+      const scaleY = outer.clientHeight / BASE_H;
+      const scale = Math.min(scaleX, scaleY);
+      inner.style.transform = `scale(${scale})`;
+    };
+
+    applyScale();
+    const ro = new ResizeObserver(applyScale);
+    ro.observe(outer);
+    return () => ro.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={outerRef}
+      style={{
+        width: '100%',
+        maxWidth: `${BASE_W}px`,
+        aspectRatio: `${BASE_W} / ${BASE_H}`,
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+      className="border border-border shadow-sm"
+    >
+      <div
+        ref={innerRef}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: `${BASE_W}px`,
+          height: `${BASE_H}px`,
+          transformOrigin: 'top left',
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  );
 }
+
 
 
 export default function Home() {

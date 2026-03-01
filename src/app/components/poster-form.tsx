@@ -10,7 +10,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
-import { Loader2, CheckCircle2, XCircle, Search } from 'lucide-react';
+import { Loader2, CheckCircle2, XCircle, Search, RotateCcw } from 'lucide-react';
 
 function centsToDisplay(cents: number): string {
   if (cents === 0) return '';
@@ -72,8 +72,10 @@ const defectOptions = [
 export function PosterForm({ data, setData, posterType }: PosterFormProps) {
   const [lookupStatus, setLookupStatus] = useState<LookupStatus>('idle');
   const [searchValue, setSearchValue] = useState('');
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggestions, setSuggestions] = useState<{ key: string; description: string }[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  // true = usuário digitou manualmente no campo POR → não recalcula automaticamente
+  const [priceForOverridden, setPriceForOverridden] = useState(false);
   const suggestTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
@@ -88,8 +90,11 @@ export function PosterForm({ data, setData, posterType }: PosterFormProps) {
     setData(prev => ({ ...prev, priceFrom: priceFrom.display }));
   }, [priceFrom.display]);
   
+  // Recalcula POR automaticamente a partir do DE + desconto do motivo,
+  // exceto quando o usuário tiver feito override manual.
   useEffect(() => {
     if (posterType !== 'avaria') return;
+    if (priceForOverridden) return;
 
     const fromCents = priceFrom.cents;
     if (fromCents === 0) {
@@ -114,7 +119,13 @@ export function PosterForm({ data, setData, posterType }: PosterFormProps) {
     } else {
       priceFor.setValue('');
     }
-  }, [priceFrom.cents, data.defectType, data.customDefectDiscount, posterType, priceFor, setData]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [priceFrom.cents, data.defectType, data.customDefectDiscount, posterType, priceForOverridden]);
+
+  // Quando o usuário muda o motivo/DE, volta para auto-calc
+  useEffect(() => {
+    setPriceForOverridden(false);
+  }, [priceFrom.cents, data.defectType, data.customDefectDiscount]);
 
 
   useEffect(() => {
@@ -129,14 +140,14 @@ export function PosterForm({ data, setData, posterType }: PosterFormProps) {
 
   const fetchSuggestions = useCallback((prefix: string) => {
     if (suggestTimer.current) clearTimeout(suggestTimer.current);
-    if (prefix.length < 2 || detectInputType(prefix) === 'ean') {
+    if (prefix.length < 2) {
       setSuggestions([]);
       return;
     }
     suggestTimer.current = setTimeout(async () => {
       try {
         const res = await fetch(`/api/produto/suggest?prefix=${encodeURIComponent(prefix)}`);
-        const list = await res.json() as string[];
+        const list = await res.json() as { key: string; description: string }[];
         setSuggestions(list);
         setShowSuggestions(list.length > 0);
       } catch { /* silencioso */ }
@@ -189,11 +200,11 @@ export function PosterForm({ data, setData, posterType }: PosterFormProps) {
     }
   };
 
-  const handleSuggestionSelect = (code: string) => {
-    setSearchValue(code);
+  const handleSuggestionSelect = (key: string) => {
+    setSearchValue(key);
     setSuggestions([]);
     setShowSuggestions(false);
-    handleLookup(code);
+    handleLookup(key);
   };
 
   const handlePaymentOptionChange = (value: string) => {
@@ -328,13 +339,13 @@ export function PosterForm({ data, setData, posterType }: PosterFormProps) {
                 <div className="absolute z-50 w-full mt-1 bg-popover border border-border rounded-md shadow-lg overflow-hidden">
                   {suggestions.map((s, i) => (
                     <button
-                      key={s}
+                      key={s.key}
                       data-suggestion
                       tabIndex={0}
-                      className="w-full text-left px-3 py-1.5 text-sm hover:bg-accent focus:bg-accent focus:outline-none font-mono"
-                      onMouseDown={() => handleSuggestionSelect(s)}
+                      className="w-full text-left px-3 py-1.5 hover:bg-accent focus:bg-accent focus:outline-none"
+                      onMouseDown={() => handleSuggestionSelect(s.key)}
                       onKeyDown={e => {
-                        if (e.key === 'Enter') handleSuggestionSelect(s);
+                        if (e.key === 'Enter') handleSuggestionSelect(s.key);
                         if (e.key === 'ArrowDown') {
                           e.preventDefault();
                           const next = wrapperRef.current?.querySelectorAll<HTMLButtonElement>('[data-suggestion]')[i + 1];
@@ -347,7 +358,10 @@ export function PosterForm({ data, setData, posterType }: PosterFormProps) {
                         }
                       }}
                     >
-                      {s}
+                      <span className="font-mono text-sm">{s.key}</span>
+                      {s.description && (
+                        <span className="ml-2 text-xs text-muted-foreground truncate">{s.description}</span>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -360,10 +374,14 @@ export function PosterForm({ data, setData, posterType }: PosterFormProps) {
 
           <div className="space-y-1">
             <Label className="font-semibold">Preços</Label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 items-end">
               {(isOfferType || posterType === 'avaria') && (
                 <div className="space-y-1">
-                  <Label htmlFor="price-from" className="text-xs text-muted-foreground">DE (R$)</Label>
+                  <div className="flex items-center justify-between h-5">
+                    <Label htmlFor="price-from" className="text-xs text-muted-foreground">
+                      {posterType === 'avaria' ? 'Preço Atual (R$)' : 'DE (R$)'}
+                    </Label>
+                  </div>
                   <Input
                     id="price-from"
                     value={priceFrom.display}
@@ -376,18 +394,35 @@ export function PosterForm({ data, setData, posterType }: PosterFormProps) {
                 </div>
               )}
               <div className={cn('space-y-1', !(isOfferType || posterType === 'avaria') && 'col-span-2')}>
-                <Label htmlFor="price-for" className="text-xs text-muted-foreground">
-                  {(isOfferType || posterType === 'avaria') ? 'POR (R$)' : 'Preço (R$)'}
-                </Label>
+                <div className="flex items-center justify-between h-5">
+                  <Label htmlFor="price-for" className="text-xs text-muted-foreground">
+                    {(isOfferType || posterType === 'avaria') ? 'POR (R$)' : 'Preço (R$)'}
+                  </Label>
+                  {posterType === 'avaria' && priceForOverridden && (
+                    <button
+                      type="button"
+                      onClick={() => setPriceForOverridden(false)}
+                      className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                      title="Recalcular automaticamente"
+                    >
+                      <RotateCcw className="h-3 w-3" /> auto
+                    </button>
+                  )}
+                </div>
                 <Input
                   id="price-for"
                   value={priceFor.display}
-                  onKeyDown={priceFor.handleKeyDown}
+                  onKeyDown={(e) => {
+                    if (posterType === 'avaria') setPriceForOverridden(true);
+                    priceFor.handleKeyDown(e);
+                  }}
                   onChange={() => {/* no-op */}}
                   placeholder="0,00"
-                  className="font-mono text-right"
+                  className={cn(
+                    'font-mono text-right',
+                    posterType === 'avaria' && !priceForOverridden && 'bg-muted/50 text-muted-foreground'
+                  )}
                   inputMode="numeric"
-                  readOnly={posterType === 'avaria'}
                 />
               </div>
             </div>
@@ -409,6 +444,80 @@ export function PosterForm({ data, setData, posterType }: PosterFormProps) {
                   <Label htmlFor="r2" className="font-normal text-sm">Parcelado</Label>
                 </div>
               </RadioGroup>
+            </div>
+          )}
+
+          {posterType === 'avaria' && (
+            <div className="space-y-1">
+              <div className="flex items-baseline justify-between">
+                <Label htmlFor="defect-note" className="text-xs text-muted-foreground">
+                  Observação
+                </Label>
+                <span className="text-[10px] text-muted-foreground">
+                  {(data.defectNote ?? '').length}/60
+                </span>
+              </div>
+              <Input
+                id="defect-note"
+                value={data.defectNote ?? ''}
+                onChange={e => setData(prev => ({ ...prev, defectNote: e.target.value.slice(0, 60) }))}
+                placeholder="Ex: arranhado na lateral, sem bateria…"
+                className="text-sm"
+                maxLength={60}
+              />
+            </div>
+          )}
+
+          {posterType === 'reliquias' && (
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground block">
+                Período da Oferta <span className="text-[10px] text-muted-foreground/70">(opcional)</span>
+              </Label>
+              <div className="flex items-center gap-2">
+                <div className="flex-1">
+                  <Input
+                    type="date"
+                    value={
+                      data.offerValidityStart
+                        ? data.offerValidityStart.split('/').reverse().join('-')
+                        : ''
+                    }
+                    onChange={e => {
+                      const iso = e.target.value;
+                      if (!iso) {
+                        setData(prev => ({ ...prev, offerValidityStart: undefined }));
+                        return;
+                      }
+                      const [y, m, d] = iso.split('-');
+                      setData(prev => ({ ...prev, offerValidityStart: `${d}/${m}/${y}` }));
+                    }}
+                    className="text-sm"
+                    title="Data de Início"
+                  />
+                </div>
+                <span className="text-muted-foreground text-sm">até</span>
+                <div className="flex-1">
+                  <Input
+                    type="date"
+                    value={
+                      data.offerValidity
+                        ? data.offerValidity.split('/').reverse().join('-')
+                        : ''
+                    }
+                    onChange={e => {
+                      const iso = e.target.value;
+                      if (!iso) {
+                        setData(prev => ({ ...prev, offerValidity: undefined }));
+                        return;
+                      }
+                      const [y, m, d] = iso.split('-');
+                      setData(prev => ({ ...prev, offerValidity: `${d}/${m}/${y}` }));
+                    }}
+                    className="text-sm"
+                    title="Data de Término"
+                  />
+                </div>
+              </div>
             </div>
           )}
 
