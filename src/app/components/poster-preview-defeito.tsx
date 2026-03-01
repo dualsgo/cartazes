@@ -33,16 +33,17 @@ export function PosterPreviewDefeito({
   paymentOption,
   defectType,
   customDefectReason,
+  customDefectDiscount,
 }: PosterData) {
   const valDe = parsePrice(priceFrom);
   const valPor = parsePrice(priceFor);
 
-  let discount = 0;
-  if (valDe > 0 && valPor > 0 && valDe > valPor) {
-    discount = Math.round(((valDe - valPor) / valDe) * 100);
-  }
-
   const selectedDefect = defectOptions.find(opt => opt.value === defectType);
+  
+  const discount = defectType === 'outro' 
+    ? customDefectDiscount 
+    : selectedDefect?.discount ?? 0;
+
   const reasonText = defectType === 'outro' 
     ? customDefectReason 
     : selectedDefect?.label;
