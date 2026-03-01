@@ -7,11 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { PosterData } from '@/app/lib/types';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
 import { Loader2, CheckCircle2, XCircle, Search } from 'lucide-react';
 
-// ─── Máscara de moeda (estilo caixa registradora) ───────────────────────────
-// Armazena centavos como inteiro. Ex: 1999 → "19,99"
 function centsToDisplay(cents: number): string {
   if (cents === 0) return '';
   return (cents / 100).toLocaleString('pt-BR', {
@@ -38,29 +38,36 @@ function useCurrencyInput(initial: string) {
       e.preventDefault();
       setCents(prev => {
         const next = prev * 10 + parseInt(e.key, 10);
-        return next > 9999999 ? prev : next; // limite R$ 99.999,99
+        return next > 9999999 ? prev : next;
       });
     }
   };
 
-  const reset = () => setCents(0);
-  const setValue = (val: string) => setCents(displayToCents(val));
+  const reset = useCallback(() => setCents(0), []);
+  const setValue = useCallback((val: string) => setCents(displayToCents(val)), []);
 
   return { display, handleKeyDown, reset, setValue, cents };
 }
-// ─────────────────────────────────────────────────────────────────────────────
 
 type LookupStatus = 'idle' | 'loading' | 'found' | 'notfound';
 
 type PosterFormProps = {
   data: PosterData;
   setData: Dispatch<SetStateAction<PosterData>>;
-  posterType: 'reliquias' | 'aereo';
+  posterType: 'reliquias' | 'aereo' | 'avaria';
 };
 
 function detectInputType(value: string): 'ean' | 'code' {
   return value.replace(/\D/g, '').length >= 8 ? 'ean' : 'code';
 }
+
+const defectOptions = [
+  { value: 'embalagem_danificada', label: 'Embalagem Danificada', discount: 20 },
+  { value: 'marcas_de_uso', label: 'Marcas de Uso', discount: 30 },
+  { value: 'pelucia_suja', label: 'Pelúcia Suja', discount: 40 },
+  { value: 'peca_faltando', label: 'Peça Faltando', discount: 50 },
+  { value: 'outro', label: 'Outro (descrever)', discount: null },
+];
 
 export function PosterForm({ data, setData, posterType }: PosterFormProps) {
   const [lookupStatus, setLookupStatus] = useState<LookupStatus>('idle');
@@ -73,18 +80,43 @@ export function PosterForm({ data, setData, posterType }: PosterFormProps) {
   const priceFor  = useCurrencyInput(data.priceFor);
   const priceFrom = useCurrencyInput(data.priceFrom);
 
-  // Sincroniza os valores de preço com o PosterData pai
   useEffect(() => {
     setData(prev => ({ ...prev, priceFor: priceFor.display }));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [priceFor.cents]);
+  }, [priceFor.display, setData]);
 
   useEffect(() => {
     setData(prev => ({ ...prev, priceFrom: priceFrom.display }));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [priceFrom.cents]);
+  }, [priceFrom.display, setData]);
+  
+  useEffect(() => {
+    if (posterType !== 'avaria') return;
 
-  // Fecha sugestões ao clicar fora
+    const fromCents = priceFrom.cents;
+    if (fromCents === 0) {
+      priceFor.setValue('');
+      return;
+    }
+
+    const selectedDefect = defectOptions.find(opt => opt.value === data.defectType);
+    let discount = 0;
+
+    if (selectedDefect) {
+      if (selectedDefect.value === 'outro') {
+        discount = data.customDefectDiscount ?? 0;
+      } else {
+        discount = selectedDefect.discount ?? 0;
+      }
+    }
+
+    if (discount > 0) {
+      const discountedCents = Math.round(fromCents * (1 - discount / 100));
+      priceFor.setValue(centsToDisplay(discountedCents));
+    } else {
+      priceFor.setValue('');
+    }
+  }, [priceFrom.cents, data.defectType, data.customDefectDiscount, posterType, priceFor, data.priceFrom]);
+
+
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
@@ -95,7 +127,6 @@ export function PosterForm({ data, setData, posterType }: PosterFormProps) {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  // Busca sugestões enquanto digita (debounce 200ms)
   const fetchSuggestions = useCallback((prefix: string) => {
     if (suggestTimer.current) clearTimeout(suggestTimer.current);
     if (prefix.length < 2 || detectInputType(prefix) === 'ean') {
@@ -119,7 +150,6 @@ export function PosterForm({ data, setData, posterType }: PosterFormProps) {
     fetchSuggestions(v);
   };
 
-  // Executa o lookup completo
   const handleLookup = useCallback(async (q = searchValue) => {
     const query = q.trim();
     if (query.length < 3) return;
@@ -179,17 +209,29 @@ export function PosterForm({ data, setData, posterType }: PosterFormProps) {
     if (value === 'normal') priceFrom.reset();
   };
 
+  const handleDefectChange = (value: string) => {
+    setData(prev => ({
+      ...prev,
+      defectType: value,
+      customDefectReason: value === 'outro' ? prev.customDefectReason : '',
+    }));
+  };
+
+  const handleCustomDiscountChange = (value: number[]) => {
+    setData(prev => ({ ...prev, customDefectDiscount: value[0] }));
+  };
+
   const statusIcon = {
     idle:     <Search className="h-4 w-4 text-muted-foreground" />,
     loading:  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />,
     found:    <CheckCircle2 className="h-4 w-4 text-green-500" />,
     notfound: <XCircle className="h-4 w-4 text-destructive" />,
   }[lookupStatus];
+  
+  const isOfferType = posterType === 'reliquias' || (posterType === 'aereo' && data.posterSubType === 'offer');
 
   return (
     <div className="space-y-3">
-
-      {/* ── TIPO DE CARTAZ (Aéreo) ────────────────────────── */}
       {posterType === 'aereo' && (
         <Card>
           <CardContent className="pt-4">
@@ -211,11 +253,54 @@ export function PosterForm({ data, setData, posterType }: PosterFormProps) {
         </Card>
       )}
 
-      {/* ── INPUTS ATIVOS: CÓDIGO + PREÇOS ────────────────── */}
+      {posterType === 'avaria' && (
+        <Card>
+          <CardContent className="pt-4 space-y-4">
+            <div className="space-y-1">
+              <Label htmlFor="defect-reason">Motivo da Avaria</Label>
+              <Select onValueChange={handleDefectChange} value={data.defectType}>
+                <SelectTrigger id="defect-reason">
+                  <SelectValue placeholder="Selecione um motivo..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {defectOptions.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {data.defectType === 'outro' && (
+              <>
+                <div className="space-y-1">
+                  <Label htmlFor="custom-defect-reason">Descreva o Motivo</Label>
+                  <Input
+                    id="custom-defect-reason"
+                    value={data.customDefectReason}
+                    onChange={e => setData(prev => ({ ...prev, customDefectReason: e.target.value }))}
+                    placeholder="Ex: Pequeno rasgo na caixa"
+                  />
+                </div>
+                <div className="space-y-1 pt-2">
+                  <Label htmlFor="custom-discount">Desconto Customizado: {data.customDefectDiscount}%</Label>
+                  <Slider
+                    id="custom-discount"
+                    min={0}
+                    max={50}
+                    step={5}
+                    value={[data.customDefectDiscount ?? 0]}
+                    onValueChange={handleCustomDiscountChange}
+                  />
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardContent className="pt-4 space-y-4">
-
-          {/* Campo de busca com predição */}
           <div className="space-y-1" ref={wrapperRef}>
             <Label htmlFor="search-code" className="font-semibold">
               Busca por Código / EAN
@@ -239,8 +324,6 @@ export function PosterForm({ data, setData, posterType }: PosterFormProps) {
               <span className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
                 {statusIcon}
               </span>
-
-              {/* Dropdown de sugestões */}
               {showSuggestions && suggestions.length > 0 && (
                 <div className="absolute z-50 w-full mt-1 bg-popover border border-border rounded-md shadow-lg overflow-hidden">
                   {suggestions.map((s, i) => (
@@ -275,62 +358,63 @@ export function PosterForm({ data, setData, posterType }: PosterFormProps) {
             )}
           </div>
 
-          {/* Inputs de preço */}
           <div className="space-y-1">
             <Label className="font-semibold">Preços</Label>
             <div className="grid grid-cols-2 gap-3">
-              {data.posterSubType === 'offer' && (
+              {(isOfferType || posterType === 'avaria') && (
                 <div className="space-y-1">
                   <Label htmlFor="price-from" className="text-xs text-muted-foreground">DE (R$)</Label>
                   <Input
                     id="price-from"
                     value={priceFrom.display}
                     onKeyDown={priceFrom.handleKeyDown}
-                    onChange={() => {/* controlado pelo keydown */}}
+                    onChange={() => {/* no-op */}}
                     placeholder="0,00"
                     className="font-mono text-right"
                     inputMode="numeric"
                   />
                 </div>
               )}
-              <div className={cn('space-y-1', data.posterSubType === 'normal' && 'col-span-2')}>
+              <div className={cn('space-y-1', !(isOfferType || posterType === 'avaria') && 'col-span-2')}>
                 <Label htmlFor="price-for" className="text-xs text-muted-foreground">
-                  {data.posterSubType === 'offer' ? 'POR (R$)' : 'Preço (R$)'}
+                  {(isOfferType || posterType === 'avaria') ? 'POR (R$)' : 'Preço (R$)'}
                 </Label>
                 <Input
                   id="price-for"
                   value={priceFor.display}
                   onKeyDown={priceFor.handleKeyDown}
-                  onChange={() => {/* controlado pelo keydown */}}
+                  onChange={() => {/* no-op */}}
                   placeholder="0,00"
                   className="font-mono text-right"
                   inputMode="numeric"
+                  readOnly={posterType === 'avaria'}
                 />
               </div>
             </div>
           </div>
+          
+          {(posterType === 'reliquias' || posterType === 'avaria') && (
+            <div>
+              <RadioGroup
+                value={data.paymentOption}
+                onValueChange={handlePaymentOptionChange}
+                className="flex space-x-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="normal" id="r1" />
+                  <Label htmlFor="r1" className="font-normal text-sm">À vista</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="installment" id="r2" />
+                  <Label htmlFor="r2" className="font-normal text-sm">Parcelado</Label>
+                </div>
+              </RadioGroup>
+            </div>
+          )}
 
-          {/* Forma de pagamento */}
-          <div>
-            <RadioGroup
-              value={data.paymentOption}
-              onValueChange={handlePaymentOptionChange}
-              className="flex space-x-4"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="normal" id="r1" />
-                <Label htmlFor="r1" className="font-normal text-sm">À vista</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="installment" id="r2" />
-                <Label htmlFor="r2" className="font-normal text-sm">Parcelado</Label>
-              </div>
-            </RadioGroup>
-          </div>
         </CardContent>
       </Card>
 
-      {/* ── EXIBIÇÃO DO PRODUTO ENCONTRADO (somente leitura) ── */}
       {lookupStatus === 'found' && (
         <Card className="border-green-200 bg-green-50/50 dark:bg-green-950/20 dark:border-green-900">
           <CardContent className="pt-4 space-y-2">

@@ -7,5 +7,7 @@ export type PosterData = {
   reference: string;
   paymentOption: 'normal' | 'installment';
   posterSubType: 'offer' | 'normal';
+  defectType?: string;
+  customDefectReason?: string;
+  customDefectDiscount?: number;
 };
-

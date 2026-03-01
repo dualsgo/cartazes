@@ -4,11 +4,13 @@ import { useState, useEffect, useRef } from 'react';
 import { PosterForm } from '@/app/components/poster-form';
 import { PosterPreview } from '@/app/components/poster-preview';
 import { PosterPreviewAereo } from '@/app/components/poster-preview-aereo';
+import { PosterPreviewDefeito } from '@/app/components/poster-preview-defeito';
 import type { PosterData } from '@/app/lib/types';
 import { Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
+import { useScaleFactor } from '@/hooks/useScaleFactor';
 
 /** Escala o strip Aéreo (190mm×69mm = 718×261px) para caber no container pai */
 function AereoScaleWrapper({ children }: { children: React.ReactNode }) {
@@ -35,14 +37,12 @@ function AereoScaleWrapper({ children }: { children: React.ReactNode }) {
     <div
       ref={outerRef}
       style={{
-        /* Largura sempre 100% do container pai, altura definida pelo aspectRatio */
         width: '100%',
         aspectRatio: '190 / 69',
         position: 'relative',
         overflow: 'hidden',
-        border: '1px solid #e2e8f0',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
       }}
+      className="border border-border shadow-sm"
     >
       <div
         ref={innerRef}
@@ -61,10 +61,31 @@ function AereoScaleWrapper({ children }: { children: React.ReactNode }) {
   );
 }
 
+function ReliquiasScaleWrapper({ children }: { children: React.ReactNode }) {
+    const { containerRef, scale } = useScaleFactor(1385, 990); // 297mm/210mm a 120dpi = 1403x992
+
+    return (
+        <div ref={containerRef} className="w-full h-full flex items-center justify-center">
+            <div
+                className="overflow-hidden bg-white border border-border shadow-sm"
+                style={{
+                    width: `1385px`,
+                    height: `990px`,
+                    transform: `scale(${scale})`,
+                    transformOrigin: 'center',
+                }}
+            >
+                {children}
+            </div>
+        </div>
+    );
+}
+
+
 export default function Home() {
-  const [posterType, setPosterType] = useState<'reliquias' | 'aereo'>(
-    'reliquias'
-  );
+  const [posterType, setPosterType] = useState<
+    'reliquias' | 'aereo' | 'avaria'
+  >('reliquias');
 
   const initialPosterData: PosterData = {
     description: 'DESCRIÇÃO DO PRODUTO',
@@ -75,12 +96,15 @@ export default function Home() {
     reference: '',
     paymentOption: 'normal',
     posterSubType: 'offer',
+    defectType: 'embalagem_danificada',
+    customDefectReason: '',
+    customDefectDiscount: 20,
   };
-
 
   const posterCounts = {
     reliquias: 4,
     aereo: 4,
+    avaria: 4,
   };
 
   const [postersData, setPostersData] = useState<PosterData[]>([]);
@@ -94,11 +118,15 @@ export default function Home() {
         .fill(null)
         .map((_, i) => ({
           ...initialPosterData,
-          posterSubType: posterType === 'reliquias' ? 'offer' : 'normal',
+          posterSubType:
+            posterType === 'reliquias' || posterType === 'avaria'
+              ? 'offer'
+              : 'normal',
           description: `DESCRIÇÃO DO PRODUTO ${i + 1}`,
         }))
     );
     setActiveFormTab('0');
+     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [posterType]);
 
   useEffect(() => {
@@ -117,6 +145,7 @@ export default function Home() {
         }
       `;
     } else {
+      // Relíquias e Avaria
       style.innerHTML = `
         @media print {
           @page { size: A4 landscape; margin: 1cm; }
@@ -151,7 +180,6 @@ export default function Home() {
 
   return (
     <div className="h-screen flex flex-col bg-background text-foreground overflow-hidden">
-      {/* ── Cabeçalho (oculto na impressão) ── */}
       <header className="no-print shrink-0 px-4 py-3 border-b bg-card">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-3">
@@ -171,18 +199,24 @@ export default function Home() {
         </div>
       </header>
 
-      {/* ══════════════════════════════════════════
-          CONTAINER DE IMPRESSÃO — oculto na tela,
-          visível apenas no @media print.
-          Relíquias: grade 2×2 em A4 paisagem.
-      {/* ═════════════════════════════════════════════
-          CONTAINER DE IMPRESSÃO
-          Relíquias: grade 2×2 em A4 paisagem.
-          Aéreo: 4 strips empilhados em A4 retrato
-                 cada strip ≈ 190×69mm (proporção 2.75:1)
-      ════════════════════════════════════════════ */}
       <div className="print-container" style={{ display: 'none' }}>
-        {posterType === 'reliquias' ? (
+        {posterType === 'aereo' ? (
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              width: '100%',
+              height: '100%',
+              gap: '12mm'
+            }}
+          >
+            {postersData.slice(0, 2).map((data, index) => (
+              <div key={index} style={{ flex: 1, maxHeight: 'calc(50% - 6mm)' }}>
+                <PosterPreviewAereo {...data} />
+              </div>
+            ))}
+          </div>
+        ) : (
           <div
             style={{
               display: 'grid',
@@ -190,51 +224,38 @@ export default function Home() {
               gridTemplateRows: '1fr 1fr',
               width: '100%',
               height: '100%',
+              transform: 'scale(0.9)',
+              transformOrigin: 'center',
             }}
           >
-            {postersData.map((data, index) => (
-              <PosterPreview key={index} {...data} />
-            ))}
-          </div>
-        ) : (
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              width: '100%',
-              height: '100%',
-            }}
-          >
-            {postersData.map((data, index) => (
-              <div key={index} style={{ flex: 1 }}>
-                <PosterPreviewAereo {...data} />
-              </div>
-            ))}
+            {postersData.map((data, index) =>
+              posterType === 'reliquias' ? (
+                <PosterPreview key={index} {...data} />
+              ) : (
+                <PosterPreviewDefeito key={index} {...data} />
+              )
+            )}
           </div>
         )}
       </div>
 
-      {/* ── Interface de edição + Pré-visualização individual ── */}
       <main className="no-print flex-1 overflow-hidden">
-        <div className="h-full grid grid-cols-1 lg:grid-cols-5">
-
-          {/* Formulário — rola internamente se necessário */}
-          <div className="lg:col-span-2 h-full overflow-y-auto border-r border-border px-4 py-4 flex flex-col gap-4">
-            {/* Escolha do tipo */}
+        <div className="h-full grid grid-cols-1 md:grid-cols-5">
+          <div className="md:col-span-2 h-full overflow-y-auto border-r border-border px-4 py-4 flex flex-col gap-4">
             <Tabs
-              defaultValue="reliquias"
+              value={posterType}
               onValueChange={value =>
-                setPosterType(value as 'reliquias' | 'aereo')
+                setPosterType(value as 'reliquias' | 'aereo' | 'avaria')
               }
               className="w-full"
             >
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="reliquias">Relíquias de Diversão</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="reliquias">Relíquias</TabsTrigger>
+                <TabsTrigger value="avaria">Avaria</TabsTrigger>
                 <TabsTrigger value="aereo">Aéreo</TabsTrigger>
               </TabsList>
             </Tabs>
 
-            {/* Tabs de cada cartaz */}
             <Tabs
               value={activeFormTab}
               onValueChange={setActiveFormTab}
@@ -243,10 +264,10 @@ export default function Home() {
               <TabsList
                 className={cn(
                   'grid w-full',
-                  posterType === 'reliquias' ? 'grid-cols-4' : 'grid-cols-4'
+                  posterType === 'aereo' ? 'grid-cols-2' : 'grid-cols-4'
                 )}
               >
-                {postersData.map((_, index) => (
+                {postersData.slice(0, posterType === 'aereo' ? 2 : 4).map((_, index) => (
                   <TabsTrigger key={index} value={index.toString()}>
                     Cartaz {index + 1}
                   </TabsTrigger>
@@ -264,40 +285,34 @@ export default function Home() {
             </Tabs>
           </div>
 
-          {/* ── Pré-visualização — preenche toda a altura disponível ── */}
-          <div className="lg:col-span-3 h-full flex flex-col px-4 py-4 gap-2 overflow-hidden">
+          <div className="md:col-span-3 h-full flex flex-col px-4 py-4 gap-2 overflow-hidden">
             <p className="text-xs text-muted-foreground text-center shrink-0">
-              Pré-visualização — Cartaz {activeIndex + 1} de {postersData.length}
+              Pré-visualização — Cartaz {activeIndex + 1} de {posterType === 'aereo' ? 2 : 4}
             </p>
 
-            {/* Área do preview: ocupa todo o espaço disponível */}
             <div className="flex-1 min-h-0 flex items-center justify-center">
-              {posterType === 'reliquias' ? (
-                /* A4 paisagem — max-height controla para não sair da tela */
-                <div
-                  className="border border-border shadow-sm overflow-hidden bg-white w-full"
-                  style={{
-                    aspectRatio: '297 / 210',
-                    maxHeight: '100%',
-                    maxWidth: '100%',
-                    width: 'auto',
-                  }}
-                >
-                  <PosterPreview {...activeData} />
-                </div>
-              ) : (
+              {posterType === 'aereo' ? (
                 <AereoScaleWrapper>
                   <PosterPreviewAereo {...activeData} />
                 </AereoScaleWrapper>
+              ) : (
+                 <ReliquiasScaleWrapper>
+                    {posterType === 'reliquias' ? (
+                        <PosterPreview {...activeData} />
+                    ) : (
+                        <PosterPreviewDefeito {...activeData} />
+                    )}
+                </ReliquiasScaleWrapper>
               )}
             </div>
 
             <p className="text-xs text-muted-foreground text-center shrink-0">
-              Ao imprimir, todos os {postersData.length} cartazes serão
-              {posterType === 'reliquias' ? ' dispostos em grade 2×2 (A4 paisagem)' : ' impressos em 4 strips por folha A4 retrato'}.
+              Ao imprimir, todos os {posterType === 'aereo' ? 2 : 4} cartazes serão
+              {posterType === 'aereo'
+                ? ' impressos em 2 strips por folha A4 retrato'
+                : ' dispostos em grade 2×2 (A4 paisagem)'}.
             </p>
           </div>
-
         </div>
       </main>
     </div>
