@@ -243,78 +243,12 @@ export function PosterForm({ data, setData, posterType }: PosterFormProps) {
 
   return (
     <div className="space-y-3">
-      {posterType === 'aereo' && (
-        <Card>
-          <CardContent className="pt-4">
-            <RadioGroup
-              value={data.posterSubType}
-              onValueChange={handleSubTypeChange}
-              className="flex space-x-4"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="normal" id="st-normal" />
-                <Label htmlFor="st-normal" className="font-normal">Preço Normal</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="offer" id="st-offer" />
-                <Label htmlFor="st-offer" className="font-normal">Oferta</Label>
-              </div>
-            </RadioGroup>
-          </CardContent>
-        </Card>
-      )}
-
-      {posterType === 'avaria' && (
-        <Card>
-          <CardContent className="pt-4 space-y-4">
-            <div className="space-y-1">
-              <Label htmlFor="defect-reason">Motivo da Avaria</Label>
-              <Select onValueChange={handleDefectChange} value={data.defectType}>
-                <SelectTrigger id="defect-reason">
-                  <SelectValue placeholder="Selecione um motivo..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {defectOptions.map(opt => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {data.defectType === 'outro' && (
-              <>
-                <div className="space-y-1">
-                  <Label htmlFor="custom-defect-reason">Descreva o Motivo</Label>
-                  <Input
-                    id="custom-defect-reason"
-                    value={data.customDefectReason}
-                    onChange={e => setData(prev => ({ ...prev, customDefectReason: e.target.value }))}
-                    placeholder="Ex: Pequeno rasgo na caixa"
-                  />
-                </div>
-                <div className="space-y-1 pt-2">
-                  <Label htmlFor="custom-discount">Desconto Customizado: {data.customDefectDiscount}%</Label>
-                  <Slider
-                    id="custom-discount"
-                    min={0}
-                    max={50}
-                    step={5}
-                    value={[data.customDefectDiscount ?? 0]}
-                    onValueChange={handleCustomDiscountChange}
-                  />
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
+      {/* 1. SECTION: BUSCA (Sempre visível) */}
       <Card>
         <CardContent className="pt-4 space-y-4">
           <div className="space-y-1" ref={wrapperRef}>
-            <Label htmlFor="search-code" className="font-semibold">
-              Busca por Código / EAN
+            <Label htmlFor="search-code" className="font-semibold text-lg">
+              1. Buscar Produto
             </Label>
             <div className="relative">
               <Input
@@ -326,13 +260,13 @@ export function PosterForm({ data, setData, posterType }: PosterFormProps) {
                 onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
                 placeholder="SAP (ex: 71838) ou EAN (13 dígitos)…"
                 className={cn(
-                  'pr-9',
-                  lookupStatus === 'found'    && 'border-green-500',
+                  'pr-9 h-12 text-lg',
+                  lookupStatus === 'found'    && 'border-green-500 ring-green-500',
                   lookupStatus === 'notfound' && 'border-destructive',
                 )}
                 autoComplete="off"
               />
-              <span className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                 {statusIcon}
               </span>
               {showSuggestions && suggestions.length > 0 && (
@@ -342,7 +276,7 @@ export function PosterForm({ data, setData, posterType }: PosterFormProps) {
                       key={s.key}
                       data-suggestion
                       tabIndex={0}
-                      className="w-full text-left px-3 py-1.5 hover:bg-accent focus:bg-accent focus:outline-none"
+                      className="w-full text-left px-3 py-2 hover:bg-accent focus:bg-accent focus:outline-none"
                       onMouseDown={() => handleSuggestionSelect(s.key)}
                       onKeyDown={e => {
                         if (e.key === 'Enter') handleSuggestionSelect(s.key);
@@ -372,40 +306,141 @@ export function PosterForm({ data, setData, posterType }: PosterFormProps) {
             )}
           </div>
 
-          <div className="space-y-1">
-            <Label className="font-semibold">Preços</Label>
-            <div className="grid grid-cols-2 gap-3 items-end">
-              {(isOfferType || posterType === 'avaria') && (
+          {lookupStatus === 'found' && (
+            <div className="rounded-md border border-green-200 bg-green-50/50 p-3 dark:bg-green-950/20 dark:border-green-900">
+              <p className="text-[10px] font-bold text-green-700 dark:text-green-400 uppercase tracking-wide mb-1">
+                Produto selecionado
+              </p>
+              <p className="font-semibold text-sm leading-tight mb-2">{data.description}</p>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                {data.code && <span>SAP: <b className="text-foreground">{data.code}</b></span>}
+                {data.ean  && <span>EAN: <b className="text-foreground">{data.ean}</b></span>}
+                {data.reference && <span>Ref.: <b className="text-foreground">{data.reference}</b></span>}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* 2. SECTION: CONFIGURAÇÕES DO CARTAZ (Bloqueado se não encontrou) */}
+      <fieldset 
+        className={cn(
+          "space-y-3 transition-opacity duration-200", 
+          lookupStatus !== 'found' && "opacity-40 pointer-events-none grayscale-[0.5]"
+        )}
+        disabled={lookupStatus !== 'found'}
+      >
+        <Card>
+          <CardContent className="pt-4 space-y-5">
+            <Label className="font-semibold text-lg border-b pb-2 block">
+              2. Preços e Formato
+            </Label>
+            
+            {posterType === 'aereo' && (
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Tipo de Aéreo</Label>
+                <div className="flex bg-muted p-1 rounded-lg">
+                  <button
+                    type="button"
+                    onClick={() => handleSubTypeChange('normal')}
+                    className={cn(
+                      "flex-1 px-3 py-2 rounded-md text-sm font-medium transition-all",
+                      data.posterSubType === 'normal' ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:bg-black/5"
+                    )}
+                  >
+                    Preço Normal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSubTypeChange('offer')}
+                    className={cn(
+                      "flex-1 px-3 py-2 rounded-md text-sm font-medium transition-all",
+                      data.posterSubType === 'offer' ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:bg-black/5"
+                    )}
+                  >
+                    Oferta
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {posterType === 'avaria' && (
+              <div className="space-y-4 bg-muted/30 p-3 rounded-lg border border-border/50">
                 <div className="space-y-1">
-                  <div className="flex items-center justify-between h-5">
-                    <Label htmlFor="price-from" className="text-xs text-muted-foreground">
-                      {posterType === 'avaria' ? 'Preço Atual (R$)' : 'DE (R$)'}
-                    </Label>
-                  </div>
+                  <Label htmlFor="defect-reason" className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Motivo da Avaria</Label>
+                  <Select onValueChange={handleDefectChange} value={data.defectType}>
+                    <SelectTrigger id="defect-reason" className="bg-background">
+                      <SelectValue placeholder="Selecione um motivo..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {defectOptions.map(opt => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {data.defectType === 'outro' && (
+                  <>
+                    <div className="space-y-1">
+                      <Label htmlFor="custom-defect-reason" className="text-xs text-muted-foreground uppercase tracking-wider">Descrição do Motivo</Label>
+                      <Input
+                        id="custom-defect-reason"
+                        value={data.customDefectReason}
+                        onChange={e => setData(prev => ({ ...prev, customDefectReason: e.target.value }))}
+                        placeholder="Ex: Pequeno rasgo na caixa"
+                        className="bg-background"
+                      />
+                    </div>
+                    <div className="space-y-1 pt-2">
+                      <Label htmlFor="custom-discount" className="text-xs text-muted-foreground uppercase tracking-wider">Desconto Aplicado: <span className="font-bold text-foreground">{data.customDefectDiscount}%</span></Label>
+                      <Slider
+                        id="custom-discount"
+                        min={0}
+                        max={50}
+                        step={5}
+                        value={[data.customDefectDiscount ?? 0]}
+                        onValueChange={handleCustomDiscountChange}
+                        className="pt-2"
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-4 items-start">
+              {(isOfferType || posterType === 'avaria') && (
+                <div className="space-y-2">
+                  <Label htmlFor="price-from" className="text-xs text-muted-foreground uppercase font-bold tracking-wider">
+                    {posterType === 'avaria' ? 'Preço Original' : 'Preço DE'}
+                  </Label>
                   <Input
                     id="price-from"
                     value={priceFrom.display}
                     onKeyDown={priceFrom.handleKeyDown}
                     onChange={() => {/* no-op */}}
                     placeholder="0,00"
-                    className="font-mono text-right"
+                    className="font-mono text-xl h-12"
                     inputMode="numeric"
                   />
                 </div>
               )}
-              <div className={cn('space-y-1', !(isOfferType || posterType === 'avaria') && 'col-span-2')}>
-                <div className="flex items-center justify-between h-5">
-                  <Label htmlFor="price-for" className="text-xs text-muted-foreground">
-                    {(isOfferType || posterType === 'avaria') ? 'POR (R$)' : 'Preço (R$)'}
+              
+              <div className={cn('space-y-2', !(isOfferType || posterType === 'avaria') && 'col-span-2')}>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="price-for" className="text-xs text-muted-foreground uppercase font-bold tracking-wider text-black">
+                    {(isOfferType || posterType === 'avaria') ? 'Preço POR' : 'Preço Final'}
                   </Label>
                   {posterType === 'avaria' && priceForOverridden && (
                     <button
                       type="button"
                       onClick={() => setPriceForOverridden(false)}
-                      className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                      className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors bg-muted px-2 py-0.5 rounded-full"
                       title="Recalcular automaticamente"
                     >
-                      <RotateCcw className="h-3 w-3" /> auto
+                      <RotateCcw className="h-3 w-3" /> Auto
                     </button>
                   )}
                 </div>
@@ -419,129 +454,125 @@ export function PosterForm({ data, setData, posterType }: PosterFormProps) {
                   onChange={() => {/* no-op */}}
                   placeholder="0,00"
                   className={cn(
-                    'font-mono text-right',
-                    posterType === 'avaria' && !priceForOverridden && 'bg-muted/50 text-muted-foreground'
+                    'font-mono text-xl h-12 font-bold ring-offset-2',
+                    posterType === 'avaria' && !priceForOverridden && 'bg-primary/5 border-primary/20 text-primary',
+                    lookupStatus === 'found' && 'border-primary ring-1 ring-primary/50'
                   )}
                   inputMode="numeric"
                 />
               </div>
             </div>
-          </div>
-          
-          {(posterType === 'reliquias' || posterType === 'avaria' || posterType === 'aereo') && (
-            <div>
-              <RadioGroup
-                value={data.paymentOption}
-                onValueChange={handlePaymentOptionChange}
-                className="flex space-x-4"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="normal" id="r1" />
-                  <Label htmlFor="r1" className="font-normal text-sm">À vista</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="installment" id="r2" />
-                  <Label htmlFor="r2" className="font-normal text-sm">Parcelado</Label>
-                </div>
-              </RadioGroup>
-            </div>
-          )}
 
-          {posterType === 'avaria' && (
-            <div className="space-y-1">
-              <div className="flex items-baseline justify-between">
-                <Label htmlFor="defect-note" className="text-xs text-muted-foreground">
-                  Observação
-                </Label>
-                <span className="text-[10px] text-muted-foreground">
-                  {(data.defectNote ?? '').length}/60
-                </span>
-              </div>
-              <Input
-                id="defect-note"
-                value={data.defectNote ?? ''}
-                onChange={e => setData(prev => ({ ...prev, defectNote: e.target.value.slice(0, 60) }))}
-                placeholder="Ex: arranhado na lateral, sem bateria…"
-                className="text-sm"
-                maxLength={60}
-              />
-            </div>
-          )}
-
-          {posterType === 'reliquias' && (
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground block">
-                Período da Oferta <span className="text-[10px] text-muted-foreground/70">(opcional)</span>
-              </Label>
-              <div className="flex items-center gap-2">
-                <div className="flex-1">
-                  <Input
-                    type="date"
-                    value={
-                      data.offerValidityStart
-                        ? data.offerValidityStart.split('/').reverse().join('-')
-                        : ''
-                    }
-                    onChange={e => {
-                      const iso = e.target.value;
-                      if (!iso) {
-                        setData(prev => ({ ...prev, offerValidityStart: undefined }));
-                        return;
-                      }
-                      const [y, m, d] = iso.split('-');
-                      setData(prev => ({ ...prev, offerValidityStart: `${d}/${m}/${y}` }));
-                    }}
-                    className="text-sm"
-                    title="Data de Início"
-                  />
-                </div>
-                <span className="text-muted-foreground text-sm">até</span>
-                <div className="flex-1">
-                  <Input
-                    type="date"
-                    value={
-                      data.offerValidity
-                        ? data.offerValidity.split('/').reverse().join('-')
-                        : ''
-                    }
-                    onChange={e => {
-                      const iso = e.target.value;
-                      if (!iso) {
-                        setData(prev => ({ ...prev, offerValidity: undefined }));
-                        return;
-                      }
-                      const [y, m, d] = iso.split('-');
-                      setData(prev => ({ ...prev, offerValidity: `${d}/${m}/${y}` }));
-                    }}
-                    className="text-sm"
-                    title="Data de Término"
-                  />
+            {(posterType === 'reliquias' || posterType === 'avaria' || posterType === 'aereo') && (
+              <div className="space-y-2 pt-2">
+                 <Label className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Forma de Pagamento</Label>
+                 <div className="flex bg-muted p-1 rounded-lg">
+                  <button
+                    type="button"
+                    onClick={() => handlePaymentOptionChange('normal')}
+                    className={cn(
+                      "flex-1 px-3 py-2 rounded-md text-sm font-medium transition-all",
+                      data.paymentOption === 'normal' ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:bg-black/5"
+                    )}
+                  >
+                    À vista
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handlePaymentOptionChange('installment')}
+                    className={cn(
+                      "flex-1 px-3 py-2 rounded-md text-sm font-medium transition-all",
+                      data.paymentOption === 'installment' ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:bg-black/5"
+                    )}
+                  >
+                    Parcelado
+                  </button>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+            
+            {/* 3. SECTION: ACESSÓRIOS */}
+            {(posterType === 'avaria' || posterType === 'reliquias') && (
+               <div className="pt-4 border-t mt-4 space-y-4">
+                 
+                 {posterType === 'avaria' && (
+                  <div className="space-y-1">
+                    <div className="flex items-baseline justify-between">
+                      <Label htmlFor="defect-note" className="text-xs text-muted-foreground uppercase font-bold tracking-wider">
+                        Observação de Rodapé
+                      </Label>
+                      <span className="text-[10px] text-muted-foreground">
+                        {(data.defectNote ?? '').length}/60
+                      </span>
+                    </div>
+                    <Input
+                      id="defect-note"
+                      value={data.defectNote ?? ''}
+                      onChange={e => setData(prev => ({ ...prev, defectNote: e.target.value.slice(0, 60) }))}
+                      placeholder="Ex: arranhado na lateral, sem bateria…"
+                      className="text-sm bg-muted/30"
+                      maxLength={60}
+                    />
+                  </div>
+                 )}
 
-        </CardContent>
-      </Card>
-
-      {lookupStatus === 'found' && (
-        <Card className="border-green-200 bg-green-50/50 dark:bg-green-950/20 dark:border-green-900">
-          <CardContent className="pt-4 space-y-2">
-            <p className="text-xs font-semibold text-green-700 dark:text-green-400 uppercase tracking-wide">
-              Produto encontrado
-            </p>
-            <div className="space-y-1">
-              <p className="font-semibold text-sm leading-tight">{data.description}</p>
-              <div className="flex gap-4 text-xs text-muted-foreground">
-                {data.code && <span>SAP: <b className="text-foreground">{data.code}</b></span>}
-                {data.ean  && <span>EAN: <b className="text-foreground">{data.ean}</b></span>}
-                {data.reference && <span>Ref.: <b className="text-foreground">{data.reference}</b></span>}
-              </div>
-            </div>
+                 {posterType === 'reliquias' && (
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground uppercase font-bold tracking-wider block">
+                      Período da Oferta <span className="font-normal normal-case opacity-70">(Opcional)</span>
+                    </Label>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1">
+                        <Input
+                          type="date"
+                          value={
+                            data.offerValidityStart
+                              ? data.offerValidityStart.split('/').reverse().join('-')
+                              : ''
+                          }
+                          onChange={e => {
+                            const iso = e.target.value;
+                            if (!iso) {
+                              setData(prev => ({ ...prev, offerValidityStart: undefined }));
+                              return;
+                            }
+                            const [y, m, d] = iso.split('-');
+                            setData(prev => ({ ...prev, offerValidityStart: `${d}/${m}/${y}` }));
+                          }}
+                          className="text-sm bg-muted/30"
+                          title="Data de Início"
+                        />
+                      </div>
+                      <span className="text-muted-foreground text-sm">até</span>
+                      <div className="flex-1">
+                        <Input
+                          type="date"
+                          value={
+                            data.offerValidity
+                              ? data.offerValidity.split('/').reverse().join('-')
+                              : ''
+                          }
+                          onChange={e => {
+                            const iso = e.target.value;
+                            if (!iso) {
+                              setData(prev => ({ ...prev, offerValidity: undefined }));
+                              return;
+                            }
+                            const [y, m, d] = iso.split('-');
+                            setData(prev => ({ ...prev, offerValidity: `${d}/${m}/${y}` }));
+                          }}
+                          className="text-sm bg-muted/30"
+                          title="Data de Término"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                 )}
+               </div>
+            )}
           </CardContent>
         </Card>
-      )}
-
+      </fieldset>
     </div>
   );
 }

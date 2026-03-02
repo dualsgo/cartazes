@@ -9,6 +9,8 @@ import type { PosterData } from '@/app/lib/types';
 import { Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 
 
@@ -23,8 +25,16 @@ function AereoScaleWrapper({ children }: { children: React.ReactNode }) {
     if (!outer || !inner) return;
 
     const applyScale = () => {
-      const scale = outer.clientWidth / 718;
+      // Allow scale up to max dimensions, but always constrain to fit
+      const scaleX = outer.clientWidth / 718;
+      const scaleY = outer.clientHeight / 261;
+      const baseScale = Math.min(scaleX, scaleY, 1.2); 
+      const scale = baseScale * 0.8; // Reduce by 20%
       inner.style.transform = `scale(${scale})`;
+      
+      // Center it since it may leave gaps
+      inner.style.left = `${(outer.clientWidth - 718 * scale) / 2}px`;
+      inner.style.top = `${(outer.clientHeight - 261 * scale) / 2}px`;
     };
 
     applyScale();
@@ -38,11 +48,14 @@ function AereoScaleWrapper({ children }: { children: React.ReactNode }) {
       ref={outerRef}
       style={{
         width: '100%',
-        aspectRatio: '190 / 69',
+        height: '100%',
         position: 'relative',
         overflow: 'hidden',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
       }}
-      className="border border-border shadow-sm"
+      className="border border-border shadow-sm bg-white"
     >
       <div
         ref={innerRef}
@@ -78,8 +91,13 @@ function ReliquiasScaleWrapper({ children }: { children: React.ReactNode }) {
     const applyScale = () => {
       const scaleX = outer.clientWidth / BASE_W;
       const scaleY = outer.clientHeight / BASE_H;
-      const scale = Math.min(scaleX, scaleY);
+      const baseScale = Math.min(scaleX, scaleY, 1.2);
+      const scale = baseScale * 0.8; // Reduce by 20%
       inner.style.transform = `scale(${scale})`;
+      
+      // Center it
+      inner.style.left = `${(outer.clientWidth - BASE_W * scale) / 2}px`;
+      inner.style.top = `${(outer.clientHeight - BASE_H * scale) / 2}px`;
     };
 
     applyScale();
@@ -93,12 +111,14 @@ function ReliquiasScaleWrapper({ children }: { children: React.ReactNode }) {
       ref={outerRef}
       style={{
         width: '100%',
-        maxWidth: `${BASE_W}px`,
-        aspectRatio: `${BASE_W} / ${BASE_H}`,
+        height: '100%',
         position: 'relative',
         overflow: 'hidden',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
       }}
-      className="border border-border shadow-sm"
+      className="border border-border shadow-sm bg-white"
     >
       <div
         ref={innerRef}
@@ -286,53 +306,72 @@ export default function Home() {
         )}
       </div>
 
-      <main className="no-print flex-1 overflow-hidden">
-        <div className="h-full grid grid-cols-1 md:grid-cols-5">
-          <div className="md:col-span-2 h-full overflow-y-auto border-r border-border px-4 py-4 flex flex-col gap-4">
-            <Tabs
-              value={posterType}
-              onValueChange={value =>
-                setPosterType(value as 'reliquias' | 'aereo' | 'avaria')
-              }
-              className="w-full"
-            >
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="reliquias">Relíquias</TabsTrigger>
-                <TabsTrigger value="avaria">Avaria</TabsTrigger>
-                <TabsTrigger value="aereo">Aéreo</TabsTrigger>
-              </TabsList>
-            </Tabs>
+      <main className="no-print flex-1 overflow-hidden min-h-0">
+        <div className="h-full grid grid-cols-1 md:grid-cols-12 min-h-0">
+          {/* Menu Lateral reduzido (cerca de 33% em vez de 40%) */}
+          <div className="md:col-span-4 lg:col-span-3 h-full flex flex-col border-r border-border bg-muted/10 min-h-0">
+            {/* Cabecalho da Sidebar (Fixo) */}
+            <div className="p-4 border-b border-border shrink-0 bg-background flex items-center justify-between">
+              <div className="space-y-1">
+                <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
+                  Layout do Cartaz
+                </Label>
+                <Select
+                  value={posterType}
+                  onValueChange={value => setPosterType(value as 'reliquias' | 'aereo' | 'avaria')}
+                >
+                  <SelectTrigger className="w-[200px] h-9 font-semibold bg-background shadow-sm">
+                    <SelectValue placeholder="Selecione o modelo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="reliquias">Relíquias (Padrão)</SelectItem>
+                    <SelectItem value="avaria">Avaria (Defeito)</SelectItem>
+                    <SelectItem value="aereo">Aéreo (Faixa)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
 
             <Tabs
               value={activeFormTab}
               onValueChange={setActiveFormTab}
-              className="w-full"
+              className="flex-1 flex flex-col min-h-0 w-full"
             >
-              <TabsList
-                className={cn(
-                  'grid w-full',
-                  posterType === 'aereo' ? 'grid-cols-2' : 'grid-cols-4'
-                )}
-              >
-                {postersData.slice(0, posterType === 'aereo' ? 2 : 4).map((_, index) => (
-                  <TabsTrigger key={index} value={index.toString()}>
-                    Cartaz {index + 1}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-              {postersData.map((poster, index) => (
-                <TabsContent key={index} value={index.toString()}>
-                  <PosterForm
-                    data={poster}
-                    setData={handlePosterDataChange(index)}
-                    posterType={posterType}
-                  />
-                </TabsContent>
-              ))}
+              {/* Abas Fixas */}
+              <div className="shrink-0 px-4 pt-4 bg-muted/10">
+                <TabsList
+                  className={cn(
+                    'grid w-full',
+                    posterType === 'aereo' ? 'grid-cols-2' : 'grid-cols-4'
+                  )}
+                >
+                  {postersData.slice(0, posterType === 'aereo' ? 2 : 4).map((_, index) => (
+                    <TabsTrigger key={index} value={index.toString()}>
+                      Cartaz {index + 1}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </div>
+
+              {/* Conteúdo da Sidebar (Rolável) */}
+              <div className="flex-1 overflow-y-auto px-4 pt-4 min-h-0 custom-scrollbar">
+                <div className="pb-12">
+                  {postersData.map((poster, index) => (
+                    <TabsContent key={index} value={index.toString()} className="m-0 border-none p-0">
+                      <PosterForm
+                        data={poster}
+                        setData={handlePosterDataChange(index)}
+                        posterType={posterType}
+                      />
+                    </TabsContent>
+                  ))}
+                </div>
+              </div>
             </Tabs>
           </div>
 
-          <div className="md:col-span-3 h-full flex flex-col px-4 py-4 gap-2 overflow-hidden">
+          {/* Área de Visualização (cerca de 67% a 75%) */}
+          <div className="md:col-span-8 lg:col-span-9 h-full flex flex-col p-4 gap-2 overflow-hidden bg-muted/20">
             <p className="text-xs text-muted-foreground text-center shrink-0">
               Pré-visualização — Cartaz {activeIndex + 1} de {posterType === 'aereo' ? 2 : 4}
             </p>

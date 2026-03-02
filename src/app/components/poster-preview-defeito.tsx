@@ -51,12 +51,12 @@ export function PosterPreviewDefeito({
 
   const [porInteger, porDecimal] = formatCurrency(valPor).split(',');
 
-  const numInstallments = valPor > 0 ? Math.floor(valPor / 29.99) : 0;
-  const maxInstallments = Math.min(numInstallments, 6);
-  const installmentValue = maxInstallments > 1 && valPor > 0 ? valPor / maxInstallments : 0;
-
-  const installmentText =
-    paymentOption === 'installment' && maxInstallments > 1 ? (
+  const numInstallments  = valPor > 0 ? Math.floor(valPor / 29.99) : 0;
+  const maxInstallments  = Math.min(numInstallments, 6);
+  const rawInstallment   = maxInstallments > 1 && valPor > 0 ? valPor / maxInstallments : 0;
+  const installmentValue = Math.ceil(rawInstallment * 100) / 100;
+  const showInstallment  = paymentOption === 'installment' && maxInstallments > 1;
+  const installmentText  = showInstallment ? (
       <div className="font-headline text-center font-bold text-[1.2em] leading-tight mt-1">
         ou em até {maxInstallments}x de R$ {formatCurrency(installmentValue)}
       </div>
