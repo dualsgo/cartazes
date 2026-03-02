@@ -1,4 +1,4 @@
-export function AvariaHeader({ textSize = 50 }: { textSize?: number }) {
+export function AvariaHeader({ textSize = 26 }: { textSize?: number }) {
   return (
     <svg
       viewBox="0 0 320 100"
@@ -47,14 +47,15 @@ export function AvariaHeader({ textSize = 50 }: { textSize?: number }) {
 
       <text
         x="50%"
-        y="55%"
+        y="50%"
         dominantBaseline="middle"
         textAnchor="middle"
         className="font-headline font-black"
-        style={{ fontSize: `${textSize}px`, letterSpacing: '-2px' }}
+        style={{ fontSize: `${textSize}px`, letterSpacing: '-1px' }}
         fill="black"
       >
-        AVARIA
+        <tspan x="50%" dy="-0.4em">TODO BRINQUEDO</tspan>
+        <tspan x="50%" dy="1.1em">QUER BRINCAR</tspan>
       </text>
     </svg>
   );

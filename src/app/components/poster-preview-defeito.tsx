@@ -62,11 +62,11 @@ export function PosterPreviewDefeito({
       </div>
     ) : null;
   
-  let priceFontSize = description.length > 50 ? '3.5rem' : '4rem';
+  let priceFontSize = description.length > 50 ? '3.6rem' : '4rem';
   if (porInteger.length >= 6) {
-    priceFontSize = '2.4rem';
+    priceFontSize = '2.6rem';
   } else if (porInteger.length === 5) {
-    priceFontSize = '3rem';
+    priceFontSize = '3.2rem';
   }
 
   return (
@@ -75,13 +75,13 @@ export function PosterPreviewDefeito({
         {/* Left Column */}
         <div className="w-1/2 p-[0.35cm] flex flex-col justify-between">
           <div className="flex flex-col h-full">
-            <AvariaHeader textSize={38} />
-            <h2 className="font-headline font-black uppercase text-[1.4em] leading-tight break-words text-center my-2 grow flex items-center justify-center">
+            <AvariaHeader />
+            <h2 className="font-headline font-black uppercase text-[1.8em] leading-tight break-words text-center my-2 grow flex items-center justify-center text-black">
               {description}
             </h2>
             <div
               className={cn(
-                'transition-opacity text-center text-[1.3em] font-headline',
+                'transition-opacity text-center text-[1.6em] font-headline text-black',
                 valDe > valPor ? 'opacity-100' : 'opacity-0'
               )}
             >
@@ -91,7 +91,7 @@ export function PosterPreviewDefeito({
               </span>
             </div>
           </div>
-          <div className="text-[0.65em] shrink-0">
+          <div className="text-[0.75em] shrink-0 text-black font-semibold">
             <span>
               SAP: <b className="font-bold">{code}</b>
             </span>
@@ -108,19 +108,19 @@ export function PosterPreviewDefeito({
           >
             {discount > 0 && (
               <div className='flex flex-col justify-center items-center h-[5.5em]'>
-                <span className="text-[1.1em] leading-none uppercase">{reasonText}</span>
-                <span className="text-[2.6em] leading-none">{discount}% OFF</span>
+                <span className="text-[1.3em] leading-none uppercase">{reasonText}</span>
+                <span className="text-[3em] leading-none">{discount}% OFF</span>
               </div>
             )}
           </div>
           
-          <div className="flex flex-col items-center text-[1.2em] leading-none">
-            <div className="flex items-end">
-              <span className="font-headline text-[1.5em] font-black mr-1 self-start mt-2">
+          <div className="flex flex-col items-center text-[1.3em] leading-none text-black w-full min-w-0 px-1">
+            <div className="flex items-end max-w-full">
+              <span className="font-headline text-[0.9em] font-black mr-4 self-start mt-1 shrink-0">
                 POR
               </span>
               <div className="flex items-baseline">
-                <span className="font-headline text-[1.2em] mr-1">R$</span>
+                <span className="font-headline text-[1.5em] mr-1">R$</span>
                 <span className="font-headline font-black" style={{ fontSize: priceFontSize }}>
                   {porInteger}
                 </span>
@@ -137,20 +137,20 @@ export function PosterPreviewDefeito({
             {installmentText}
           </div>
 
-          <div className="text-[0.65em] text-right w-full shrink-0">
+          <div className="text-[0.75em] text-right w-full shrink-0 text-black font-semibold pb-1 pb-[0.2em]">
             <span>
               Ref.: <b className="font-bold">{reference}</b>
             </span>
           </div>
         </div>
       </div>
-      <div className="absolute bottom-1 left-0 right-0 px-2 flex flex-col items-center gap-0.5">
+      <div className="absolute bottom-[2px] left-0 right-0 px-2 flex flex-col items-center gap-0.5 z-10">
         {defectNote && (
-          <p className="text-[0.5em] text-gray-500 italic text-center leading-tight max-w-full">
+          <p className="text-[0.6em] text-black font-semibold italic text-center leading-tight max-w-[90%]">
             {defectNote}
           </p>
         )}
-        <p className="text-[0.5em] text-gray-400 text-center leading-tight">
+        <p className="text-[0.55em] text-black font-bold text-center leading-tight">
           Item de ponta de estoque, vendido no estado. Não possui direito a troca.
         </p>
       </div>

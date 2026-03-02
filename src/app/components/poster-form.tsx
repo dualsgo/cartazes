@@ -428,7 +428,7 @@ export function PosterForm({ data, setData, posterType }: PosterFormProps) {
             </div>
           </div>
           
-          {(posterType === 'reliquias' || posterType === 'avaria') && (
+          {(posterType === 'reliquias' || posterType === 'avaria' || posterType === 'aereo') && (
             <div>
               <RadioGroup
                 value={data.paymentOption}

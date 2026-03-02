@@ -259,21 +259,29 @@ export default function Home() {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gridTemplateRows: '1fr 1fr',
+              gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
+              gridTemplateRows: 'minmax(0, 1fr) minmax(0, 1fr)',
               width: '100%',
               height: '100%',
-              transform: 'scale(0.9)',
+              padding: '2% 0', // Provides the ~10% extra top and bottom margins
+              boxSizing: 'border-box',
+              transform: 'scale(0.86)', // Scales proportionally to prevent bleeding
               transformOrigin: 'center',
             }}
           >
-            {postersData.map((data, index) =>
-              posterType === 'reliquias' ? (
-                <PosterPreview key={index} {...data} />
-              ) : (
-                <PosterPreviewDefeito key={index} {...data} />
-              )
-            )}
+            {postersData.map((data, index) => (
+              <div 
+                key={index}
+                className="w-full h-full p-1"
+                style={{ overflow: 'hidden' }}
+              >
+                {posterType === 'reliquias' ? (
+                  <PosterPreview {...data} />
+                ) : (
+                  <PosterPreviewDefeito {...data} />
+                )}
+              </div>
+            ))}
           </div>
         )}
       </div>

@@ -46,11 +46,11 @@ export function PosterPreview({
       </div>
     ) : null;
 
-  let priceFontSize = description.length > 50 ? '3.5rem' : '4rem';
+  let priceFontSize = description.length > 50 ? '3.6rem' : '4rem';
   if (porInteger.length >= 6) {
-    priceFontSize = '2.4rem';
+    priceFontSize = '2.6rem';
   } else if (porInteger.length === 5) {
-    priceFontSize = '3rem';
+    priceFontSize = '3.2rem';
   }
 
   return (
@@ -60,12 +60,12 @@ export function PosterPreview({
         {/* Coluna Esquerda */}
         <div className="w-1/2 p-[0.35cm] flex flex-col justify-between">
           <div className="flex flex-col h-full">
-            <OfertasHeader textSize={38} />
-            <h2 className="font-headline font-black uppercase text-[1.4em] leading-tight break-words text-center my-2 grow flex items-center justify-center">
+            <OfertasHeader textSize={60} />
+            <h2 className="font-headline font-black uppercase text-[1.8em] leading-tight break-words text-center my-2 grow flex items-center justify-center text-black">
               {description}
             </h2>
             <div
-              className={`transition-opacity text-center text-[1.3em] font-headline ${hasDiscount ? 'opacity-100' : 'opacity-0'}`}
+              className={`transition-opacity text-center text-[1.6em] font-headline text-black ${hasDiscount ? 'opacity-100' : 'opacity-0'}`}
             >
               <span className="block">DE:</span>
               <span className="font-bold line-through">
@@ -73,7 +73,7 @@ export function PosterPreview({
               </span>
             </div>
           </div>
-          <div className="text-[0.65em] shrink-0 flex flex-wrap gap-x-2 gap-y-0">
+          <div className="text-[0.75em] shrink-0 flex flex-wrap gap-x-2 gap-y-0 text-black font-semibold">
             {reference && <span>Ref.: <b className="font-bold">{reference}</b></span>}
             {code && <span>SAP: <b className="font-bold">{code}</b></span>}
             {ean && <span>EAN: <b className="font-bold">{ean}</b></span>}
@@ -84,19 +84,19 @@ export function PosterPreview({
         <div className="w-1/2 flex flex-col justify-between items-center p-[0.35cm]">
           <div className="bg-black text-white text-center font-headline font-black flex flex-col items-center justify-center print:color-adjust-exact px-3 py-1 w-full h-[5.5em]">
             <div className="flex flex-col justify-center items-center h-full">
-              <span className="text-[1.1em] leading-none uppercase">DESCONTO DE</span>
-              <span className="text-[2.6em] leading-none">{discount}% OFF</span>
+              <span className="text-[1.3em] leading-none uppercase">DESCONTO DE</span>
+              <span className="text-[3em] leading-none">{discount}% OFF</span>
             </div>
           </div>
 
-          <div className="flex flex-col items-center text-[1.2em] leading-none">
-            <div className="flex items-end">
-              <span className="font-headline text-[1.5em] font-black mr-1 self-start mt-2">
+          <div className="flex flex-col items-center text-[1.3em] leading-none text-black w-full min-w-0 px-1">
+            <div className="flex items-end max-w-full">
+              <span className="font-headline text-[0.9em] font-black mr-4 self-start mt-1 shrink-0">
                 POR
               </span>
               <div className="flex items-baseline">
-                <span className="font-headline text-[1.2em] mr-1">R$</span>
-                <span className="font-headline font-black" style={{ fontSize: priceFontSize }}>
+                <span className="font-headline text-[1.5em] mr-1">R$</span>
+                <span className="font-headline font-black leading-none" style={{ fontSize: priceFontSize }}>
                   {porInteger}
                 </span>
                 <span className="font-headline text-[1.8em] font-black">
@@ -112,12 +112,12 @@ export function PosterPreview({
             {installmentText}
           </div>
 
-          <div className="text-[0.45em] text-right w-full shrink-0 leading-tight">
+          <div className="text-[0.55em] text-right w-full shrink-0 leading-tight text-black font-semibold pb-1">
             {(offerValidityStart || offerValidity) && (
-              <span className="text-muted-foreground">
+              <span>
                 Oferta válida{' '}
-                {offerValidityStart && <span>de <b className="font-bold text-black">{offerValidityStart}</b>{' '}</span>}
-                {offerValidity && <span>até <b className="font-bold text-black">{offerValidity}</b>{' '}</span>}
+                {offerValidityStart && <span>de <b className="font-black">{offerValidityStart}</b>{' '}</span>}
+                {offerValidity && <span>até <b className="font-black">{offerValidity}</b>{' '}</span>}
                 ou enquanto durarem os estoques.
               </span>
             )}
