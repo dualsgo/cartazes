@@ -26,10 +26,10 @@ const PER_PAGE: Record<PosterType, number> = {
 
 // Dimensões aproximadas de UM cartaz no grid (px a 96dpi), para pré-visualização isolada
 const SINGLE_DIMS: Record<PosterType, { w: number; h: number }> = {
-  reliquias:            { w: 539, h: 375 },
-  'ofertas-imperdiveis':{ w: 539, h: 375 },
+  reliquias:            { w: 491, h: 340 },
+  'ofertas-imperdiveis':{ w: 491, h: 340 },
   aereo:                { w: 337, h: 505 },
-  avaria:               { w: 539, h: 375 },
+  avaria:               { w: 491, h: 340 },
   etiqueta:             { w: 340, h: 127 },
   totem:                { w: 794, h: 1123 },
 };
@@ -142,12 +142,32 @@ function PageGrid({ items, posterType, perPage }: { items: PosterData[]; posterT
   }
   // reliquias, ofertas-imperdiveis, avaria
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gridTemplateRows: 'minmax(0,1fr) minmax(0,1fr)', width: '100%', height: '90%', padding: '5mm', gap: '2mm', boxSizing: 'border-box', backgroundColor: 'white' }}>
+    <div style={{ 
+      display: 'grid', 
+      gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', 
+      gridTemplateRows: 'minmax(0,1fr) minmax(0,1fr)', 
+      width: '100%', 
+      height: '100%', 
+      padding: '1.5cm 1.2cm',  // Margem externa da borda do papel (A4)
+      boxSizing: 'border-box', 
+      backgroundColor: 'white' 
+    }}>
       {items.map((d, i) => (
-        <div key={i} className="w-full h-full p-1" style={{ overflow: 'hidden', marginTop: i < 2 ? '3mm' : '0', marginBottom: i < 2 ? '-3mm' : '0' }}>
-          {posterType === 'reliquias' || posterType === 'ofertas-imperdiveis'
-            ? <PosterPreview {...d} isImperdiveis={posterType === 'ofertas-imperdiveis'} />
-            : <PosterPreviewDefeito {...d} />}
+        <div key={i} style={{ 
+          width: '100%', 
+          height: '100%', 
+          padding: '0.5cm', // Padding entre o "limite/corte" do grid e o conteúdo do cartaz
+          overflow: 'hidden', 
+          boxSizing: 'border-box',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center'
+        }}>
+          <div style={{ width: '100%', height: '100%', overflow: 'hidden' }}>
+            {posterType === 'reliquias' || posterType === 'ofertas-imperdiveis'
+              ? <PosterPreview {...d} isImperdiveis={posterType === 'ofertas-imperdiveis'} />
+              : <PosterPreviewDefeito {...d} />}
+          </div>
         </div>
       ))}
       {empties.map((_, i) => <div key={`e${i}`} />)}
@@ -181,7 +201,7 @@ export default function Home() {
     } else if (posterType === 'totem') {
       style.innerHTML = `@media print { @page { size: A4 portrait; margin: 0; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0; padding: 0; } }`;
     } else {
-      style.innerHTML = `@media print { @page { size: A4 landscape; margin: 5mm; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }`;
+      style.innerHTML = `@media print { @page { size: A4 landscape; margin: 0; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0; padding: 0; } }`;
     }
   }, [posterType]);
 
@@ -223,8 +243,8 @@ export default function Home() {
       <div
         key={pageIdx}
         style={{
-          width: '100%',
-          height: '99.5%',
+          width: '29.7cm',
+          height: '21cm',
           pageBreakAfter: pageIdx < pages.length - 1 ? 'always' : 'auto',
           breakAfter:     pageIdx < pages.length - 1 ? 'page'   : 'auto',
         }}
