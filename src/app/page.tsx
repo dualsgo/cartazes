@@ -187,6 +187,7 @@ export default function Home() {
   const [queue, setQueue] = useState<PosterData[]>([]);
   const [currentPoster, setCurrentPoster] = useState<PosterData>(initialPosterData());
   const [isProductReady, setIsProductReady] = useState(false);
+  const [formKey, setFormKey] = useState(0);
 
   const perPage    = PER_PAGE[posterType];
   const totalPages = queue.length > 0 ? Math.ceil(queue.length / perPage) : 0;
@@ -219,6 +220,7 @@ export default function Home() {
       posterSubType: ['reliquias', 'ofertas-imperdiveis', 'avaria'].includes(newType) ? 'offer' : 'normal',
     });
     setIsProductReady(false);
+    setFormKey(k => k + 1);
   };
 
   const handleAddToQueue = () => {
@@ -232,6 +234,7 @@ export default function Home() {
       customDefectDiscount: currentPoster.customDefectDiscount,
     });
     setIsProductReady(false);
+    setFormKey(k => k + 1);
   };
 
   const handleRemoveFromQueue = (index: number) => {
@@ -339,6 +342,7 @@ export default function Home() {
               <div className="pb-12 space-y-3">
 
                 <PosterForm
+                  key={`form-${formKey}`}
                   data={currentPoster}
                   setData={setCurrentPoster}
                   posterType={posterType}
