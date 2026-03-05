@@ -274,7 +274,7 @@ export default function Home() {
           {postersData.map((data, index) => (
             <div 
               key={index}
-              className="w-full h-full p-1 border border-border border-dashed"
+              className="w-full h-full p-1"
               style={{ overflow: 'hidden' }}
             >
               {posterType === 'reliquias' || posterType === 'ofertas-imperdiveis' ? (
@@ -290,7 +290,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground md:h-screen md:overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-background text-foreground md:h-screen md:overflow-hidden print:w-full print:h-auto print:min-h-0 print:block">
       <header className="no-print shrink-0 px-4 py-3 border-b bg-card">
         <div className="flex justify-between items-center flex-wrap gap-4">
           <div className="flex items-center gap-3">
@@ -301,9 +301,29 @@ export default function Home() {
             </div>
             <h1 className="font-headline text-2xl font-bold">GERADOR DE CARTAZES</h1>
           </div>
-          
-          <div className="flex items-center gap-4">
-            <div className="flex bg-muted p-1 rounded-lg flex-wrap gap-1">
+          <div className="flex items-center gap-4 w-full md:w-auto mt-2 md:mt-0 justify-between">
+            {/* Mobile Select Menu */}
+            <div className="flex md:hidden flex-1 overflow-hidden">
+              <Select
+                value={posterType}
+                onValueChange={value => setPosterType(value as any)}
+              >
+                <SelectTrigger className="w-full h-9 font-semibold bg-background shadow-sm border-2">
+                  <SelectValue placeholder="Selecione o modelo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="reliquias">Relíquias</SelectItem>
+                  <SelectItem value="ofertas-imperdiveis">Ofertas Imperdíveis</SelectItem>
+                  <SelectItem value="avaria">Avarias</SelectItem>
+                  <SelectItem value="aereo">Aéreo</SelectItem>
+                  <SelectItem value="etiqueta">Gôndola (com 16)</SelectItem>
+                  <SelectItem value="totem">Totem</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Desktop Button Menu */}
+            <div className="hidden md:flex bg-muted p-1 rounded-lg flex-wrap gap-1">
               {[
                 { id: 'reliquias', label: 'Relíquias' },
                 { id: 'ofertas-imperdiveis', label: 'Ofertas Imperdíveis' },
@@ -337,7 +357,7 @@ export default function Home() {
         </div>
       </header>
 
-      <div className="print-container" style={{ display: 'none' }}>
+      <div className="print-container" style={{ display: 'none', height: '99.5%' }}>
         {renderA4PageContent()}
       </div>
 
