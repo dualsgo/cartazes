@@ -40,11 +40,11 @@ export function PosterPreviewTotem({
   
   const hasInstallments = paymentOption === 'installment' && maxInstallments > 1;
 
-  let priceFontSize = description.length > 50 ? '8em' : '10em';
+  let priceFontSize = description.length > 50 ? '10em' : '13em';
   if (porInteger.length >= 6) {
-    priceFontSize = '6em';
+    priceFontSize = '8em';
   } else if (porInteger.length === 5) {
-    priceFontSize = '7.5em';
+    priceFontSize = '9.5em';
   }
 
   return (
@@ -69,7 +69,7 @@ export function PosterPreviewTotem({
       </div>
 
       {/* MEIO: DE / DESCONTO */}
-      <div className="flex flex-col items-center w-full shrink-0 my-4">
+      <div className="flex flex-col items-center w-full shrink-0 my-4 z-10">
         <div className={`transition-opacity text-center text-[3.5em] font-headline text-black mb-4 ${valDe > 0 ? 'opacity-100' : 'opacity-0'}`}>
           <span className="block leading-none">DE:</span>
           <span className="font-bold line-through leading-none">
@@ -86,32 +86,32 @@ export function PosterPreviewTotem({
       </div>
 
       {/* BASE: POR + Parcelamento + Validade */}
-      <div className="flex flex-col items-center justify-end w-full flex-1">
+      <div className="flex flex-col items-center justify-start w-full flex-1 mt-8">
         <div className="flex items-end justify-center w-full">
-          <span className="font-headline text-[2.5em] font-black mr-4 self-start mt-6 shrink-0">
+          <span className="font-headline text-[3.5em] font-black mr-4 self-start mt-8 shrink-0">
             POR
           </span>
           <div className="flex items-baseline">
-            <span className="font-headline text-[3.5em] mr-1">R$</span>
+            <span className="font-headline text-[5em] mr-1">R$</span>
             <span className="font-headline font-black leading-[0.8] tracking-tighter" style={{ fontSize: priceFontSize }}>
               {porInteger}
             </span>
-            <span className="font-headline text-[4em] font-black">
+            <span className="font-headline text-[5.5em] font-black">
               ,{porDecimal}
             </span>
           </div>
         </div>
 
         <div className="font-bold flex items-baseline space-x-1 mt-2">
-          <span className="text-[2em]">un. à vista</span>
+          <span className="text-[2.5em]">un. à vista</span>
         </div>
 
         {hasInstallments ? (
-          <div className="font-headline text-center font-bold text-[3em] leading-tight mt-3">
+          <div className="font-headline text-center font-bold text-[4em] leading-tight mt-4">
             ou {maxInstallments}x de R$ {formatCurrency(installmentValue)}
           </div>
         ) : (
-          <div className="mt-3" style={{ height: '3em' }}></div> // Espaçador para segurar o layout
+          <div className="mt-4" style={{ height: '4.8em' }}></div> // Espaçador para segurar o layout
         )}
 
         <div className="text-[1.2em] text-center w-full shrink-0 leading-tight text-gray-800 font-semibold mt-6 pt-4 border-t border-gray-300">

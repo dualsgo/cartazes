@@ -89,7 +89,7 @@ export default function Home() {
     code: '',
     ean: '',
     reference: '',
-    paymentOption: 'normal',
+    paymentOption: 'installment',
     posterSubType: 'offer',
     defectType: 'embalagem_danificada',
     customDefectReason: '',
