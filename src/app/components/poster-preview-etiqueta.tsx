@@ -56,10 +56,10 @@ export function PosterPreviewEtiqueta({
     <div className="w-full h-full bg-white text-black font-body overflow-hidden relative flex flex-col justify-between box-border">
       {/* Etiqueta 90x34mm - Horizontally Wide */}
       <div className="flex w-full h-full">
-        {/* Esquerda: Black Block with text OFERTAS DESCONTO */}
+        {/* Esquerda: Black Block with text OFERTAS */}
         <div className="w-[18%] h-full bg-black text-white flex flex-col justify-center items-center shrink-0">
-            <span className="font-headline font-black text-[18px] leading-tight text-center uppercase" style={{ transform: 'rotate(-90deg)', whiteSpace: 'nowrap' }}>
-                OFERTAS<br />DESCONTO
+            <span className="font-headline font-black text-[20px] leading-none text-center uppercase tracking-wider" style={{ transform: 'rotate(-90deg)', whiteSpace: 'nowrap' }}>
+                OFERTAS
             </span>
         </div>
 
