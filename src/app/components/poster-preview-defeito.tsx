@@ -17,12 +17,22 @@ function formatCurrency(value: number): string {
 }
 
 const defectOptions = [
-    { value: 'embalagem_danificada', label: 'Embalagem Danificada', discount: 20 },
-    { value: 'marcas_de_uso', label: 'Marcas de Uso', discount: 30 },
-    { value: 'pelucia_suja', label: 'Pelúcia Suja', discount: 40 },
-    { value: 'peca_faltando', label: 'Peça Faltando', discount: 50 },
-    { value: 'outro', label: 'Outro (descrever)', discount: null },
+  { value: 'embalagem_danificada', label: 'Embalagem Danificada', discount: 20 },
+  { value: 'marcas_de_uso',        label: 'Marcas de Uso',        discount: 30 },
+  { value: 'pelucia_suja',         label: 'Pelúcia Suja',         discount: 40 },
+  { value: 'peca_faltando',        label: 'Peça Faltando',        discount: 50 },
+  { value: 'outro',                label: 'Outro (descrever)',     discount: null },
 ];
+
+/** Tamanho dinâmico da fonte da descrição */
+function descFontSize(desc: string): string {
+  const len = desc.length;
+  if (len <= 15)  return '1.85em';
+  if (len <= 25)  return '1.55em';
+  if (len <= 40)  return '1.3em';
+  if (len <= 60)  return '1.1em';
+  return '0.95em';
+}
 
 export function PosterPreviewDefeito({
   description,
@@ -57,50 +67,47 @@ export function PosterPreviewDefeito({
   const installmentValue = Math.ceil(rawInstallment * 100) / 100;
   const showInstallment  = paymentOption === 'installment' && maxInstallments > 1;
   const installmentText  = showInstallment ? (
-      <div className="font-headline text-center font-bold text-[1.2em] leading-tight h-[1.2em] mt-1 pt-[2px]">
-        ou em até {maxInstallments}x de R$ {formatCurrency(installmentValue)}
-      </div>
-    ) : (
-      <div className="h-[1.2em] mt-1 pt-[2px]"></div> // Placeholder to preserve space
-    );
+    <div className="font-headline text-center font-bold text-[1.2em] leading-tight h-[1.2em] mt-1 pt-[2px]">
+      ou em até {maxInstallments}x de R$ {formatCurrency(installmentValue)}
+    </div>
+  ) : (
+    <div className="h-[1.2em] mt-1 pt-[2px]"></div>
+  );
   
-  let priceFontSize = description.length > 50 ? '3.6rem' : '4rem';
-  if (porInteger.length >= 6) {
-    priceFontSize = '2.6rem';
-  } else if (porInteger.length === 5) {
-    priceFontSize = '3.2rem';
-  }
-
-  const descFontSize = description.length > 20
-    ? `${Math.max(0.85, 1.8 * (20 / description.length)).toFixed(2)}em`
-    : '1.8em';
+  let priceFontSize = '4rem';
+  if (porInteger.length >= 6) priceFontSize = '2.6rem';
+  else if (porInteger.length === 5) priceFontSize = '3.2rem';
 
   return (
     <Card className="w-full h-full overflow-hidden shadow-none border-none rounded-none bg-white text-black font-body relative">
       <div className="flex h-full w-full">
-        {/* Left Column */}
-        <div className="w-1/2 p-[0.35cm] flex flex-col justify-between">
-          <div className="flex flex-col h-full">
+        {/* ── Left Column ── */}
+        <div className="w-1/2 p-[0.35cm] flex flex-col overflow-hidden">
+
+          {/* ZONA 1: Header (fixo) */}
+          <div className="shrink-0">
             <AvariaHeader />
-            <h2 className="font-headline font-black uppercase leading-tight break-words text-center my-2 grow flex items-center justify-center text-black" style={{ fontSize: descFontSize }}>
+          </div>
+
+          {/* ZONA 2: Descrição (flexível, fonte dinâmica) */}
+          <div className="flex-1 flex items-center justify-center min-h-0 overflow-hidden py-1">
+            <h2
+              className="font-headline font-black uppercase leading-tight break-words text-center text-black"
+              style={{ fontSize: descFontSize(description) }}
+            >
               {description}
             </h2>
-            <div
-              className={cn(
-                'transition-opacity text-center text-[1.6em] font-headline text-black',
-                valDe > 0 ? 'opacity-100' : 'opacity-0'
-              )}
-            >
-              <span className="block">DE:</span>
-              <span className="font-bold line-through">
-                R$ {formatCurrency(valDe)}
-              </span>
-            </div>
           </div>
-          <div className="text-[0.75em] shrink-0 text-black font-semibold">
-            <span>
-              SAP: <b className="font-bold">{code}</b>
-            </span>
+
+          {/* ZONA 3: Preço DE + código (fixo) */}
+          <div className="shrink-0">
+            <div className={cn('transition-opacity text-center text-[1.5em] font-headline text-black', valDe > 0 ? 'opacity-100' : 'opacity-0')}>
+              <span className="block">DE:</span>
+              <span className="font-bold line-through">R$ {formatCurrency(valDe)}</span>
+            </div>
+            <div className="text-[0.72em] mt-1 text-black font-semibold">
+              <span>SAP: <b className="font-bold">{code}</b></span>
+            </div>
           </div>
         </div>
 
@@ -155,7 +162,7 @@ export function PosterPreviewDefeito({
             {installmentText}
           </div>
 
-          <div className="text-[0.75em] text-right w-full shrink-0 text-black font-semibold pb-1 pb-[0.2em]">
+          <div className="text-[0.75em] text-right w-full shrink-0 text-black font-semibold pb-1 pb-[0.2em] pr-4">
             <span>
               Ref.: <b className="font-bold">{reference}</b>
             </span>
