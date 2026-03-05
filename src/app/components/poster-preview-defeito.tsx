@@ -57,10 +57,12 @@ export function PosterPreviewDefeito({
   const installmentValue = Math.ceil(rawInstallment * 100) / 100;
   const showInstallment  = paymentOption === 'installment' && maxInstallments > 1;
   const installmentText  = showInstallment ? (
-      <div className="font-headline text-center font-bold text-[1.2em] leading-tight mt-1">
+      <div className="font-headline text-center font-bold text-[1.2em] leading-tight h-[1.2em] mt-1 pt-[2px]">
         ou em até {maxInstallments}x de R$ {formatCurrency(installmentValue)}
       </div>
-    ) : null;
+    ) : (
+      <div className="h-[1.2em] mt-1 pt-[2px]"></div> // Placeholder to preserve space
+    );
   
   let priceFontSize = description.length > 50 ? '3.6rem' : '4rem';
   if (porInteger.length >= 6) {
@@ -82,7 +84,7 @@ export function PosterPreviewDefeito({
             <div
               className={cn(
                 'transition-opacity text-center text-[1.6em] font-headline text-black',
-                valDe > valPor ? 'opacity-100' : 'opacity-0'
+                valDe > 0 ? 'opacity-100' : 'opacity-0'
               )}
             >
               <span className="block">DE:</span>
@@ -102,19 +104,31 @@ export function PosterPreviewDefeito({
         <div className="w-1/2 flex flex-col justify-between items-center pt-0 pr-0 pb-[0.35cm] pl-[0.35cm]">
           <div
             className={cn(
-              'bg-black text-white text-center font-headline font-black transition-opacity flex flex-col items-center justify-center print:color-adjust-exact px-3 py-1 w-full',
-              discount > 0 ? 'opacity-100' : 'opacity-0 h-[5.5em]'
+              'bg-black text-white text-center font-headline font-black transition-opacity flex flex-col items-center justify-center print:color-adjust-exact px-2 w-full shrink-0',
+              discount > 0 ? 'opacity-100' : 'opacity-0'
             )}
+            style={{ height: '7.8em' }}
           >
             {discount > 0 && (
-              <div className='flex flex-col justify-center items-center h-[5.5em]'>
-                <span className="text-[1.3em] leading-none uppercase">{reasonText}</span>
-                <span className="text-[3em] leading-none">{discount}% OFF</span>
+              <div className='flex flex-col items-center w-full h-full py-1'>
+                <div className="flex items-center justify-center w-full h-[2.8em]">
+                   <span className="text-[1.3em] leading-tight uppercase text-center line-clamp-2">{reasonText}</span>
+                </div>
+                
+                <div className="flex items-center justify-center w-full h-[1.6em] mb-1">
+                  <span className="text-[0.7em] font-semibold tracking-wide leading-tight uppercase text-gray-300 text-center line-clamp-2">
+                    {defectNote}
+                  </span>
+                </div>
+                
+                <div className="flex items-end justify-center w-full flex-1 mb-0.5">
+                  <span className="text-[3.3em] leading-[0.85]">{discount}% OFF</span>
+                </div>
               </div>
             )}
           </div>
           
-          <div className="flex flex-col items-center text-[1.3em] leading-none text-black w-full min-w-0 px-1">
+          <div className="flex flex-col items-center justify-center text-[1.3em] leading-none text-black w-full min-w-0 px-1 flex-1">
             <div className="flex items-end max-w-full">
               <span className="font-headline text-[0.9em] font-black mr-4 self-start mt-1 shrink-0">
                 POR
@@ -145,11 +159,6 @@ export function PosterPreviewDefeito({
         </div>
       </div>
       <div className="absolute bottom-[2px] left-0 right-0 px-2 flex flex-col items-center gap-0.5 z-10">
-        {defectNote && (
-          <p className="text-[0.6em] text-black font-semibold italic text-center leading-tight max-w-[90%]">
-            {defectNote}
-          </p>
-        )}
         <p className="text-[0.55em] text-black font-bold text-center leading-tight">
           Item de ponta de estoque, vendido no estado. Não possui direito a troca.
         </p>

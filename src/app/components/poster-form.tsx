@@ -25,8 +25,14 @@ function displayToCents(display: string): number {
   return digits ? parseInt(digits, 10) : 0;
 }
 
-function useCurrencyInput(initial: string) {
+function useCurrencyInput(initial: string, maxCents?: number) {
   const [cents, setCents] = useState(() => displayToCents(initial));
+
+  useEffect(() => {
+    if (maxCents !== undefined && cents > maxCents) {
+      setCents(maxCents);
+    }
+  }, [maxCents, cents]);
 
   const display = centsToDisplay(cents);
 
@@ -38,7 +44,8 @@ function useCurrencyInput(initial: string) {
       e.preventDefault();
       setCents(prev => {
         const next = prev * 10 + parseInt(e.key, 10);
-        return next > 9999999 ? prev : next;
+        const capped = maxCents !== undefined && next > maxCents ? maxCents : next;
+        return capped > 9999999 ? prev : capped;
       });
     }
   };
@@ -54,7 +61,7 @@ type LookupStatus = 'idle' | 'loading' | 'found' | 'notfound';
 type PosterFormProps = {
   data: PosterData;
   setData: Dispatch<SetStateAction<PosterData>>;
-  posterType: 'reliquias' | 'aereo' | 'avaria' | 'etiqueta';
+  posterType: 'reliquias' | 'ofertas-imperdiveis' | 'aereo' | 'avaria' | 'etiqueta' | 'totem';
 };
 
 function detectInputType(value: string): 'ean' | 'code' {
@@ -79,8 +86,9 @@ export function PosterForm({ data, setData, posterType }: PosterFormProps) {
   const suggestTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
-  const priceFor  = useCurrencyInput(data.priceFor);
   const priceFrom = useCurrencyInput(data.priceFrom);
+  const maxForCents = priceFrom.cents > 0 ? priceFrom.cents : undefined;
+  const priceFor  = useCurrencyInput(data.priceFor, maxForCents);
 
   useEffect(() => {
     setData(prev => ({ ...prev, priceFor: priceFor.display }));
@@ -239,7 +247,7 @@ export function PosterForm({ data, setData, posterType }: PosterFormProps) {
     notfound: <XCircle className="h-4 w-4 text-destructive" />,
   }[lookupStatus];
   
-  const isOfferType = posterType === 'reliquias' || posterType === 'etiqueta' || (posterType === 'aereo' && data.posterSubType === 'offer');
+  const isOfferType = posterType === 'reliquias' || posterType === 'ofertas-imperdiveis' || posterType === 'totem' || posterType === 'etiqueta' || (posterType === 'aereo' && data.posterSubType === 'offer');
 
   return (
     <div className="space-y-3">
@@ -407,6 +415,25 @@ export function PosterForm({ data, setData, posterType }: PosterFormProps) {
                     </div>
                   </>
                 )}
+
+                <div className="pt-2 border-t border-border/50 mt-2 space-y-1">
+                  <div className="flex items-baseline justify-between">
+                    <Label htmlFor="defect-note" className="text-xs text-muted-foreground uppercase font-bold tracking-wider">
+                      Observação de Rodapé
+                    </Label>
+                    <span className="text-[10px] text-muted-foreground">
+                      {(data.defectNote ?? '').length}/60
+                    </span>
+                  </div>
+                  <Input
+                    id="defect-note"
+                    value={data.defectNote ?? ''}
+                    onChange={e => setData(prev => ({ ...prev, defectNote: e.target.value.slice(0, 60) }))}
+                    placeholder="Ex: arranhado na lateral, sem bateria…"
+                    className="text-sm bg-background"
+                    maxLength={60}
+                  />
+                </div>
               </div>
             )}
 
@@ -463,7 +490,7 @@ export function PosterForm({ data, setData, posterType }: PosterFormProps) {
               </div>
             </div>
 
-            {(posterType === 'reliquias' || posterType === 'etiqueta' || posterType === 'avaria' || posterType === 'aereo') && (
+            {(posterType === 'reliquias' || posterType === 'ofertas-imperdiveis' || posterType === 'etiqueta' || posterType === 'avaria' || posterType === 'aereo' || posterType === 'totem') && (
               <div className="space-y-2 pt-2">
                  <Label className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Forma de Pagamento</Label>
                  <div className="flex bg-muted p-1 rounded-lg">
@@ -492,32 +519,10 @@ export function PosterForm({ data, setData, posterType }: PosterFormProps) {
             )}
             
             {/* 3. SECTION: ACESSÓRIOS */}
-            {(posterType === 'avaria' || posterType === 'reliquias' || posterType === 'etiqueta') && (
+            {(posterType === 'reliquias' || posterType === 'ofertas-imperdiveis' || posterType === 'totem') && (
                <div className="pt-4 border-t mt-4 space-y-4">
                  
-                 {posterType === 'avaria' && (
-                  <div className="space-y-1">
-                    <div className="flex items-baseline justify-between">
-                      <Label htmlFor="defect-note" className="text-xs text-muted-foreground uppercase font-bold tracking-wider">
-                        Observação de Rodapé
-                      </Label>
-                      <span className="text-[10px] text-muted-foreground">
-                        {(data.defectNote ?? '').length}/60
-                      </span>
-                    </div>
-                    <Input
-                      id="defect-note"
-                      value={data.defectNote ?? ''}
-                      onChange={e => setData(prev => ({ ...prev, defectNote: e.target.value.slice(0, 60) }))}
-                      placeholder="Ex: arranhado na lateral, sem bateria…"
-                      className="text-sm bg-muted/30"
-                      maxLength={60}
-                    />
-                  </div>
-                 )}
-
-                 {posterType === 'reliquias' && (
-                  <div className="space-y-2">
+                 <div className="space-y-2">
                     <Label className="text-xs text-muted-foreground uppercase font-bold tracking-wider block">
                       Período da Oferta <span className="font-normal normal-case opacity-70">(Opcional)</span>
                     </Label>
@@ -567,7 +572,6 @@ export function PosterForm({ data, setData, posterType }: PosterFormProps) {
                       </div>
                     </div>
                   </div>
-                 )}
                </div>
             )}
           </CardContent>

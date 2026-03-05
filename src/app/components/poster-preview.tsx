@@ -26,7 +26,8 @@ export function PosterPreview({
   paymentOption,
   offerValidityStart,
   offerValidity,
-}: PosterData) {
+  isImperdiveis,
+}: PosterData & { isImperdiveis?: boolean }) {
   const valDe  = parsePrice(priceFrom);
   const valPor = parsePrice(priceFor);
 
@@ -59,7 +60,10 @@ export function PosterPreview({
         {/* Coluna Esquerda */}
         <div className="w-1/2 p-[0.35cm] flex flex-col justify-between">
           <div className="flex flex-col h-full">
-            <OfertasHeader textSize={60} />
+            <OfertasHeader 
+              textSize={60} 
+              title={isImperdiveis ? "OFERTAS IMPERDÍVEIS" : "OFERTAS"} 
+            />
             <h2 className="font-headline font-black uppercase text-[1.8em] leading-tight break-words text-center my-2 grow flex items-center justify-center text-black">
               {description}
             </h2>
@@ -84,7 +88,7 @@ export function PosterPreview({
           <div className="bg-black text-white text-center font-headline font-black flex flex-col items-center justify-center print:color-adjust-exact px-3 py-1 w-full h-[5.5em]">
             <div className="flex flex-col justify-center items-center h-full">
               <span className="text-[1.3em] leading-none uppercase">DESCONTO DE</span>
-              <span className="text-[3em] leading-none">{discount}% OFF</span>
+              <span className="text-[3em] leading-none">{discount}%</span>
             </div>
           </div>
 

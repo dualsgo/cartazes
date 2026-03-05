@@ -1,4 +1,10 @@
-export function OfertasHeader({ textSize = 50 }: { textSize?: number }) {
+export function OfertasHeader({ 
+  textSize = 50, 
+  title = "OFERTAS" 
+}: { 
+  textSize?: number;
+  title?: string;
+}) {
   return (
     <svg
       viewBox="0 0 320 100"
@@ -45,17 +51,37 @@ export function OfertasHeader({ textSize = 50 }: { textSize?: number }) {
       <use href="#starburst" transform="translate(95, 30)" />
       <use href="#starburst" transform="translate(140, 88)" />
 
-      <text
-        x="50%"
-        y="55%"
-        dominantBaseline="middle"
-        textAnchor="middle"
-        className="font-headline font-black"
-        style={{ fontSize: `${textSize}px`, letterSpacing: '-2px' }}
-        fill="black"
-      >
-        OFERTAS
-      </text>
+      {title === "OFERTAS IMPERDÍVEIS" ? (
+        <text
+          x="50%"
+          y="50%"
+          dominantBaseline="middle"
+          textAnchor="middle"
+          className="font-headline font-black"
+          fill="black"
+        >
+          <tspan x="50%" dy="-0.2em" style={{ fontSize: `${textSize * 0.7}px`, letterSpacing: '-1px' }}>
+            OFERTAS
+          </tspan>
+          <tspan x="50%" dy="0.95em" style={{ fontSize: `${textSize * 0.55}px`, letterSpacing: '-1.5px' }}>
+            IMPERDÍVEIS
+          </tspan>
+        </text>
+      ) : (
+        <text
+          x="50%"
+          y="55%"
+          dominantBaseline="middle"
+          textAnchor="middle"
+          className="font-headline font-black"
+          style={{ fontSize: `${title.length > 10 ? textSize * 0.55 : textSize}px`, letterSpacing: '-2px' }}
+          fill="black"
+          textLength={title.length > 10 ? 250 : undefined}
+          lengthAdjust={title.length > 10 ? "spacingAndGlyphs" : undefined}
+        >
+          {title}
+        </text>
+      )}
     </svg>
   );
 }
