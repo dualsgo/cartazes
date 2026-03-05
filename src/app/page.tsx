@@ -5,6 +5,7 @@ import { PosterForm } from '@/app/components/poster-form';
 import { PosterPreview } from '@/app/components/poster-preview';
 import { PosterPreviewAereo } from '@/app/components/poster-preview-aereo';
 import { PosterPreviewDefeito } from '@/app/components/poster-preview-defeito';
+import { PosterPreviewEtiqueta } from '@/app/components/poster-preview-etiqueta';
 import type { PosterData } from '@/app/lib/types';
 import { Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -137,11 +138,70 @@ function ReliquiasScaleWrapper({ children }: { children: React.ReactNode }) {
   );
 }
 
+/** Escala um cartaz Etiqueta (90mm × 34mm ≈ 340 × 128 px a 96 dpi) */
+function EtiquetaScaleWrapper({ children }: { children: React.ReactNode }) {
+  const outerRef = useRef<HTMLDivElement>(null);
+  const innerRef = useRef<HTMLDivElement>(null);
 
+  const BASE_W = 340; 
+  const BASE_H = 129; // approximately 34mm
+
+  useEffect(() => {
+    const outer = outerRef.current;
+    const inner = innerRef.current;
+    if (!outer || !inner) return;
+
+    const applyScale = () => {
+      const scaleX = outer.clientWidth / BASE_W;
+      const scaleY = outer.clientHeight / BASE_H;
+      const baseScale = Math.min(scaleX, scaleY, 1.2);
+      const scale = baseScale * 0.9;
+      inner.style.transform = `scale(${scale})`;
+      
+      inner.style.left = `${(outer.clientWidth - BASE_W * scale) / 2}px`;
+      inner.style.top = `${(outer.clientHeight - BASE_H * scale) / 2}px`;
+    };
+
+    applyScale();
+    const ro = new ResizeObserver(applyScale);
+    ro.observe(outer);
+    return () => ro.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={outerRef}
+      style={{
+        width: '100%',
+        height: '100%',
+        position: 'relative',
+        overflow: 'hidden',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}
+      className="border border-border shadow-sm bg-white"
+    >
+      <div
+        ref={innerRef}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: `${BASE_W}px`,
+          height: `${BASE_H}px`,
+          transformOrigin: 'top left',
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
 
 export default function Home() {
   const [posterType, setPosterType] = useState<
-    'reliquias' | 'aereo' | 'avaria'
+    'reliquias' | 'aereo' | 'avaria' | 'etiqueta'
   >('reliquias');
 
   const initialPosterData: PosterData = {
@@ -162,6 +222,7 @@ export default function Home() {
     reliquias: 4,
     aereo: 4,
     avaria: 4,
+    etiqueta: 16,
   };
 
   const [postersData, setPostersData] = useState<PosterData[]>([]);
@@ -201,11 +262,19 @@ export default function Home() {
           @page { size: A4 portrait; margin: 1cm; }
         }
       `;
+    } else if (posterType === 'etiqueta') {
+      style.innerHTML = `
+        @media print {
+          @page { size: A4 portrait; margin: 0; }
+          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0; padding: 0; }
+        }
+      `;
     } else {
       // Relíquias e Avaria
       style.innerHTML = `
         @media print {
-          @page { size: A4 landscape; margin: 1cm; }
+          @page { size: A4 landscape; margin: 5mm; }
+          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
       `;
     }
@@ -275,6 +344,30 @@ export default function Home() {
               </div>
             ))}
           </div>
+        ) : posterType === 'etiqueta' ? (
+          <div
+            className="etiqueta-print-grid"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '90mm 90mm',
+              gridTemplateRows: 'repeat(8, 33.5mm)',
+              gap: '0 6mm',
+              paddingTop: '15mm',
+              paddingBottom: '14mm',
+              paddingLeft: '12mm',
+              paddingRight: '12mm',
+              width: '210mm',
+              height: '297mm',
+              boxSizing: 'border-box',
+              backgroundColor: 'white',
+            }}
+          >
+            {postersData.slice(0, 16).map((data, index) => (
+              <div key={index} style={{ width: '90mm', height: '33.5mm', overflow: 'hidden' }}>
+                <PosterPreviewEtiqueta {...data} />
+              </div>
+            ))}
+          </div>
         ) : (
           <div
             style={{
@@ -283,10 +376,10 @@ export default function Home() {
               gridTemplateRows: 'minmax(0, 1fr) minmax(0, 1fr)',
               width: '100%',
               height: '100%',
-              padding: '2% 0', // Provides the ~10% extra top and bottom margins
+              padding: '0', // Removes extra padding to maximize space
+              gap: '2mm', // Adds a slight gap between posters
               boxSizing: 'border-box',
-              transform: 'scale(0.86)', // Scales proportionally to prevent bleeding
-              transformOrigin: 'center',
+              // Removed scale to prevent shrinking and use 100% of available space
             }}
           >
             {postersData.map((data, index) => (
@@ -316,9 +409,9 @@ export default function Home() {
                 <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
                   Layout do Cartaz
                 </Label>
-                <Select
+                  <Select
                   value={posterType}
-                  onValueChange={value => setPosterType(value as 'reliquias' | 'aereo' | 'avaria')}
+                  onValueChange={value => setPosterType(value as 'reliquias' | 'aereo' | 'avaria' | 'etiqueta')}
                 >
                   <SelectTrigger className="w-[200px] h-9 font-semibold bg-background shadow-sm">
                     <SelectValue placeholder="Selecione o modelo" />
@@ -327,6 +420,7 @@ export default function Home() {
                     <SelectItem value="reliquias">Relíquias (Padrão)</SelectItem>
                     <SelectItem value="avaria">Avaria (Defeito)</SelectItem>
                     <SelectItem value="aereo">Aéreo (Faixa)</SelectItem>
+                    <SelectItem value="etiqueta">Etiqueta (16 por folha)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -341,13 +435,14 @@ export default function Home() {
               <div className="shrink-0 px-4 pt-4 bg-muted/10">
                 <TabsList
                   className={cn(
-                    'grid w-full',
-                    posterType === 'aereo' ? 'grid-cols-2' : 'grid-cols-4'
+                    'grid w-full gap-1',
+                    posterType === 'aereo' ? 'grid-cols-2' : posterType === 'etiqueta' ? 'grid-cols-4' : 'grid-cols-4'
                   )}
+                  style={posterType === 'etiqueta' ? { height: 'auto', paddingBottom: '0.5rem' } : undefined}
                 >
-                  {postersData.slice(0, posterType === 'aereo' ? 2 : 4).map((_, index) => (
-                    <TabsTrigger key={index} value={index.toString()}>
-                      Cartaz {index + 1}
+                  {postersData.slice(0, posterType === 'aereo' ? 2 : posterType === 'etiqueta' ? 16 : 4).map((_, index) => (
+                    <TabsTrigger key={index} value={index.toString()} className={posterType === 'etiqueta' ? "text-[10px] px-1 h-7" : ""}>
+                      {posterType === 'etiqueta' ? `Etiqueta ${index + 1}` : `Cartaz ${index + 1}`}
                     </TabsTrigger>
                   ))}
                 </TabsList>
@@ -373,7 +468,7 @@ export default function Home() {
           {/* Área de Visualização (cerca de 67% a 75%) */}
           <div className="md:col-span-8 lg:col-span-9 h-full flex flex-col p-4 gap-2 overflow-hidden bg-muted/20">
             <p className="text-xs text-muted-foreground text-center shrink-0">
-              Pré-visualização — Cartaz {activeIndex + 1} de {posterType === 'aereo' ? 2 : 4}
+              Pré-visualização — Cartaz {activeIndex + 1} de {posterType === 'aereo' ? 2 : posterType === 'etiqueta' ? 16 : 4}
             </p>
 
             <div className="flex-1 min-h-0 flex items-center justify-center">
@@ -381,6 +476,10 @@ export default function Home() {
                 <AereoScaleWrapper>
                   <PosterPreviewAereo {...activeData} />
                 </AereoScaleWrapper>
+              ) : posterType === 'etiqueta' ? (
+                <EtiquetaScaleWrapper>
+                  <PosterPreviewEtiqueta {...activeData} />
+                </EtiquetaScaleWrapper>
               ) : (
                  <ReliquiasScaleWrapper>
                     {posterType === 'reliquias' ? (
@@ -393,10 +492,12 @@ export default function Home() {
             </div>
 
             <p className="text-xs text-muted-foreground text-center shrink-0">
-              Ao imprimir, todos os {posterType === 'aereo' ? 2 : 4} cartazes serão
+              Ao imprimir, todos os {posterType === 'aereo' ? 2 : posterType === 'etiqueta' ? 16 : 4} cartazes serão
               {posterType === 'aereo'
-                ? ' impressos em 2 strips por folha A4 retrato'
-                : ' dispostos em grade 2×2 (A4 paisagem)'}.
+                ? ' impressos em 2 strips por folha A4 retrato.'
+                : posterType === 'etiqueta'
+                ? ' dispostos na folha serrilhada (A4 Retrato, 16 etiquetas).'
+                : ' dispostos em grade 2×2 (A4 paisagem).'}
             </p>
           </div>
         </div>

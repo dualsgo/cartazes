@@ -99,7 +99,7 @@ export function PosterPreviewDefeito({
         </div>
 
         {/* Right Column */}
-        <div className="w-1/2 flex flex-col justify-between items-center p-[0.35cm]">
+        <div className="w-1/2 flex flex-col justify-between items-center pt-0 pr-0 pb-[0.35cm] pl-[0.35cm]">
           <div
             className={cn(
               'bg-black text-white text-center font-headline font-black transition-opacity flex flex-col items-center justify-center print:color-adjust-exact px-3 py-1 w-full',

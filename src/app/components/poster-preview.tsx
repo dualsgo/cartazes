@@ -80,7 +80,7 @@ export function PosterPreview({
         </div>
 
         {/* Coluna Direita */}
-        <div className="w-1/2 flex flex-col justify-between items-center p-[0.35cm]">
+        <div className="w-1/2 flex flex-col justify-between items-center pt-0 pr-0 pb-[0.35cm] pl-[0.35cm]">
           <div className="bg-black text-white text-center font-headline font-black flex flex-col items-center justify-center print:color-adjust-exact px-3 py-1 w-full h-[5.5em]">
             <div className="flex flex-col justify-center items-center h-full">
               <span className="text-[1.3em] leading-none uppercase">DESCONTO DE</span>

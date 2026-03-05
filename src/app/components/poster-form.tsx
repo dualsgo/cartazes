@@ -54,7 +54,7 @@ type LookupStatus = 'idle' | 'loading' | 'found' | 'notfound';
 type PosterFormProps = {
   data: PosterData;
   setData: Dispatch<SetStateAction<PosterData>>;
-  posterType: 'reliquias' | 'aereo' | 'avaria';
+  posterType: 'reliquias' | 'aereo' | 'avaria' | 'etiqueta';
 };
 
 function detectInputType(value: string): 'ean' | 'code' {
@@ -239,7 +239,7 @@ export function PosterForm({ data, setData, posterType }: PosterFormProps) {
     notfound: <XCircle className="h-4 w-4 text-destructive" />,
   }[lookupStatus];
   
-  const isOfferType = posterType === 'reliquias' || (posterType === 'aereo' && data.posterSubType === 'offer');
+  const isOfferType = posterType === 'reliquias' || posterType === 'etiqueta' || (posterType === 'aereo' && data.posterSubType === 'offer');
 
   return (
     <div className="space-y-3">
@@ -463,7 +463,7 @@ export function PosterForm({ data, setData, posterType }: PosterFormProps) {
               </div>
             </div>
 
-            {(posterType === 'reliquias' || posterType === 'avaria' || posterType === 'aereo') && (
+            {(posterType === 'reliquias' || posterType === 'etiqueta' || posterType === 'avaria' || posterType === 'aereo') && (
               <div className="space-y-2 pt-2">
                  <Label className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Forma de Pagamento</Label>
                  <div className="flex bg-muted p-1 rounded-lg">
@@ -492,7 +492,7 @@ export function PosterForm({ data, setData, posterType }: PosterFormProps) {
             )}
             
             {/* 3. SECTION: ACESSÓRIOS */}
-            {(posterType === 'avaria' || posterType === 'reliquias') && (
+            {(posterType === 'avaria' || posterType === 'reliquias' || posterType === 'etiqueta') && (
                <div className="pt-4 border-t mt-4 space-y-4">
                  
                  {posterType === 'avaria' && (
