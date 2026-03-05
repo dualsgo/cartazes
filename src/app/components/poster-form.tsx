@@ -10,7 +10,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
-import { Loader2, CheckCircle2, XCircle, Search, RotateCcw } from 'lucide-react';
+import { Loader2, CheckCircle2, XCircle, Search, RotateCcw, PlusCircle } from 'lucide-react';
 
 function centsToDisplay(cents: number): string {
   if (cents === 0) return '';
@@ -62,6 +62,7 @@ type PosterFormProps = {
   data: PosterData;
   setData: Dispatch<SetStateAction<PosterData>>;
   posterType: 'reliquias' | 'ofertas-imperdiveis' | 'aereo' | 'avaria' | 'etiqueta' | 'totem';
+  onLookupStatusChange?: (found: boolean) => void;
 };
 
 function detectInputType(value: string): 'ean' | 'code' {
@@ -76,7 +77,7 @@ const defectOptions = [
   { value: 'outro', label: 'Outro (descrever)', discount: null },
 ];
 
-export function PosterForm({ data, setData, posterType }: PosterFormProps) {
+export function PosterForm({ data, setData, posterType, onLookupStatusChange }: PosterFormProps) {
   const [lookupStatus, setLookupStatus] = useState<LookupStatus>('idle');
   const [searchValue, setSearchValue] = useState('');
   const [suggestions, setSuggestions] = useState<{ key: string; description: string }[]>([]);
@@ -85,6 +86,13 @@ export function PosterForm({ data, setData, posterType }: PosterFormProps) {
   const [priceForOverridden, setPriceForOverridden] = useState(false);
   const suggestTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
+
+  const [regDescription, setRegDescription] = useState('');
+  const [regCode, setRegCode] = useState('');
+  const [regEan, setRegEan] = useState('');
+  const [regReference, setRegReference] = useState('');
+  const [regStatus, setRegStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [regConfirming, setRegConfirming] = useState(false);
 
   const priceFrom = useCurrencyInput(data.priceFrom);
   const maxForCents = priceFrom.cents > 0 ? priceFrom.cents : undefined;
@@ -176,10 +184,11 @@ export function PosterForm({ data, setData, posterType }: PosterFormProps) {
     setSuggestions([]);
     const inputType = detectInputType(query);
     setLookupStatus('loading');
+    onLookupStatusChange?.(false);
 
     try {
       const res = await fetch(`/api/produto?q=${encodeURIComponent(query)}`);
-      if (!res.ok) { setLookupStatus('notfound'); return; }
+      if (!res.ok) { setLookupStatus('notfound'); onLookupStatusChange?.(false); return; }
 
       const produto = await res.json() as {
         description: string; reference: string; ean?: string; code?: string;
@@ -193,10 +202,12 @@ export function PosterForm({ data, setData, posterType }: PosterFormProps) {
         ean:   inputType === 'ean'  ? query : (produto.ean  ?? ''),
       }));
       setLookupStatus('found');
+      onLookupStatusChange?.(true);
     } catch {
       setLookupStatus('notfound');
+      onLookupStatusChange?.(false);
     }
-  }, [searchValue, setData]);
+  }, [searchValue, setData, onLookupStatusChange]);
 
   const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') { e.preventDefault(); handleLookup(); }
@@ -246,6 +257,34 @@ export function PosterForm({ data, setData, posterType }: PosterFormProps) {
     found:    <CheckCircle2 className="h-4 w-4 text-green-500" />,
     notfound: <XCircle className="h-4 w-4 text-destructive" />,
   }[lookupStatus];
+
+  const handleRegister = async () => {
+    const key = regCode.trim() || regEan.trim();
+    if (!key || !regDescription.trim()) return;
+    setRegStatus('saving');
+    setRegConfirming(false);
+    try {
+      const res = await fetch('/api/produto', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          key,
+          description: regDescription,
+          reference: regReference || undefined,
+          ean: regEan || undefined,
+          code: regCode || undefined,
+        }),
+      });
+      if (!res.ok) throw new Error();
+      setRegStatus('saved');
+      await handleLookup(key);
+      setRegDescription(''); setRegCode(''); setRegEan(''); setRegReference('');
+      setTimeout(() => setRegStatus('idle'), 3000);
+    } catch {
+      setRegStatus('error');
+      setTimeout(() => setRegStatus('idle'), 3000);
+    }
+  };
   
   const isOfferType = posterType === 'reliquias' || posterType === 'ofertas-imperdiveis' || posterType === 'totem' || posterType === 'etiqueta' || (posterType === 'aereo' && data.posterSubType === 'offer');
 
@@ -313,6 +352,112 @@ export function PosterForm({ data, setData, posterType }: PosterFormProps) {
               <p className="text-xs text-destructive">Código não encontrado</p>
             )}
           </div>
+
+          {lookupStatus === 'notfound' && (
+            <div className="rounded-md border border-orange-200 bg-orange-50/60 p-3 dark:bg-orange-950/20 dark:border-orange-900 space-y-3">
+              <p className="text-[11px] font-bold text-orange-700 dark:text-orange-400 uppercase tracking-wide flex items-center gap-1">
+                <PlusCircle className="h-3.5 w-3.5" /> Cadastrar produto na base
+              </p>
+
+              {/* Confirmation panel */}
+              {regConfirming ? (
+                <div className="space-y-3">
+                  <div className="rounded-md bg-orange-100 dark:bg-orange-900/30 p-3 space-y-1 text-sm">
+                    <p className="font-bold text-orange-900 dark:text-orange-200">Confirmar cadastro?</p>
+                    <p><span className="text-xs text-muted-foreground">Descrição:</span> <b>{regDescription}</b></p>
+                    {regCode && <p><span className="text-xs text-muted-foreground">SAP:</span> <b className="font-mono">{regCode}</b></p>}
+                    {regEan  && <p><span className="text-xs text-muted-foreground">EAN:</span> <b className="font-mono">{regEan}</b></p>}
+                    {regReference && <p><span className="text-xs text-muted-foreground">Referência:</span> <b>{regReference}</b></p>}
+                  </div>
+                  <p className="text-[10px] text-orange-700 dark:text-orange-400">
+                    Este produto será salvo permanentemente na base de dados.
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setRegConfirming(false)}
+                      className="flex-1 rounded-md border border-border text-sm font-medium py-2 hover:bg-muted transition-colors"
+                    >
+                      Corrigir
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleRegister}
+                      disabled={regStatus === 'saving'}
+                      className="flex-1 flex items-center justify-center gap-2 rounded-md bg-orange-600 text-white text-sm font-semibold py-2 hover:bg-orange-700 disabled:opacity-40 transition-colors"
+                    >
+                      {regStatus === 'saving' ? (
+                        <><Loader2 className="h-4 w-4 animate-spin" /> Salvando...</>
+                      ) : (
+                        <><CheckCircle2 className="h-4 w-4" /> Confirmar e Salvar</>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="space-y-1">
+                    <Label htmlFor="reg-description" className="text-xs text-muted-foreground">Descrição *</Label>
+                    <Input
+                      id="reg-description"
+                      value={regDescription}
+                      onChange={e => setRegDescription(e.target.value.toUpperCase())}
+                      placeholder="NOME DO PRODUTO"
+                      className="text-sm uppercase"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label htmlFor="reg-code" className="text-xs text-muted-foreground">Cód. SAP</Label>
+                      <Input
+                        id="reg-code"
+                        value={regCode}
+                        onChange={e => setRegCode(e.target.value.replace(/\D/g, ''))}
+                        placeholder="71838"
+                        inputMode="numeric"
+                        className="text-sm font-mono"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="reg-ean" className="text-xs text-muted-foreground">EAN</Label>
+                      <Input
+                        id="reg-ean"
+                        value={regEan}
+                        onChange={e => setRegEan(e.target.value.replace(/\D/g, ''))}
+                        placeholder="7891234567890"
+                        inputMode="numeric"
+                        className="text-sm font-mono"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="reg-reference" className="text-xs text-muted-foreground">Referência <span className="font-normal opacity-70">(Opcional)</span></Label>
+                    <Input
+                      id="reg-reference"
+                      value={regReference}
+                      onChange={e => setRegReference(e.target.value)}
+                      placeholder="Ex: ABC-123"
+                      className="text-sm"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    disabled={(!regCode && !regEan) || !regDescription}
+                    onClick={() => setRegConfirming(true)}
+                    className="w-full flex items-center justify-center gap-2 rounded-md bg-orange-600 text-white text-sm font-semibold py-2 px-3 hover:bg-orange-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {regStatus === 'saved' ? (
+                      <><CheckCircle2 className="h-4 w-4" /> Cadastrado com sucesso!</>
+                    ) : regStatus === 'error' ? (
+                      <><XCircle className="h-4 w-4" /> Erro ao salvar. Tente novamente.</>
+                    ) : (
+                      <><PlusCircle className="h-4 w-4" /> Revisar e Cadastrar &rarr;</>
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           {lookupStatus === 'found' && (
             <div className="rounded-md border border-green-200 bg-green-50/50 p-3 dark:bg-green-950/20 dark:border-green-900">
