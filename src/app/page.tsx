@@ -144,25 +144,31 @@ function PageGrid({ items, posterType, perPage }: { items: PosterData[]; posterT
   return (
     <div style={{ 
       display: 'grid', 
+      // Divide a "área util" (após as margens do papel de 1.5cm vert e 1.2cm horiz) 
+      // exatamente ao meio, criando 4 containers idênticos.
       gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', 
       gridTemplateRows: 'minmax(0,1fr) minmax(0,1fr)', 
       width: '100%', 
       height: '100%', 
-      padding: '1.5cm 1.2cm',  // Margem externa da borda do papel (A4)
+      padding: '1.5cm 1.2cm',  // Margens externas (Padrão A4 limpo)
       boxSizing: 'border-box', 
       backgroundColor: 'white' 
     }}>
       {items.map((d, i) => (
+        // Cada slot tem 100% da sua metade do papel (Aprox 13.x cm por 9cm)
         <div key={i} style={{ 
           width: '100%', 
           height: '100%', 
-          padding: '0.5cm', // Padding entre o "limite/corte" do grid e o conteúdo do cartaz
-          overflow: 'hidden', 
+          // O espaço em branco QUE SEPARA um painel do outro fisicamente:
+          // Como as margens encostam, o top de um cartaz respira pro limite
+          // e o bottom respira pro mesmo limite.
+          paddingTop: '0.4cm',
+          paddingBottom: '0.4cm',
+          paddingLeft: '0.4cm',
+          paddingRight: '0.4cm',
           boxSizing: 'border-box',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center'
         }}>
+          {/* O Cartaz real, posicionado nos limites do seu padding interno */}
           <div style={{ width: '100%', height: '100%', overflow: 'hidden' }}>
             {posterType === 'reliquias' || posterType === 'ofertas-imperdiveis'
               ? <PosterPreview {...d} isImperdiveis={posterType === 'ofertas-imperdiveis'} />
