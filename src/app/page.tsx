@@ -217,16 +217,17 @@ export default function Home() {
       return (
         <div
           style={{
-            display: 'flex',
-            flexDirection: 'column',
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gridTemplateRows: '1fr 1fr',
             width: '100%',
             height: '100%',
             gap: '12mm',
-            padding: '1cm'
+            padding: 'calc(1cm - 2mm) 1cm 1cm 1cm'
           }}
         >
-          {postersData.slice(0, 2).map((data, index) => (
-            <div key={index} style={{ flex: 1, maxHeight: 'calc(50% - 6mm)' }}>
+          {postersData.slice(0, 4).map((data, index) => (
+            <div key={index} style={{ width: '100%', height: '100%', overflow: 'hidden' }}>
               {isPosterFilled(data, index) && <PosterPreviewAereo {...data} />}
             </div>
           ))}
@@ -241,7 +242,7 @@ export default function Home() {
             gridTemplateColumns: '90mm 90mm',
             gridTemplateRows: 'repeat(8, 33.5mm)',
             gap: '0 6mm',
-            paddingTop: '15mm',
+            paddingTop: '13mm',
             paddingBottom: '14mm',
             paddingLeft: '12mm',
             paddingRight: '12mm',
@@ -294,7 +295,11 @@ export default function Home() {
             <div 
               key={index}
               className="w-full h-full p-1"
-              style={{ overflow: 'hidden' }}
+              style={{ 
+                overflow: 'hidden',
+                marginTop: index < 2 ? '3mm' : '0',
+                marginBottom: index < 2 ? '-3mm' : '0'
+              }}
             >
               {isPosterFilled(data, index) && (
                 posterType === 'reliquias' || posterType === 'ofertas-imperdiveis' ? (
@@ -399,11 +404,11 @@ export default function Home() {
                   <TabsList
                     className={cn(
                       'grid gap-1 min-w-full',
-                      posterType === 'aereo' ? 'grid-cols-2' : posterType === 'etiqueta' ? 'grid-cols-4' : 'grid-cols-4'
+                      posterType === 'etiqueta' ? 'grid-cols-4' : 'grid-cols-4'
                     )}
                     style={posterType === 'etiqueta' ? { height: 'auto', paddingBottom: '0.5rem' } : undefined}
                   >
-                    {postersData.slice(0, posterType === 'aereo' ? 2 : posterType === 'etiqueta' ? 16 : 4).map((_, index) => (
+                    {postersData.slice(0, posterType === 'etiqueta' ? 16 : 4).map((_, index) => (
                       <TabsTrigger key={index} value={index.toString()} className={posterType === 'etiqueta' ? "text-[10px] px-1 h-7" : ""}>
                         {posterType === 'etiqueta' ? `Gôndola ${index + 1}` : `Cartaz ${index + 1}`}
                       </TabsTrigger>
@@ -433,7 +438,7 @@ export default function Home() {
           {/* Área de Visualização (cerca de 67% a 75%) */}
           <div className="md:col-span-7 lg:col-span-8 flex flex-col p-4 gap-2 md:overflow-hidden bg-muted/20 order-1 md:order-2 border-b border-border md:border-b-0 h-[60vh] md:h-full">
             <p className="text-xs text-muted-foreground text-center shrink-0">
-              Pré-visualização — Cartaz {activeIndex + 1} de {posterType === 'aereo' ? 2 : posterType === 'etiqueta' ? 16 : posterType === 'totem' ? 1 : 4}
+              Pré-visualização — Cartaz {activeIndex + 1} de {posterType === 'etiqueta' ? 16 : posterType === 'totem' ? 1 : 4}
             </p>
 
             <div className="flex-1 min-h-0 flex items-center justify-center border rounded border-border bg-black/5">
@@ -443,9 +448,9 @@ export default function Home() {
             </div>
 
             <p className="text-xs text-muted-foreground text-center shrink-0">
-              Ao imprimir, todos os {posterType === 'aereo' ? 2 : posterType === 'etiqueta' ? 16 : posterType === 'totem' ? 1 : 4} cartazes serão
+              Ao imprimir, todos os {posterType === 'etiqueta' ? 16 : posterType === 'totem' ? 1 : 4} cartazes serão
               {posterType === 'aereo'
-                ? ' impressos em 2 strips por folha A4 retrato.'
+                ? ' impressos em 4 strips por folha A4 retrato.'
                 : posterType === 'etiqueta'
                 ? ' dispostos na folha serrilhada (A4 Retrato, 16 de Gôndola).'
                 : posterType === 'totem'
