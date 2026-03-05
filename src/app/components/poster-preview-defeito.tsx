@@ -115,25 +115,28 @@ export function PosterPreviewDefeito({
         <div className="w-1/2 flex flex-col justify-between items-center pt-0 pr-0 pb-[0.35cm] pl-[0.35cm]">
           <div
             className={cn(
-              'bg-black text-white text-center font-headline font-black transition-opacity flex flex-col items-center justify-center print:color-adjust-exact px-2 w-full shrink-0',
+              'bg-black text-white text-center font-headline font-black transition-opacity flex flex-col items-center justify-center print:color-adjust-exact px-2 w-full shrink-0 pt-2',
               discount > 0 ? 'opacity-100' : 'opacity-0'
             )}
-            style={{ height: '7.8em' }}
+            style={{ height: '7.2em' }}
           >
             {discount > 0 && (
-              <div className='flex flex-col items-center w-full h-full py-1'>
-                <div className="flex items-center justify-center w-full h-[2.8em]">
-                   <span className="text-[1.3em] leading-tight uppercase text-center line-clamp-2">{reasonText}</span>
+              <div className='flex flex-col items-center w-full h-full'>
+                {/* MOTIVO DO DEFEITO */}
+                <div className="flex items-center justify-center w-full h-[1.2em] mb-0.5 mt-1">
+                   <span className="text-[0.95em] leading-tight uppercase text-center line-clamp-1">{reasonText}</span>
                 </div>
                 
-                <div className="flex items-center justify-center w-full h-[1.6em] mb-1">
-                  <span className="text-[0.7em] font-semibold tracking-wide leading-tight uppercase text-gray-300 text-center line-clamp-2">
+                {/* OBSERVAÇÃO OPCIONAL */}
+                <div className="flex items-center justify-center w-full h-[0.9em] mb-1.5 px-2">
+                  <span className="text-[0.6em] font-medium tracking-wide leading-tight uppercase text-gray-400 text-center line-clamp-2">
                     {defectNote}
                   </span>
                 </div>
                 
-                <div className="flex items-end justify-center w-full flex-1 mb-0.5">
-                  <span className="text-[3.3em] leading-[0.85]">{discount}% OFF</span>
+                {/* 20% OFF */}
+                <div className="flex items-center justify-center w-full flex-1 pb-1">
+                  <span className="text-[2.2em] leading-none whitespace-nowrap">{discount}% OFF</span>
                 </div>
               </div>
             )}
