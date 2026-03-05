@@ -128,17 +128,17 @@ export function PosterPreviewDefeito({
             )}
           </div>
           
-          <div className="flex flex-col items-center justify-center text-[1.3em] leading-none text-black w-full min-w-0 px-1 flex-1">
-            <div className="flex items-end max-w-full">
-              <span className="font-headline text-[0.9em] font-black mr-4 self-start mt-1 shrink-0">
-                POR
-              </span>
-              <div className="flex items-baseline">
-                <span className="font-headline text-[1.5em] mr-1">R$</span>
-                <span className="font-headline font-black" style={{ fontSize: priceFontSize }}>
+          <div className="flex flex-col items-center justify-center text-[1.3em] leading-none text-black w-full min-w-0 px-1 flex-1 pt-1">
+            <span className="font-headline text-[0.8em] font-black w-full text-center shrink-0 mb-[-0.2em] z-10">
+              POR
+            </span>
+            <div className="flex items-end max-w-full overflow-hidden shrink-0">
+              <div className="flex items-baseline shrink-0 tracking-tighter">
+                <span className="font-headline text-[1.25em] mr-1">R$</span>
+                <span className="font-headline font-black leading-none" style={{ fontSize: priceFontSize }}>
                   {porInteger}
                 </span>
-                <span className="font-headline text-[1.8em] font-black">
+                <span className="font-headline text-[1.45em] font-black">
                   ,{porDecimal}
                 </span>
               </div>

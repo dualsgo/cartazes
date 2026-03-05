@@ -364,20 +364,20 @@ export default function Home() {
       <main className="no-print flex-1 flex flex-col min-h-0 md:overflow-hidden">
         <div className="flex-1 flex flex-col md:grid md:grid-cols-12 min-h-0">
           {/* Menu Lateral reduzido */}
-          <div className="flex-none md:flex-auto md:col-span-4 lg:col-span-3 flex flex-col border-r border-border bg-muted/10 md:min-h-0 order-2 md:order-1 h-auto md:h-full">
+          <div className="flex-none md:flex-auto md:col-span-5 lg:col-span-4 flex flex-col border-r border-border bg-muted/10 md:min-h-0 order-2 md:order-1 h-auto md:h-full overflow-x-hidden">
       {/* Sidebar header removido, pois o Select foi para o menu superior */}
 
             <Tabs
               value={activeFormTab}
               onValueChange={setActiveFormTab}
-              className="flex-1 flex flex-col min-h-0 w-full"
+              className="flex-1 flex flex-col min-h-0 w-full overflow-x-hidden"
             >
               {/* Abas Fixas */}
               {posterType !== 'totem' && (
-                <div className="shrink-0 px-4 pt-4 bg-muted/10">
+                <div className="shrink-0 px-4 pt-4 bg-muted/10 w-full overflow-x-auto custom-scrollbar">
                   <TabsList
                     className={cn(
-                      'grid w-full gap-1',
+                      'grid gap-1 min-w-full',
                       posterType === 'aereo' ? 'grid-cols-2' : posterType === 'etiqueta' ? 'grid-cols-4' : 'grid-cols-4'
                     )}
                     style={posterType === 'etiqueta' ? { height: 'auto', paddingBottom: '0.5rem' } : undefined}
@@ -392,11 +392,12 @@ export default function Home() {
               )}
 
               {/* Conteúdo da Sidebar (Rolável) */}
-              <div className="flex-1 md:overflow-y-auto overflow-visible px-4 pt-4 min-h-0 custom-scrollbar">
+              <div className="flex-1 md:overflow-y-auto overflow-y-visible overflow-x-hidden px-4 pt-4 min-h-0 custom-scrollbar">
                 <div className="pb-12">
                   {postersData.map((poster, index) => (
-                    <TabsContent key={index} value={index.toString()} className="m-0 border-none p-0">
+                    <TabsContent key={`${posterType}-${index}`} value={index.toString()} className="m-0 border-none p-0">
                       <PosterForm
+                        key={`form-${posterType}-${index}`}
                         data={poster}
                         setData={handlePosterDataChange(index)}
                         posterType={posterType}
@@ -409,7 +410,7 @@ export default function Home() {
           </div>
 
           {/* Área de Visualização (cerca de 67% a 75%) */}
-          <div className="md:col-span-8 lg:col-span-9 flex flex-col p-4 gap-2 md:overflow-hidden bg-muted/20 order-1 md:order-2 border-b border-border md:border-b-0 h-[60vh] md:h-full">
+          <div className="md:col-span-7 lg:col-span-8 flex flex-col p-4 gap-2 md:overflow-hidden bg-muted/20 order-1 md:order-2 border-b border-border md:border-b-0 h-[60vh] md:h-full">
             <p className="text-xs text-muted-foreground text-center shrink-0">
               Pré-visualização — Cartaz {activeIndex + 1} de {posterType === 'aereo' ? 2 : posterType === 'etiqueta' ? 16 : posterType === 'totem' ? 1 : 4}
             </p>
