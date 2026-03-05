@@ -105,27 +105,34 @@ export default function Home() {
     totem: 1,
   };
 
-  const [postersData, setPostersData] = useState<PosterData[]>([]);
+  const [postersData, setPostersData] = useState<PosterData[]>(() => {
+    return Array(4) // default for reliquias initially
+      .fill(null)
+      .map((_, i) => ({
+        ...initialPosterData,
+        description: `DESCRIÇÃO DO PRODUTO ${i + 1}`,
+      }));
+  });
   const [activeFormTab, setActiveFormTab] = useState('0');
   const activeIndex = parseInt(activeFormTab, 10);
 
-  useEffect(() => {
-    const numPosters = posterCounts[posterType];
+  const handlePosterTypeChange = (newType: typeof posterType) => {
+    setPosterType(newType);
+    const numPosters = posterCounts[newType];
     setPostersData(
       Array(numPosters)
         .fill(null)
         .map((_, i) => ({
           ...initialPosterData,
           posterSubType:
-            posterType === 'reliquias' || posterType === 'ofertas-imperdiveis' || posterType === 'avaria'
+            newType === 'reliquias' || newType === 'ofertas-imperdiveis' || newType === 'avaria'
               ? 'offer'
               : 'normal',
           description: `DESCRIÇÃO DO PRODUTO ${i + 1}`,
         }))
     );
     setActiveFormTab('0');
-     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [posterType]);
+  };
 
   useEffect(() => {
     const styleId = 'print-page-style';
@@ -193,6 +200,18 @@ export default function Home() {
 
   const activeData = postersData[activeIndex] ?? postersData[0];
 
+  const isPosterFilled = (data: PosterData, index: number) => {
+    if (!data) return false;
+    return (
+      data.code !== '' ||
+      data.ean !== '' ||
+      data.priceFor !== '' ||
+      data.priceFrom !== '' ||
+      data.reference !== '' ||
+      data.description !== `DESCRIÇÃO DO PRODUTO ${index + 1}`
+    );
+  };
+
   const renderA4PageContent = () => {
     if (posterType === 'aereo') {
       return (
@@ -208,7 +227,7 @@ export default function Home() {
         >
           {postersData.slice(0, 2).map((data, index) => (
             <div key={index} style={{ flex: 1, maxHeight: 'calc(50% - 6mm)' }}>
-              <PosterPreviewAereo {...data} />
+              {isPosterFilled(data, index) && <PosterPreviewAereo {...data} />}
             </div>
           ))}
         </div>
@@ -234,7 +253,7 @@ export default function Home() {
         >
           {postersData.slice(0, 16).map((data, index) => (
             <div key={index} style={{ width: '90mm', height: '33.5mm', overflow: 'hidden' }}>
-              <PosterPreviewEtiqueta {...data} />
+              {isPosterFilled(data, index) && <PosterPreviewEtiqueta {...data} />}
             </div>
           ))}
         </div>
@@ -252,7 +271,7 @@ export default function Home() {
           }}
         >
           <div style={{ width: '100%', height: '100%' }}>
-            <PosterPreviewTotem {...postersData[0]} />
+            {isPosterFilled(postersData[0], 0) && <PosterPreviewTotem {...postersData[0]} />}
           </div>
         </div>
       );
@@ -277,10 +296,12 @@ export default function Home() {
               className="w-full h-full p-1"
               style={{ overflow: 'hidden' }}
             >
-              {posterType === 'reliquias' || posterType === 'ofertas-imperdiveis' ? (
-                <PosterPreview {...data} isImperdiveis={posterType === 'ofertas-imperdiveis'} />
-              ) : (
-                <PosterPreviewDefeito {...data} />
+              {isPosterFilled(data, index) && (
+                posterType === 'reliquias' || posterType === 'ofertas-imperdiveis' ? (
+                  <PosterPreview {...data} isImperdiveis={posterType === 'ofertas-imperdiveis'} />
+                ) : (
+                  <PosterPreviewDefeito {...data} />
+                )
               )}
             </div>
           ))}
@@ -306,7 +327,7 @@ export default function Home() {
             <div className="flex md:hidden flex-1 overflow-hidden">
               <Select
                 value={posterType}
-                onValueChange={value => setPosterType(value as any)}
+                onValueChange={value => handlePosterTypeChange(value as any)}
               >
                 <SelectTrigger className="w-full h-9 font-semibold bg-background shadow-sm border-2">
                   <SelectValue placeholder="Selecione o modelo" />
@@ -334,7 +355,7 @@ export default function Home() {
               ].map(opt => (
                 <button
                   key={opt.id}
-                  onClick={() => setPosterType(opt.id as any)}
+                  onClick={() => handlePosterTypeChange(opt.id as any)}
                   className={cn(
                     "px-3 py-1.5 rounded-md text-[13px] font-semibold transition-all whitespace-nowrap",
                     posterType === opt.id 
