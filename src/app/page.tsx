@@ -142,7 +142,7 @@ function PageGrid({ items, posterType, perPage }: { items: PosterData[]; posterT
   }
   // reliquias, ofertas-imperdiveis, avaria
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gridTemplateRows: 'minmax(0,1fr) minmax(0,1fr)', width: '100%', height: '100%', padding: '5mm', gap: '2mm', boxSizing: 'border-box', backgroundColor: 'white' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gridTemplateRows: 'minmax(0,1fr) minmax(0,1fr)', width: '100%', height: '90%', padding: '5mm', gap: '2mm', boxSizing: 'border-box', backgroundColor: 'white' }}>
       {items.map((d, i) => (
         <div key={i} className="w-full h-full p-1" style={{ overflow: 'hidden', marginTop: i < 2 ? '3mm' : '0', marginBottom: i < 2 ? '-3mm' : '0' }}>
           {posterType === 'reliquias' || posterType === 'ofertas-imperdiveis'

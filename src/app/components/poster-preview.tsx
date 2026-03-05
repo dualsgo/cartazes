@@ -53,6 +53,10 @@ export function PosterPreview({
     priceFontSize = '3.2rem';
   }
 
+  const descFontSize = description.length > 20
+    ? `${Math.max(0.85, 1.8 * (20 / description.length)).toFixed(2)}em`
+    : '1.8em';
+
   return (
     <Card className="w-full h-full overflow-hidden shadow-none border-none rounded-none bg-white text-black font-body relative">
       <div className="flex h-full w-full">
@@ -64,7 +68,7 @@ export function PosterPreview({
               textSize={60} 
               title={isImperdiveis ? "OFERTAS IMPERDÍVEIS" : "OFERTAS"} 
             />
-            <h2 className="font-headline font-black uppercase text-[1.8em] leading-tight break-words text-center my-2 grow flex items-center justify-center text-black">
+            <h2 className="font-headline font-black uppercase leading-tight break-words text-center my-2 grow flex items-center justify-center text-black" style={{ fontSize: descFontSize }}>
               {description}
             </h2>
             <div

@@ -87,7 +87,7 @@ export function PosterPreviewAereo({
 
       {/* MEIO: DESCRIÇÃO */}
       <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '3.5mm 9.4mm', background: 'rgba(0,0,0,0.08)' }}>
-        <h2 style={{ fontSize: '18pt', fontWeight: 900, textTransform: 'uppercase', lineHeight: 1.2, margin: 0, flex: 1, fontFamily: 'inherit', wordBreak: 'break-word', color: 'black' }}>
+        <h2 style={{ fontSize: `${Math.max(8.5, description.length > 20 ? 18 * (20 / description.length) : 18).toFixed(1)}pt`, fontWeight: 900, textTransform: 'uppercase', lineHeight: 1.2, margin: 0, flex: 1, fontFamily: 'inherit', wordBreak: 'break-word', color: 'black' }}>
           {description}
         </h2>
         {isOffer && valDe > valPor && (
