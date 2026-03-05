@@ -290,7 +290,7 @@ export default function Home() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-background text-foreground overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-background text-foreground md:h-screen md:overflow-hidden">
       <header className="no-print shrink-0 px-4 py-3 border-b bg-card">
         <div className="flex justify-between items-center flex-wrap gap-4">
           <div className="flex items-center gap-3">
@@ -341,10 +341,10 @@ export default function Home() {
         {renderA4PageContent()}
       </div>
 
-      <main className="no-print flex-1 overflow-hidden min-h-0">
-        <div className="h-full grid grid-cols-1 md:grid-cols-12 min-h-0">
-          {/* Menu Lateral reduzido (cerca de 33% em vez de 40%) */}
-          <div className="md:col-span-4 lg:col-span-3 h-full flex flex-col border-r border-border bg-muted/10 min-h-0">
+      <main className="no-print flex-1 flex flex-col min-h-0 md:overflow-hidden">
+        <div className="flex-1 flex flex-col md:grid md:grid-cols-12 min-h-0">
+          {/* Menu Lateral reduzido */}
+          <div className="flex-none md:flex-auto md:col-span-4 lg:col-span-3 flex flex-col border-r border-border bg-muted/10 md:min-h-0 order-2 md:order-1 h-auto md:h-full">
       {/* Sidebar header removido, pois o Select foi para o menu superior */}
 
             <Tabs
@@ -372,7 +372,7 @@ export default function Home() {
               )}
 
               {/* Conteúdo da Sidebar (Rolável) */}
-              <div className="flex-1 overflow-y-auto px-4 pt-4 min-h-0 custom-scrollbar">
+              <div className="flex-1 md:overflow-y-auto overflow-visible px-4 pt-4 min-h-0 custom-scrollbar">
                 <div className="pb-12">
                   {postersData.map((poster, index) => (
                     <TabsContent key={index} value={index.toString()} className="m-0 border-none p-0">
@@ -389,7 +389,7 @@ export default function Home() {
           </div>
 
           {/* Área de Visualização (cerca de 67% a 75%) */}
-          <div className="md:col-span-8 lg:col-span-9 h-full flex flex-col p-4 gap-2 overflow-hidden bg-muted/20">
+          <div className="md:col-span-8 lg:col-span-9 flex flex-col p-4 gap-2 md:overflow-hidden bg-muted/20 order-1 md:order-2 border-b border-border md:border-b-0 h-[60vh] md:h-full">
             <p className="text-xs text-muted-foreground text-center shrink-0">
               Pré-visualização — Cartaz {activeIndex + 1} de {posterType === 'aereo' ? 2 : posterType === 'etiqueta' ? 16 : posterType === 'totem' ? 1 : 4}
             </p>
