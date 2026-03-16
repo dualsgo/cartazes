@@ -100,7 +100,7 @@ function SinglePosterPreview({
   }
 
   return (
-    <div ref={outerRef} style={{ position: 'absolute', inset: 0, overflow: 'hidden', backgroundColor: '#b0b8c4' }}>
+    <div ref={outerRef} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', backgroundColor: '#b0b8c4' }}>
       <div
         ref={innerRef}
         style={{
@@ -443,11 +443,14 @@ export default function Home() {
             </p>
 
             <div className="flex-1 min-h-0 relative border rounded border-border overflow-hidden">
-              <SinglePosterPreview
-                data={currentPoster}
-                posterType={posterType}
-                isReady={isProductReady}
-              />
+            {/* Wrapper absoluto garante dimensões confiáveis para o ResizeObserver */}
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
+                <SinglePosterPreview
+                  data={currentPoster}
+                  posterType={posterType}
+                  isReady={isProductReady}
+                />
+              </div>
             </div>
 
             <p className="text-xs text-muted-foreground text-center shrink-0">
