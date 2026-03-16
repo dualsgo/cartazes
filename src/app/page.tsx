@@ -77,12 +77,22 @@ function SinglePosterPreview({
     const outer = outerRef.current;
     const inner = innerRef.current;
     if (!outer || !inner) return;
+
+    // Esconde enquanto não medimos — evita flash do totem em tamanho A4 real
+    inner.style.visibility = 'hidden';
+
     const apply = () => {
-      const scale = Math.min(outer.clientWidth / w, outer.clientHeight / h) * 0.88;
+      const cw = outer.clientWidth;
+      const ch = outer.clientHeight;
+      // Se o container ainda não tem dimensões, aguarda o ResizeObserver
+      if (cw === 0 || ch === 0) return;
+      const scale = Math.min(cw / w, ch / h) * 0.88;
       inner.style.transform = `scale(${scale})`;
-      inner.style.left = `${(outer.clientWidth  - w * scale) / 2}px`;
-      inner.style.top  = `${(outer.clientHeight - h * scale) / 2}px`;
+      inner.style.left = `${(cw - w * scale) / 2}px`;
+      inner.style.top  = `${(ch - h * scale) / 2}px`;
+      inner.style.visibility = 'visible';
     };
+
     apply();
     const ro = new ResizeObserver(apply);
     ro.observe(outer);
