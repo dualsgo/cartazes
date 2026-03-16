@@ -39,6 +39,7 @@ export function PosterPreviewDefeito({
   priceFrom,
   priceFor,
   code,
+  ean,
   reference,
   paymentOption,
   defectType,
@@ -99,14 +100,16 @@ export function PosterPreviewDefeito({
             </h2>
           </div>
 
-          {/* ZONA 3: Preço DE + código (fixo) */}
+          {/* ZONA 3: Preço DE + código + ref + ean (fixo) */}
           <div className="shrink-0">
             <div className={cn('transition-opacity text-center text-[1.5em] font-headline text-black', valDe > 0 ? 'opacity-100' : 'opacity-0')}>
               <span className="block">DE:</span>
               <span className="font-bold line-through">R$ {formatCurrency(valDe)}</span>
             </div>
-            <div className="text-[0.72em] mt-1 text-black font-semibold">
+            <div className="text-[0.65em] mt-1 text-black font-semibold leading-snug">
               <span>SAP: <b className="font-bold">{code}</b></span>
+              {reference && <span className="ml-2">Ref.: <b className="font-bold">{reference}</b></span>}
+              {ean && <span className="block">EAN: <b className="font-bold">{ean}</b></span>}
             </div>
           </div>
         </div>
@@ -165,11 +168,7 @@ export function PosterPreviewDefeito({
             {installmentText}
           </div>
 
-          <div className="text-[0.75em] text-right w-full shrink-0 text-black font-semibold pb-1 pb-[0.2em] pr-4">
-            <span>
-              Ref.: <b className="font-bold">{reference}</b>
-            </span>
-          </div>
+
         </div>
       </div>
       <div className="absolute bottom-[2px] left-0 right-0 px-2 flex flex-col items-center gap-0.5 z-10">
