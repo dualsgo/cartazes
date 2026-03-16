@@ -70,27 +70,23 @@ function SinglePosterPreview({
   isReady: boolean;
 }) {
   const outerRef = useRef<HTMLDivElement>(null);
-  const innerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+  const [ready, setReady] = useState(false);
   const { w, h } = SINGLE_DIMS[posterType];
 
   useEffect(() => {
-    const outer = outerRef.current;
-    const inner = innerRef.current;
-    if (!outer || !inner) return;
+    // Recalcula escala quando o tipo muda
+    setReady(false);
 
-    // Esconde enquanto não medimos — evita flash do totem em tamanho A4 real
-    inner.style.visibility = 'hidden';
+    const outer = outerRef.current;
+    if (!outer) return;
 
     const apply = () => {
       const cw = outer.clientWidth;
       const ch = outer.clientHeight;
-      // Se o container ainda não tem dimensões, aguarda o ResizeObserver
       if (cw === 0 || ch === 0) return;
-      const scale = Math.min(cw / w, ch / h) * 0.88;
-      inner.style.transform = `scale(${scale})`;
-      inner.style.left = `${(cw - w * scale) / 2}px`;
-      inner.style.top  = `${(ch - h * scale) / 2}px`;
-      inner.style.visibility = 'visible';
+      setScale(Math.min(cw / w, ch / h) * 0.88);
+      setReady(true);
     };
 
     apply();
@@ -99,39 +95,52 @@ function SinglePosterPreview({
     return () => ro.disconnect();
   }, [posterType, w, h]);
 
-  if (!isReady) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full gap-3 text-muted-foreground p-6">
-        <PackageOpen className="h-10 w-10 opacity-30" />
-        <p className="text-sm font-medium">Busque um produto para ver o cartaz</p>
-        <p className="text-xs opacity-60 text-center">Use o campo de busca ao lado para localizar ou cadastrar o produto</p>
-      </div>
-    );
-  }
-
+  // O outerRef SEMPRE existe no DOM para que o ResizeObserver funcione.
+  // O conteúdo interno muda conforme isReady.
   return (
-    <div ref={outerRef} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', backgroundColor: '#b0b8c4' }}>
-      <div
-        ref={innerRef}
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: `${w}px`,
-          height: `${h}px`,
-          transformOrigin: 'top left',
-          backgroundColor: 'white',
-          boxShadow: '0 8px 32px -4px rgb(0 0 0 / 0.35)',
-          overflow: 'hidden',
-        }}
-      >
-        {posterType === 'reliquias'           && <PosterPreview {...data} isImperdiveis={false} />}
-        {posterType === 'ofertas-imperdiveis' && <PosterPreview {...data} isImperdiveis={true}  />}
-        {posterType === 'aereo'               && <PosterPreviewAereo {...data} />}
-        {posterType === 'avaria'              && <PosterPreviewDefeito {...data} />}
-        {posterType === 'etiqueta'            && <PosterPreviewEtiqueta {...data} />}
-        {posterType === 'totem'               && <PosterPreviewTotem {...data} />}
-      </div>
+    <div
+      ref={outerRef}
+      style={{
+        width: '100%',
+        height: '100%',
+        overflow: 'hidden',
+        backgroundColor: '#b0b8c4',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      {!isReady ? (
+        <div
+          className="flex flex-col items-center justify-center gap-3 text-muted-foreground p-6"
+          style={{ backgroundColor: 'transparent' }}
+        >
+          <PackageOpen className="h-10 w-10 opacity-30" />
+          <p className="text-sm font-medium">Busque um produto para ver o cartaz</p>
+          <p className="text-xs opacity-60 text-center">Use o campo de busca ao lado para localizar ou cadastrar o produto</p>
+        </div>
+      ) : (
+        <div
+          style={{
+            width: `${w}px`,
+            height: `${h}px`,
+            flexShrink: 0,
+            transformOrigin: 'center center',
+            transform: `scale(${scale})`,
+            visibility: ready ? 'visible' : 'hidden',
+            backgroundColor: 'white',
+            boxShadow: '0 8px 32px -4px rgb(0 0 0 / 0.35)',
+            overflow: 'hidden',
+          }}
+        >
+          {posterType === 'reliquias'           && <PosterPreview {...data} isImperdiveis={false} />}
+          {posterType === 'ofertas-imperdiveis' && <PosterPreview {...data} isImperdiveis={true}  />}
+          {posterType === 'aereo'               && <PosterPreviewAereo {...data} />}
+          {posterType === 'avaria'              && <PosterPreviewDefeito {...data} />}
+          {posterType === 'etiqueta'            && <PosterPreviewEtiqueta {...data} />}
+          {posterType === 'totem'               && <PosterPreviewTotem {...data} />}
+        </div>
+      )}
     </div>
   );
 }
