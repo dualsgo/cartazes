@@ -89,15 +89,20 @@ export function PosterPreviewEtiqueta({
 
             {/* Direita Inferior: Preço Por e Parcelamento Expandido Horizontalmente */}
             <div className="flex flex-col items-end justify-end flex-1 shrink-0">
-              <div className="flex items-start leading-none shrink-0" style={{ transformOrigin: 'right bottom' }}>
-                <span className="font-headline font-black mr-1 mt-1.5" style={{ fontSize: currencyFontSize }}>POR R$</span>
-                <div className="flex items-baseline">
-                  <span className="font-headline font-black leading-[0.75] tracking-tighter" style={{ fontSize: priceFontSize }}>
-                    {porInteger}
-                  </span>
-                  <span className="font-headline font-black leading-none" style={{ fontSize: decimalFontSize }}>
-                    ,{porDecimal}
-                  </span>
+              <div className="flex flex-col items-end leading-none shrink-0">
+                {/* Label POR — pequeno, acima */}
+                <span className="font-headline font-black uppercase tracking-widest" style={{ fontSize: currencyFontSize }}>POR</span>
+                {/* Bloco: R$ + inteiro + decimal */}
+                <div className="flex items-start leading-none">
+                  <span className="font-headline font-black self-start mt-1" style={{ fontSize: decimalFontSize }}>R$</span>
+                  <div className="flex items-baseline">
+                    <span className="font-headline font-black leading-[0.75] tracking-tighter" style={{ fontSize: priceFontSize }}>
+                      {porInteger}
+                    </span>
+                    <span className="font-headline font-black leading-none" style={{ fontSize: decimalFontSize }}>
+                      ,{porDecimal}
+                    </span>
+                  </div>
                 </div>
               </div>
               

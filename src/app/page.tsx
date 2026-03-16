@@ -31,7 +31,7 @@ const SINGLE_DIMS: Record<PosterType, { w: number; h: number }> = {
   aereo:                { w: 337, h: 505 },
   avaria:               { w: 491, h: 340 },
   etiqueta:             { w: 340, h: 127 },
-  totem:                { w: 794, h: 1123 },
+  totem:                { w: 595, h: 842 },
 };
 
 const initialPosterData = (): PosterData => ({
@@ -248,12 +248,15 @@ export default function Home() {
     for (let i = 0; i < queue.length; i += perPage) {
       pages.push(queue.slice(i, i + perPage));
     }
+    const isPortrait = ['aereo', 'etiqueta', 'totem'].includes(posterType);
+    const pageW = isPortrait ? '21cm' : '29.7cm';
+    const pageH = isPortrait ? '29.7cm' : '21cm';
     return pages.map((pageItems, pageIdx) => (
       <div
         key={pageIdx}
         style={{
-          width: '29.7cm',
-          height: '21cm',
+          width: pageW,
+          height: pageH,
           pageBreakAfter: pageIdx < pages.length - 1 ? 'always' : 'auto',
           breakAfter:     pageIdx < pages.length - 1 ? 'page'   : 'auto',
         }}
