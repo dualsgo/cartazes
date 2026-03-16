@@ -24,14 +24,20 @@ const PER_PAGE: Record<PosterType, number> = {
   totem: 1,
 };
 
-// Dimensões aproximadas de UM cartaz no grid (px a 96dpi), para pré-visualização isolada
-const SINGLE_DIMS: Record<PosterType, { w: number; h: number }> = {
-  reliquias:            { w: 491, h: 340 },
-  'ofertas-imperdiveis':{ w: 491, h: 340 },
-  aereo:                { w: 337, h: 505 },
-  avaria:               { w: 491, h: 340 },
-  etiqueta:             { w: 340, h: 127 },
-  totem:                { w: 595, h: 842 },
+// Dimensões da folha A4 (em pontos CSS ≈ px a 72dpi) por orientação
+const PAGE_DIMS = {
+  portrait:  { w: 595, h: 842 },   // A4 portrait
+  landscape: { w: 842, h: 595 },   // A4 landscape
+};
+
+// Orientação de impressão por tipo de cartaz
+const POSTER_ORIENTATION: Record<PosterType, 'portrait' | 'landscape'> = {
+  reliquias:            'landscape',
+  'ofertas-imperdiveis':'landscape',
+  aereo:                'portrait',
+  avaria:               'landscape',
+  etiqueta:             'portrait',
+  totem:                'portrait',
 };
 
 const initialPosterData = (): PosterData => ({
@@ -49,6 +55,7 @@ const initialPosterData = (): PosterData => ({
 });
 
 /* ─────────────────────────── SinglePosterPreview ─────────────────────────── */
+// Renderiza a folha A4 completa escalada — idêntico ao que vai para o PDF.
 function SinglePosterPreview({
   data,
   posterType,
@@ -59,18 +66,20 @@ function SinglePosterPreview({
   isReady: boolean;
 }) {
   const outerRef = useRef<HTMLDivElement>(null);
-  const innerRef = useRef<HTMLDivElement>(null);
-  const { w, h } = SINGLE_DIMS[posterType];
+  const paperRef = useRef<HTMLDivElement>(null);
+  const orientation = POSTER_ORIENTATION[posterType];
+  const { w, h } = PAGE_DIMS[orientation];
 
   useEffect(() => {
     const outer = outerRef.current;
-    const inner = innerRef.current;
-    if (!outer || !inner) return;
+    const paper = paperRef.current;
+    if (!outer || !paper) return;
     const apply = () => {
-      const scale = Math.min(outer.clientWidth / w, outer.clientHeight / h) * 0.92;
-      inner.style.transform = `scale(${scale})`;
-      inner.style.left = `${(outer.clientWidth  - w * scale) / 2}px`;
-      inner.style.top  = `${(outer.clientHeight - h * scale) / 2}px`;
+      // 0.88 → deixa margem visual ao redor da folha no painel
+      const scale = Math.min(outer.clientWidth / w, outer.clientHeight / h) * 0.88;
+      paper.style.transform = `scale(${scale})`;
+      paper.style.left = `${(outer.clientWidth  - w * scale) / 2}px`;
+      paper.style.top  = `${(outer.clientHeight - h * scale) / 2}px`;
     };
     apply();
     const ro = new ResizeObserver(apply);
@@ -89,9 +98,11 @@ function SinglePosterPreview({
   }
 
   return (
-    <div ref={outerRef} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
+    // Fundo cinza simula a mesa/área ao redor do papel
+    <div ref={outerRef} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', backgroundColor: '#b0b8c4' }}>
+      {/* Folha A4 — dimensões e layout IDÊNTICOS ao PDF */}
       <div
-        ref={innerRef}
+        ref={paperRef}
         style={{
           position: 'absolute',
           top: 0,
@@ -100,15 +111,11 @@ function SinglePosterPreview({
           height: `${h}px`,
           transformOrigin: 'top left',
           backgroundColor: 'white',
-          boxShadow: '0 4px 24px -4px rgb(0 0 0 / 0.18)',
+          boxShadow: '0 8px 32px -4px rgb(0 0 0 / 0.40)',
         }}
       >
-        {posterType === 'reliquias'             && <PosterPreview {...data} isImperdiveis={false} />}
-        {posterType === 'ofertas-imperdiveis'   && <PosterPreview {...data} isImperdiveis={true}  />}
-        {posterType === 'aereo'                 && <PosterPreviewAereo {...data} />}
-        {posterType === 'avaria'                && <PosterPreviewDefeito {...data} />}
-        {posterType === 'etiqueta'              && <PosterPreviewEtiqueta {...data} />}
-        {posterType === 'totem'                 && <PosterPreviewTotem {...data} />}
+        {/* PageGrid com apenas o cartaz atual — mesmo componente do PDF */}
+        <PageGrid items={[data]} posterType={posterType} perPage={PER_PAGE[posterType]} />
       </div>
     </div>
   );
@@ -429,7 +436,7 @@ export default function Home() {
               Pré-visualização — {orientation === 'landscape' ? 'Paisagem' : 'Retrato'}
             </p>
 
-            <div className="flex-1 min-h-0 flex items-center justify-center border rounded border-border bg-black/5">
+            <div className="flex-1 min-h-0 flex items-center justify-center border rounded border-border overflow-hidden">
               <SinglePosterPreview
                 data={currentPoster}
                 posterType={posterType}

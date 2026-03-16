@@ -64,31 +64,35 @@ export function PosterPreviewEtiqueta({
         </div>
 
         {/* Lado Direito Inteiro: Nome em cima, Preços em baixo */}
-        <div className="flex-1 px-2 pt-1.5 pb-1 flex flex-col justify-between h-full overflow-hidden">
+        <div className="flex-1 px-2 pt-1.5 pb-1 flex flex-col h-full overflow-hidden">
           
-          {/* TOPO: Linha Imaginária Reta para o Nome */}
+          {/* TOPO: Descrição */}
           <h2 className="font-headline font-bold text-[16px] leading-[1.1] uppercase overflow-hidden w-full max-h-[2.5em] shrink-0">
             {description}
           </h2>
-          
-          {/* BASE: Detalhes e Preço Final Desenhados em Linha e Ajustados */}
-          <div className="flex w-full items-end justify-between mt-auto shrink-0 space-x-1">
+
+          {/* MEIO + BASE: DE e Preço POR lado a lado, centralizados verticalmente */}
+          <div className="flex w-full items-center justify-between flex-1 min-h-0 space-x-1">
             
-            {/* Esquerda Inferior: Preço De e Detalhes */}
-            <div className="flex flex-col justify-end shrink-0 pb-1">
-              <div className={`text-[12px] font-bold ${hasDiscount ? 'opacity-100' : 'opacity-0'}`}>
-                DE: <span className="line-through">R$ {formatCurrency(valDe)}</span>
+            {/* Esquerda: DE (centro) + Códigos (rodapé) */}
+            <div className="flex flex-col justify-between h-full shrink-0 pb-1">
+              {/* Preço DE — centralizado no espaço disponível */}
+              <div className="flex-1 flex items-center">
+                <div className={`text-[14px] font-bold ${hasDiscount ? 'opacity-100' : 'opacity-0'}`}>
+                  DE: <span className="line-through">R$ {formatCurrency(valDe)}</span>
+                </div>
               </div>
               
-              <div className="text-[9px] text-gray-700 leading-tight">
+              {/* Códigos — rodapé */}
+              <div className="text-[9px] text-gray-700 leading-tight shrink-0">
                 {reference && <div className="truncate">Ref: {reference}</div>}
                 {code && <div className="truncate">SAP: {code}</div>}
                 {ean && <div className="truncate">EAN: {ean}</div>}
               </div>
             </div>
 
-            {/* Direita Inferior: Preço Por e Parcelamento Expandido Horizontalmente */}
-            <div className="flex flex-col items-end justify-end flex-1 shrink-0">
+            {/* Direita: Preço Por e Parcelamento */}
+            <div className="flex flex-col items-end justify-center flex-1 shrink-0 h-full">
               <div className="flex flex-col items-end leading-none shrink-0">
                 {/* Label POR — pequeno, acima */}
                 <span className="font-headline font-black uppercase tracking-widest" style={{ fontSize: currencyFontSize }}>POR</span>
@@ -106,7 +110,7 @@ export function PosterPreviewEtiqueta({
                 </div>
               </div>
               
-              <div className="flex items-center justify-end w-full gap-2 mt-1.5 shrink-0">
+              <div className="flex items-center justify-end w-full gap-2 mt-1 shrink-0">
                 <span className="font-bold whitespace-nowrap" style={{ fontSize: currencyFontSize }}>un. à vista</span>
                 {hasInstallments && (
                    <span className="font-headline font-bold leading-tight text-right whitespace-nowrap" style={{ fontSize: installmentFontSize }}>
