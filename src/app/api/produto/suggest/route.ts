@@ -35,6 +35,11 @@ export async function GET(request: NextRequest) {
         return NextResponse.json([]);
     }
 
+    // Limite de tamanho e apenas alfanuméricos no prefixo de busca
+    if (prefix.length > 20 || !/^[a-zA-Z0-9]+$/.test(prefix)) {
+        return NextResponse.json([]);
+    }
+
     const all = loadAll();
     const matches: SuggestItem[] = [];
 

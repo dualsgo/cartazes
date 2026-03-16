@@ -49,6 +49,14 @@ export async function GET(request: NextRequest) {
         );
     }
 
+    // Limite de tamanho e apenas caracteres alfanuméricos permitidos na busca
+    if (q.length > 30 || !/^[a-zA-Z0-9\-_]+$/.test(q)) {
+        return NextResponse.json(
+            { error: 'Parâmetro "q" inválido.' },
+            { status: 400 }
+        );
+    }
+
     const produtos = loadProdutos();
     const produto = produtos[q];
 
@@ -61,6 +69,12 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     try {
+        // Rejeita bodies muito grandes (proteção contra abuso)
+        const contentLength = request.headers.get('content-length');
+        if (contentLength && parseInt(contentLength, 10) > 2048) {
+            return NextResponse.json({ error: 'Payload muito grande.' }, { status: 413 });
+        }
+
         const body = await request.json() as {
             key: string;
             description: string;
@@ -78,31 +92,48 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // Validações de tamanho e formato
+        const keyClean = String(key).trim();
+        const descClean = String(description).trim().toUpperCase();
+        const refClean  = reference ? String(reference).trim() : undefined;
+        const eanClean  = ean  ? String(ean).trim()  : undefined;
+        const codeClean = code ? String(code).trim() : undefined;
+
+        if (keyClean.length > 30 || !/^[a-zA-Z0-9\-_]+$/.test(keyClean)) {
+            return NextResponse.json({ error: 'Chave (key) inválida.' }, { status: 400 });
+        }
+        if (descClean.length < 2 || descClean.length > 120) {
+            return NextResponse.json({ error: 'Descrição deve ter entre 2 e 120 caracteres.' }, { status: 400 });
+        }
+        if (refClean  && refClean.length  > 40) return NextResponse.json({ error: 'Referência muito longa.' },  { status: 400 });
+        if (eanClean  && (eanClean.length  > 14 || !/^\d+$/.test(eanClean)))  return NextResponse.json({ error: 'EAN inválido.' },  { status: 400 });
+        if (codeClean && (codeClean.length > 10 || !/^\d+$/.test(codeClean))) return NextResponse.json({ error: 'Código SAP inválido.' }, { status: 400 });
+
         const produtos = loadProdutos();
 
         const entry: ProdutoEntry = {
-            description: description.toUpperCase().trim(),
-            reference: reference?.trim() ?? key,
-            ...(ean ? { ean: ean.trim() } : {}),
-            ...(code ? { code: code.trim() } : {}),
+            description: descClean,
+            reference: refClean ?? keyClean,
+            ...(eanClean  ? { ean:  eanClean  } : {}),
+            ...(codeClean ? { code: codeClean } : {}),
         };
 
         // Salva pela chave principal (SAP ou EAN fornecido)
-        produtos[key.trim()] = entry;
+        produtos[keyClean] = entry;
 
         // Se EAN foi fornecido e difere da chave, indexa também pelo EAN
-        if (ean && ean.trim() !== key.trim()) {
-            produtos[ean.trim()] = { ...entry, code: code?.trim() ?? key.trim() };
+        if (eanClean && eanClean !== keyClean) {
+            produtos[eanClean] = { ...entry, code: codeClean ?? keyClean };
         }
         // Se SAP código foi fornecido e difere da chave, indexa também pelo SAP
-        if (code && code.trim() !== key.trim()) {
-            produtos[code.trim()] = { ...entry, ean: ean?.trim() };
+        if (codeClean && codeClean !== keyClean) {
+            produtos[codeClean] = { ...entry, ean: eanClean };
         }
 
         saveProdutos(produtos);
 
-        console.log(`[api/produto] Produto cadastrado: ${key} → ${entry.description}`);
-        return NextResponse.json({ success: true, key, entry }, { status: 201 });
+        console.log(`[api/produto] Produto cadastrado: ${keyClean} → ${entry.description}`);
+        return NextResponse.json({ success: true, key: keyClean, entry }, { status: 201 });
     } catch (err) {
         console.error('[api/produto] Erro ao salvar produto:', err);
         return NextResponse.json({ error: 'Erro interno ao salvar produto.' }, { status: 500 });
