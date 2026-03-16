@@ -31,7 +31,7 @@ const SINGLE_DIMS: Record<PosterType, { w: number; h: number }> = {
   aereo:                { w: 720, h: 262 },  // 190mm × 69mm @ 96dpi
   avaria:               { w: 491, h: 340 },
   etiqueta:             { w: 340, h: 127 },
-  totem:                { w: 595, h: 842 },
+  totem:                { w: 794, h: 1123 }, // A4 a 96dpi (210×297mm em pixels de tela)
 };
 
 // Orientação de impressão por tipo de cartaz
