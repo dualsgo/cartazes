@@ -18,23 +18,27 @@ type PosterType = 'reliquias' | 'ofertas-imperdiveis' | 'aereo' | 'avaria' | 'et
 const PER_PAGE: Record<PosterType, number> = {
   reliquias: 4,
   'ofertas-imperdiveis': 4,
-  aereo: 4,
+  aereo: 2,           // 2 por página em landscape
   avaria: 4,
   etiqueta: 16,
   totem: 1,
 };
 
-// Dimensões da folha A4 (em pontos CSS ≈ px a 72dpi) por orientação
-const PAGE_DIMS = {
-  portrait:  { w: 595, h: 842 },   // A4 portrait
-  landscape: { w: 842, h: 595 },   // A4 landscape
+// Dimensões do cartaz individual para o preview (px)
+const SINGLE_DIMS: Record<PosterType, { w: number; h: number }> = {
+  reliquias:            { w: 491, h: 340 },
+  'ofertas-imperdiveis':{ w: 491, h: 340 },
+  aereo:                { w: 720, h: 262 },  // 190mm × 69mm @ 96dpi
+  avaria:               { w: 491, h: 340 },
+  etiqueta:             { w: 340, h: 127 },
+  totem:                { w: 595, h: 842 },
 };
 
 // Orientação de impressão por tipo de cartaz
 const POSTER_ORIENTATION: Record<PosterType, 'portrait' | 'landscape'> = {
   reliquias:            'landscape',
   'ofertas-imperdiveis':'landscape',
-  aereo:                'portrait',
+  aereo:                'landscape',  // landscape: 2 cartazes por página
   avaria:               'landscape',
   etiqueta:             'portrait',
   totem:                'portrait',
@@ -55,7 +59,7 @@ const initialPosterData = (): PosterData => ({
 });
 
 /* ─────────────────────────── SinglePosterPreview ─────────────────────────── */
-// Renderiza a folha A4 completa escalada — idêntico ao que vai para o PDF.
+// Mostra um cartaz individual em fundo cinza (simulação de papel).
 function SinglePosterPreview({
   data,
   posterType,
@@ -66,20 +70,18 @@ function SinglePosterPreview({
   isReady: boolean;
 }) {
   const outerRef = useRef<HTMLDivElement>(null);
-  const paperRef = useRef<HTMLDivElement>(null);
-  const orientation = POSTER_ORIENTATION[posterType];
-  const { w, h } = PAGE_DIMS[orientation];
+  const innerRef = useRef<HTMLDivElement>(null);
+  const { w, h } = SINGLE_DIMS[posterType];
 
   useEffect(() => {
     const outer = outerRef.current;
-    const paper = paperRef.current;
-    if (!outer || !paper) return;
+    const inner = innerRef.current;
+    if (!outer || !inner) return;
     const apply = () => {
-      // 0.88 → deixa margem visual ao redor da folha no painel
       const scale = Math.min(outer.clientWidth / w, outer.clientHeight / h) * 0.88;
-      paper.style.transform = `scale(${scale})`;
-      paper.style.left = `${(outer.clientWidth  - w * scale) / 2}px`;
-      paper.style.top  = `${(outer.clientHeight - h * scale) / 2}px`;
+      inner.style.transform = `scale(${scale})`;
+      inner.style.left = `${(outer.clientWidth  - w * scale) / 2}px`;
+      inner.style.top  = `${(outer.clientHeight - h * scale) / 2}px`;
     };
     apply();
     const ro = new ResizeObserver(apply);
@@ -98,11 +100,9 @@ function SinglePosterPreview({
   }
 
   return (
-    // Fundo cinza simula a mesa/área ao redor do papel
-    <div ref={outerRef} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', backgroundColor: '#b0b8c4' }}>
-      {/* Folha A4 — dimensões e layout IDÊNTICOS ao PDF */}
+    <div ref={outerRef} style={{ position: 'absolute', inset: 0, overflow: 'hidden', backgroundColor: '#b0b8c4' }}>
       <div
-        ref={paperRef}
+        ref={innerRef}
         style={{
           position: 'absolute',
           top: 0,
@@ -111,11 +111,16 @@ function SinglePosterPreview({
           height: `${h}px`,
           transformOrigin: 'top left',
           backgroundColor: 'white',
-          boxShadow: '0 8px 32px -4px rgb(0 0 0 / 0.40)',
+          boxShadow: '0 8px 32px -4px rgb(0 0 0 / 0.35)',
+          overflow: 'hidden',
         }}
       >
-        {/* PageGrid com apenas o cartaz atual — mesmo componente do PDF */}
-        <PageGrid items={[data]} posterType={posterType} perPage={PER_PAGE[posterType]} />
+        {posterType === 'reliquias'           && <PosterPreview {...data} isImperdiveis={false} />}
+        {posterType === 'ofertas-imperdiveis' && <PosterPreview {...data} isImperdiveis={true}  />}
+        {posterType === 'aereo'               && <PosterPreviewAereo {...data} />}
+        {posterType === 'avaria'              && <PosterPreviewDefeito {...data} />}
+        {posterType === 'etiqueta'            && <PosterPreviewEtiqueta {...data} />}
+        {posterType === 'totem'               && <PosterPreviewTotem {...data} />}
       </div>
     </div>
   );
@@ -126,9 +131,10 @@ function PageGrid({ items, posterType, perPage }: { items: PosterData[]; posterT
   const empties = Array.from({ length: perPage - items.length });
 
   if (posterType === 'aereo') {
+    // 2 cartazes por página landscape, 1 por linha — cartaz de 190mm cabe na largura total
     return (
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', width: '100%', height: '100%', gap: '12mm', padding: 'calc(1cm - 2mm) 1cm 1cm 1cm' }}>
-        {items.map((d, i) => (<div key={i} style={{ width: '100%', height: '100%', overflow: 'hidden' }}><PosterPreviewAereo {...d} /></div>))}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gridTemplateRows: '1fr 1fr', width: '100%', height: '100%', gap: '8mm', padding: '8mm 10mm' }}>
+        {items.map((d, i) => (<div key={i} style={{ width: '100%', height: '100%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}><PosterPreviewAereo {...d} /></div>))}
         {empties.map((_, i) => <div key={`e${i}`} />)}
       </div>
     );
@@ -142,8 +148,8 @@ function PageGrid({ items, posterType, perPage }: { items: PosterData[]; posterT
   }
   if (posterType === 'totem') {
     return (
-      <div style={{ display: 'flex', width: '100%', height: '100%', backgroundColor: 'white' }}>
-        <div style={{ width: '100%', height: '100%' }}><PosterPreviewTotem {...items[0]} /></div>
+      <div style={{ width: '100%', height: '100%', backgroundColor: 'white' }}>
+        <PosterPreviewTotem {...items[0]} />
       </div>
     );
   }
@@ -209,7 +215,7 @@ export default function Home() {
       document.head.appendChild(style);
     }
     if (posterType === 'aereo') {
-      style.innerHTML = `@media print { @page { size: A4 portrait; margin: 0; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0; padding: 0; } }`;
+      style.innerHTML = `@media print { @page { size: A4 landscape; margin: 0; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0; padding: 0; } }`;
     } else if (posterType === 'etiqueta') {
       style.innerHTML = `@media print { @page { size: A4 portrait; margin: 0; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0; padding: 0; } }`;
     } else if (posterType === 'totem') {
@@ -255,7 +261,7 @@ export default function Home() {
     for (let i = 0; i < queue.length; i += perPage) {
       pages.push(queue.slice(i, i + perPage));
     }
-    const isPortrait = ['aereo', 'etiqueta', 'totem'].includes(posterType);
+    const isPortrait = ['etiqueta', 'totem'].includes(posterType);
     const pageW = isPortrait ? '21cm' : '29.7cm';
     const pageH = isPortrait ? '29.7cm' : '21cm';
     return pages.map((pageItems, pageIdx) => (
@@ -436,7 +442,7 @@ export default function Home() {
               Pré-visualização — {orientation === 'landscape' ? 'Paisagem' : 'Retrato'}
             </p>
 
-            <div className="flex-1 min-h-0 flex items-center justify-center border rounded border-border overflow-hidden">
+            <div className="flex-1 min-h-0 relative border rounded border-border overflow-hidden">
               <SinglePosterPreview
                 data={currentPoster}
                 posterType={posterType}
