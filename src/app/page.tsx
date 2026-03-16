@@ -7,8 +7,10 @@ import { PosterPreviewAereo } from '@/app/components/poster-preview-aereo';
 import { PosterPreviewDefeito } from '@/app/components/poster-preview-defeito';
 import { PosterPreviewEtiqueta } from '@/app/components/poster-preview-etiqueta';
 import { PosterPreviewTotem } from '@/app/components/poster-preview-totem';
+import { DisclaimerModal } from '@/app/components/disclaimer-modal';
+import { AboutPanel } from '@/app/components/about-panel';
 import type { PosterData } from '@/app/lib/types';
-import { Printer, Plus, Trash2, FileStack, PackageOpen } from 'lucide-react';
+import { Printer, Plus, Trash2, FileStack, PackageOpen, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
@@ -220,6 +222,7 @@ export default function Home() {
   const [currentPoster, setCurrentPoster] = useState<PosterData>(initialPosterData());
   const [isProductReady, setIsProductReady] = useState(false);
   const [formKey, setFormKey] = useState(0);
+  const [showAbout, setShowAbout] = useState(false);
 
   const perPage    = PER_PAGE[posterType];
   const totalPages = queue.length > 0 ? Math.ceil(queue.length / perPage) : 0;
@@ -312,6 +315,10 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground md:h-screen md:overflow-hidden print:w-full print:h-auto print:min-h-0 print:block">
 
+      {/* Modais */}
+      <DisclaimerModal />
+      <AboutPanel open={showAbout} onClose={() => setShowAbout(false)} />
+
       {/* ── Header ── */}
       <header className="no-print shrink-0 px-4 py-3 border-b bg-card">
         <div className="flex justify-between items-center flex-wrap gap-4">
@@ -350,14 +357,24 @@ export default function Home() {
                 </button>
               ))}
             </div>
-            <Button
-              onClick={() => window.print()}
-              disabled={queue.length === 0}
-              className="transition-transform active:scale-95"
-            >
-              <Printer className="mr-2 h-4 w-4" />
-              Imprimir{queue.length > 0 ? ` (${totalPages}p)` : ''}
-            </Button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowAbout(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all border border-border/50 hover:border-border"
+                title="Sobre esta ferramenta"
+              >
+                <Info className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Sobre</span>
+              </button>
+              <Button
+                onClick={() => window.print()}
+                disabled={queue.length === 0}
+                className="transition-transform active:scale-95"
+              >
+                <Printer className="mr-2 h-4 w-4" />
+                Imprimir{queue.length > 0 ? ` (${totalPages}p)` : ''}
+              </Button>
+            </div>
           </div>
         </div>
       </header>
