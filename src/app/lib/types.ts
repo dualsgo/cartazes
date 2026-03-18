@@ -18,4 +18,7 @@ export type PosterData = {
   pagueY?: number;
   comboDescription?: string;
   comboPrice?: string;
+  comboCode?: string;
+  comboEan?: string;
+  comboReference?: string;
 };

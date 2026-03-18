@@ -20,6 +20,8 @@ export function PosterPreviewLevePague({
   description,
   priceFor,
   code,
+  ean,
+  reference,
   leveX = 2,
   pagueY = 1,
   offerValidityStart,
@@ -37,7 +39,7 @@ export function PosterPreviewLevePague({
 
   const baseFontSize = isA4 ? '12px' : '7px';
   const headerFontSize = isA4 ? '5.5em' : '4.5em';
-  const descFontSize = isA4 ? '3.5em' : '2.8em';
+  const descFontSize = isA4 ? '4.2em' : '3.6em';
   const priceFontSize = isA4 ? '12em' : '10em';
 
   return (
@@ -49,25 +51,31 @@ export function PosterPreviewLevePague({
       style={{ fontSize: baseFontSize }}
     >
       {/* HEADER: LEVE X, PAGUE Y! */}
-      <div className="bg-black text-white w-full py-6 px-2 flex flex-col items-center justify-center shrink-0 print:color-adjust-exact">
-        <h1 className="font-headline font-black uppercase text-center leading-[0.9]" style={{ fontSize: headerFontSize }}>
+      <div className="bg-black text-white w-full py-8 px-2 flex flex-col items-center justify-center shrink-0 print:color-adjust-exact">
+        <h1 className="font-headline font-black uppercase text-center leading-[1.1]" style={{ fontSize: headerFontSize }}>
           LEVE {leveX},<br/>PAGUE {pagueY}!
         </h1>
       </div>
 
       {/* DESCRIPTION */}
       <div className="flex flex-col items-center w-full mt-6 px-4 flex-none">
-        <h2 className="font-headline font-black uppercase leading-tight text-center w-full" style={{ fontSize: descFontSize }}>
+        <h2 className="font-headline font-black uppercase leading-[1.1] text-center w-full" style={{ fontSize: descFontSize }}>
           {description}
         </h2>
-        <div className="text-[1.2em] font-semibold mt-1">
+        <div className="flex gap-4 text-[1.4em] font-bold mt-2 text-gray-700">
           {code && <span>SAP: {code}</span>}
+          {ean && <span>EAN: {ean}</span>}
+          {reference && <span>REF: {reference}</span>}
         </div>
       </div>
 
       {/* PRICE SECTION */}
       <div className="flex-1 flex flex-col items-center justify-center w-full mt-4">
-        <div className="font-headline font-black uppercase text-[4em] leading-none mb-2">
+        <div className="text-[1.2em] font-bold uppercase text-gray-500 mb-2">
+          Preço original da unidade: R$ {priceFor}
+        </div>
+        
+        <div className="font-headline font-black uppercase text-[5em] leading-none mb-2">
           Leve {leveX} por
         </div>
         

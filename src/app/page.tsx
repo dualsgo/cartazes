@@ -76,6 +76,9 @@ const initialPosterData = (): PosterData => ({
   pagueY: 1,
   comboDescription: '',
   comboPrice: '',
+  comboCode: '',
+  comboEan: '',
+  comboReference: '',
 });
 
 /* ─────────────────────────── SinglePosterPreview ─────────────────────────── */
@@ -292,7 +295,7 @@ export default function Home() {
       style.id = styleId;
       document.head.appendChild(style);
     }
-    const orientation = POSTER_ORIENTATION[posterType];
+    const orientation = POSTER_ORIENTATION[posterType as PosterType];
     style.innerHTML = `@media print { @page { size: A4 ${orientation}; margin: 0; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0; padding: 0; } }`;
   }, [posterType]);
 
@@ -332,7 +335,7 @@ export default function Home() {
     for (let i = 0; i < queue.length; i += perPage) {
       pages.push(queue.slice(i, i + perPage));
     }
-    const orientation = POSTER_ORIENTATION[posterType];
+    const orientation = POSTER_ORIENTATION[posterType as PosterType];
     const pageW = orientation === 'portrait' ? '21cm' : '29.7cm';
     const pageH = orientation === 'portrait' ? '29.7cm' : '21cm';
     return pages.map((pageItems, pageIdx) => (

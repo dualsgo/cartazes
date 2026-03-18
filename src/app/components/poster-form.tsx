@@ -578,11 +578,11 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
                       {(data.defectNote ?? '').length}/60
                     </span>
                   </div>
-                  <Input
-                    id="defect-note"
-                    value={data.defectNote ?? ''}
-                    onChange={e => setData(prev => ({ ...prev, defectNote: e.target.value.slice(0, 60) }))}
-                    placeholder="Ex: arranhado na lateral, sem bateria…"
+                    <Input
+                      id="defect-note"
+                      value={data.defectNote ?? ''}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setData(prev => ({ ...prev, defectNote: e.target.value.slice(0, 60) }))}
+                      placeholder="Ex: arranhado na lateral, sem bateria…"
                     className="text-sm bg-background"
                     maxLength={60}
                   />
@@ -638,6 +638,38 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
                     className="uppercase font-semibold border-2"
                   />
                 </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="space-y-1">
+                    <Label htmlFor="combo-code" className="text-[10px] font-bold uppercase text-muted-foreground">SAP B</Label>
+                    <Input 
+                      id="combo-code"
+                      value={data.comboCode ?? ''}
+                      onChange={e => setData(prev => ({ ...prev, comboCode: e.target.value.replace(/\D/g, '') }))}
+                      className="h-8 text-xs font-mono"
+                      placeholder="SAP"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="combo-ean" className="text-[10px] font-bold uppercase text-muted-foreground">EAN B</Label>
+                    <Input 
+                      id="combo-ean"
+                      value={data.comboEan ?? ''}
+                      onChange={e => setData(prev => ({ ...prev, comboEan: e.target.value.replace(/\D/g, '') }))}
+                      className="h-8 text-xs font-mono"
+                      placeholder="EAN"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="combo-ref" className="text-[10px] font-bold uppercase text-muted-foreground">REF B</Label>
+                    <Input 
+                      id="combo-ref"
+                      value={data.comboReference ?? ''}
+                      onChange={e => setData(prev => ({ ...prev, comboReference: e.target.value }))}
+                      className="h-8 text-xs"
+                      placeholder="REF"
+                    />
+                  </div>
+                </div>
                 <div className="space-y-2">
                   <Label htmlFor="combo-price" className="text-xs font-bold uppercase text-primary">Preço Oferta Item B</Label>
                   <Input 
@@ -654,7 +686,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
             )}
 
             <div className="grid grid-cols-2 gap-4 items-start">
-              {(isOfferType || posterType === 'avaria') && (
+              {isOfferType && !posterType.startsWith('leve-pague') && !posterType.startsWith('combo') && (
                 <div className="space-y-2">
                   <Label htmlFor="price-from" className="text-xs text-muted-foreground uppercase font-bold tracking-wider">
                     {posterType === 'avaria' ? 'Preço Original' : 'Preço DE'}
@@ -671,10 +703,12 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
                 </div>
               )}
               
-              <div className={cn('space-y-2', !(isOfferType || posterType === 'avaria') && 'col-span-2')}>
+              <div className={cn('space-y-2', (!isOfferType || posterType.startsWith('leve-pague') || posterType.startsWith('combo')) && 'col-span-2')}>
                 <div className="flex items-center justify-between">
                   <Label htmlFor="price-for" className="text-xs text-muted-foreground uppercase font-bold tracking-wider text-black">
-                    {(isOfferType || posterType === 'avaria') ? 'Preço POR' : 'Preço Final'}
+                    {posterType.startsWith('leve-pague') ? 'Preço Unitário' : 
+                     posterType.startsWith('combo') ? 'Preço Item A' :
+                     isOfferType ? 'Preço POR' : 'Preço Final'}
                   </Label>
                   {posterType === 'avaria' && priceForOverridden && (
                     <button
@@ -706,7 +740,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
               </div>
             </div>
 
-            {(posterType === 'reliquias' || posterType === 'ofertas-imperdiveis' || posterType === 'etiqueta' || posterType === 'avaria' || posterType === 'aereo' || posterType === 'totem' || posterType.startsWith('leve-pague') || posterType.startsWith('combo')) && (
+            {['reliquias', 'ofertas-imperdiveis', 'etiqueta', 'avaria', 'aereo', 'totem'].includes(posterType) && (
               <div className="space-y-2 pt-2">
                  <Label className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Forma de Pagamento</Label>
                  <div className="flex bg-muted p-1 rounded-lg">
