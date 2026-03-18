@@ -22,3 +22,8 @@ export type PosterData = {
   comboEan?: string;
   comboReference?: string;
 };
+
+export type PosterSettings = {
+  maxInstallments: number;
+  minInstallmentAmount: number;
+};

@@ -11,7 +11,8 @@ import { PosterPreviewLevePague } from '@/app/components/poster-preview-leve-pag
 import { PosterPreviewCombo } from '@/app/components/poster-preview-combo';
 import { DisclaimerModal } from '@/app/components/disclaimer-modal';
 import { AboutPanel } from '@/app/components/about-panel';
-import type { PosterData } from '@/app/lib/types';
+import { SettingsDialog } from '@/app/components/settings-dialog';
+import type { PosterData, PosterSettings } from '@/app/lib/types';
 import { Printer, Plus, Trash2, FileStack, PackageOpen, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -87,10 +88,12 @@ function SinglePosterPreview({
   data,
   posterType,
   isReady,
+  settings,
 }: {
   data: PosterData;
   posterType: PosterType;
   isReady: boolean;
+  settings: PosterSettings;
 }) {
   const outerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
@@ -156,12 +159,12 @@ function SinglePosterPreview({
             overflow: 'hidden',
           }}
         >
-          {posterType === 'reliquias'           && <PosterPreview {...data} isImperdiveis={false} />}
-          {posterType === 'ofertas-imperdiveis' && <PosterPreview {...data} isImperdiveis={true}  />}
+          {posterType === 'reliquias'           && <PosterPreview {...data} isImperdiveis={false} settings={settings} />}
+          {posterType === 'ofertas-imperdiveis' && <PosterPreview {...data} isImperdiveis={true}  settings={settings} />}
           {posterType === 'aereo'               && <PosterPreviewAereo {...data} />}
-          {posterType === 'avaria'              && <PosterPreviewDefeito {...data} />}
+          {posterType === 'avaria'              && <PosterPreviewDefeito {...data} settings={settings} />}
           {posterType === 'etiqueta'            && <PosterPreviewEtiqueta {...data} />}
-          {posterType === 'totem'               && <PosterPreviewTotem {...data} />}
+          {posterType === 'totem'               && <PosterPreviewTotem {...data} settings={settings} />}
           {(posterType === 'leve-pague-a4' || posterType === 'leve-pague-a6') && <PosterPreviewLevePague {...data} isA4={posterType === 'leve-pague-a4'} />}
           {(posterType === 'combo-a4' || posterType === 'combo-a6') && <PosterPreviewCombo {...data} isA4={posterType === 'combo-a4'} />}
         </div>
@@ -171,7 +174,17 @@ function SinglePosterPreview({
 }
 
 /* ─────────────────────────── renderPageGrid ──────────────────────────────── */
-function PageGrid({ items, posterType, perPage }: { items: PosterData[]; posterType: PosterType; perPage: number }) {
+function PageGrid({ 
+  items, 
+  posterType, 
+  perPage, 
+  settings 
+}: { 
+  items: PosterData[]; 
+  posterType: PosterType; 
+  perPage: number;
+  settings: PosterSettings;
+}) {
   const empties = Array.from({ length: perPage - items.length });
 
   if (posterType === 'aereo') {
@@ -193,7 +206,7 @@ function PageGrid({ items, posterType, perPage }: { items: PosterData[]; posterT
   if (posterType === 'totem' || posterType === 'leve-pague-a4' || posterType === 'combo-a4') {
     return (
       <div style={{ width: '100%', height: '100%', backgroundColor: 'white' }}>
-        {posterType === 'totem' && <PosterPreviewTotem {...items[0]} />}
+        {posterType === 'totem' && <PosterPreviewTotem {...items[0]} settings={settings} />}
         {posterType === 'leve-pague-a4' && <PosterPreviewLevePague {...items[0]} isA4={true} />}
         {posterType === 'combo-a4' && <PosterPreviewCombo {...items[0]} isA4={true} />}
       </div>
@@ -264,8 +277,8 @@ function PageGrid({ items, posterType, perPage }: { items: PosterData[]; posterT
           {/* O Cartaz real, posicionado nos limites do seu padding interno */}
           <div style={{ width: '100%', height: '100%', overflow: 'hidden' }}>
             {posterType === 'reliquias' || posterType === 'ofertas-imperdiveis'
-              ? <PosterPreview {...d} isImperdiveis={posterType === 'ofertas-imperdiveis'} />
-              : <PosterPreviewDefeito {...d} />}
+              ? <PosterPreview {...d} isImperdiveis={posterType === 'ofertas-imperdiveis'} settings={settings} />
+              : <PosterPreviewDefeito {...d} settings={settings} />}
           </div>
         </div>
       ))}
@@ -282,6 +295,23 @@ export default function Home() {
   const [isProductReady, setIsProductReady] = useState(false);
   const [formKey, setFormKey] = useState(0);
   const [showAbout, setShowAbout] = useState(false);
+  const [settings, setSettings] = useState<PosterSettings>({
+    maxInstallments: 6,
+    minInstallmentAmount: 30,
+  });
+
+  // Load settings
+  useEffect(() => {
+    const saved = localStorage.getItem('poster-settings');
+    if (saved) {
+      try { setSettings(JSON.parse(saved)); } catch { /* ignore */ }
+    }
+  }, []);
+
+  const saveSettings = (newSettings: PosterSettings) => {
+    setSettings(newSettings);
+    localStorage.setItem('poster-settings', JSON.stringify(newSettings));
+  };
 
   const perPage    = PER_PAGE[posterType];
   const totalPages = queue.length > 0 ? Math.ceil(queue.length / perPage) : 0;
@@ -348,7 +378,7 @@ export default function Home() {
           breakAfter:     pageIdx < pages.length - 1 ? 'page'   : 'auto',
         }}
       >
-        <PageGrid items={pageItems} posterType={posterType} perPage={perPage} />
+        <PageGrid items={pageItems} posterType={posterType} perPage={perPage} settings={settings} />
       </div>
     ));
   };
@@ -422,6 +452,7 @@ export default function Home() {
                 <Info className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Sobre</span>
               </button>
+              <SettingsDialog settings={settings} onSave={saveSettings} />
               <Button
                 onClick={() => window.print()}
                 disabled={queue.length === 0}
@@ -541,6 +572,7 @@ export default function Home() {
                   data={currentPoster}
                   posterType={posterType}
                   isReady={isProductReady}
+                  settings={settings}
                 />
               </div>
             </div>
