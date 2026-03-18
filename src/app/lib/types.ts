@@ -27,3 +27,15 @@ export type PosterSettings = {
   maxInstallments: number;
   minInstallmentAmount: number;
 };
+
+export type PosterType = 
+  | 'reliquias' 
+  | 'ofertas-imperdiveis' 
+  | 'aereo' 
+  | 'avaria' 
+  | 'etiqueta' 
+  | 'totem' 
+  | 'leve-pague-a4' 
+  | 'leve-pague-a6' 
+  | 'combo-a4' 
+  | 'combo-a6';

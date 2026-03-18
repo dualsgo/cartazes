@@ -100,15 +100,15 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
   const comboPrice = useCurrencyInput(data.comboPrice || '');
 
   useEffect(() => {
-    setData(prev => ({ ...prev, priceFor: priceFor.display }));
+    setData((prev: PosterData) => ({ ...prev, priceFor: priceFor.display }));
   }, [priceFor.display]);
 
   useEffect(() => {
-    setData(prev => ({ ...prev, priceFrom: priceFrom.display }));
+    setData((prev: PosterData) => ({ ...prev, priceFrom: priceFrom.display }));
   }, [priceFrom.display]);
 
   useEffect(() => {
-    setData(prev => ({ ...prev, comboPrice: comboPrice.display }));
+    setData((prev: PosterData) => ({ ...prev, comboPrice: comboPrice.display }));
   }, [comboPrice.display]);
   
   // Recalcula POR automaticamente a partir do DE + desconto do motivo,
@@ -200,7 +200,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
       };
 
       if (target === 'A') {
-        setData(prev => ({
+        setData((prev: PosterData) => ({
           ...prev,
           description: produto.description,
           reference:   produto.reference,
@@ -210,7 +210,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
         setLookupStatus('found');
         onLookupStatusChange?.(true);
       } else {
-        setData(prev => ({
+        setData((prev: PosterData) => ({
           ...prev,
           comboDescription: produto.description,
           comboReference:   produto.reference,
@@ -243,11 +243,11 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
   };
 
   const handlePaymentOptionChange = (value: string) => {
-    setData(prev => ({ ...prev, paymentOption: value as 'normal' | 'installment' }));
+    setData((prev: PosterData) => ({ ...prev, paymentOption: value as 'normal' | 'installment' }));
   };
 
   const handleSubTypeChange = (value: string) => {
-    setData(prev => ({
+    setData((prev: PosterData) => ({
       ...prev,
       posterSubType: value as 'offer' | 'normal',
       priceFrom: value === 'normal' ? '' : prev.priceFrom,
@@ -256,7 +256,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
   };
 
   const handleDefectChange = (value: string) => {
-    setData(prev => ({
+    setData((prev: PosterData) => ({
       ...prev,
       defectType: value,
       customDefectReason: value === 'outro' ? prev.customDefectReason : '',
@@ -264,15 +264,15 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
   };
 
   const handleCustomDiscountChange = (value: number[]) => {
-    setData(prev => ({ ...prev, customDefectDiscount: value[0] }));
+    setData((prev: PosterData) => ({ ...prev, customDefectDiscount: value[0] }));
   };
 
-  const statusIcon = {
+  const statusIcon = ({
     idle:     <Search className="h-4 w-4 text-muted-foreground" />,
     loading:  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />,
     found:    <CheckCircle2 className="h-4 w-4 text-green-500" />,
     notfound: <XCircle className="h-4 w-4 text-destructive" />,
-  }[lookupStatus];
+  } as Record<string, any>)[lookupStatus];
 
   const handleRegister = async () => {
     const key = regCode.trim() || regEan.trim();
@@ -341,7 +341,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
                 
                 {showSuggestions && suggestions.length > 0 && (
                   <div className="absolute z-50 w-full mt-1 bg-popover border border-border rounded-md shadow-lg overflow-hidden">
-                    {suggestions.map((s, i) => (
+                    {suggestions.map((s: any) => (
                       <button
                         key={s.key}
                         data-suggestion
@@ -362,7 +362,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
               <Label className="text-[10px] font-bold text-muted-foreground uppercase">Descrição</Label>
               <Input 
                 value={data.description}
-                onChange={e => setData(prev => ({ ...prev, description: e.target.value.toUpperCase() }))}
+                onChange={e => setData((prev: PosterData) => ({ ...prev, description: e.target.value.toUpperCase() }))}
                 className="uppercase font-bold h-10 border-foreground/20"
               />
             </div>
@@ -370,15 +370,15 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
             <div className="grid grid-cols-3 gap-2">
               <div className="space-y-1">
                 <Label className="text-[10px] font-bold text-muted-foreground uppercase">SAP</Label>
-                <Input value={data.code} onChange={e => setData(prev => ({ ...prev, code: e.target.value }))} className="h-8 text-xs font-mono" />
+                <Input value={data.code} onChange={e => setData((prev: PosterData) => ({ ...prev, code: e.target.value }))} className="h-8 text-xs font-mono" />
               </div>
               <div className="space-y-1">
                 <Label className="text-[10px] font-bold text-muted-foreground uppercase">EAN</Label>
-                <Input value={data.ean} onChange={e => setData(prev => ({ ...prev, ean: e.target.value }))} className="h-8 text-xs font-mono" />
+                <Input value={data.ean} onChange={e => setData((prev: PosterData) => ({ ...prev, ean: e.target.value }))} className="h-8 text-xs font-mono" />
               </div>
               <div className="space-y-1">
                 <Label className="text-[10px] font-bold text-muted-foreground uppercase">Ref.</Label>
-                <Input value={data.reference} onChange={e => setData(prev => ({ ...prev, reference: e.target.value }))} className="h-8 text-xs" />
+                <Input value={data.reference} onChange={e => setData((prev: PosterData) => ({ ...prev, reference: e.target.value }))} className="h-8 text-xs" />
               </div>
             </div>
 
@@ -426,7 +426,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
                   <Input 
                     type="number"
                     value={data.leveX}
-                    onChange={e => setData(prev => ({ ...prev, leveX: parseInt(e.target.value) || 0 }))}
+                    onChange={e => setData((prev: PosterData) => ({ ...prev, leveX: parseInt(e.target.value) || 0 }))}
                     className="text-center text-2xl font-black h-14"
                   />
                 </div>
@@ -435,7 +435,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
                   <Input 
                     type="number"
                     value={data.pagueY}
-                    onChange={e => setData(prev => ({ ...prev, pagueY: parseInt(e.target.value) || 0 }))}
+                    onChange={e => setData((prev: PosterData) => ({ ...prev, pagueY: parseInt(e.target.value) || 0 }))}
                     className="text-center text-2xl font-black h-14"
                   />
                 </div>
@@ -456,7 +456,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
                 <Input 
                   placeholder="Obs de rodapé (max 60 carac.)"
                   value={data.defectNote || ''}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setData(prev => ({ ...prev, defectNote: e.target.value.slice(0, 60) }))}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setData((prev: PosterData) => ({ ...prev, defectNote: e.target.value.slice(0, 60) }))}
                 />
               </div>
             )}
@@ -489,15 +489,24 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
                 <Label className="text-[10px] font-bold text-muted-foreground uppercase">Descrição Item B</Label>
                 <Input 
                   value={data.comboDescription}
-                  onChange={e => setData(prev => ({ ...prev, comboDescription: e.target.value.toUpperCase() }))}
+                  onChange={e => setData((prev: PosterData) => ({ ...prev, comboDescription: e.target.value.toUpperCase() }))}
                   className="uppercase font-bold h-10 border-primary/20"
                 />
               </div>
 
               <div className="grid grid-cols-3 gap-2">
-                <div className="space-y-1"><Label className="text-[10px] font-bold uppercase">SAP B</Label><Input value={data.comboCode} onChange={e => setData(prev => ({ ...prev, comboCode: e.target.value }))} className="h-8 text-xs" /></div>
-                <div className="space-y-1"><Label className="text-[10px] font-bold uppercase">EAN B</Label><Input value={data.comboEan} onChange={e => setData(prev => ({ ...prev, comboEan: e.target.value }))} className="h-8 text-xs" /></div>
-                <div className="space-y-1"><Label className="text-[10px] font-bold uppercase">Ref B</Label><Input value={data.comboReference} onChange={e => setData(prev => ({ ...prev, comboReference: e.target.value }))} className="h-8 text-xs" /></div>
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-bold uppercase">SAP B</Label>
+                  <Input value={data.comboCode} onChange={e => setData((prev: PosterData) => ({ ...prev, comboCode: e.target.value }))} className="h-8 text-xs" />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-bold uppercase">EAN B</Label>
+                  <Input value={data.comboEan} onChange={e => setData((prev: PosterData) => ({ ...prev, comboEan: e.target.value }))} className="h-8 text-xs" />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-bold uppercase">Ref B</Label>
+                  <Input value={data.comboReference} onChange={e => setData((prev: PosterData) => ({ ...prev, comboReference: e.target.value }))} className="h-8 text-xs" />
+                </div>
               </div>
 
               <div className="pt-2">
@@ -533,11 +542,11 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
               <div className="grid grid-cols-2 gap-2">
                 <Input type="date" className="text-xs h-9" value={data.offerValidityStart?.split('/').reverse().join('-') || ''} onChange={e => {
                   const [y,m,d] = e.target.value.split('-');
-                  setData(prev => ({ ...prev, offerValidityStart: e.target.value ? `${d}/${m}/${y}` : undefined }));
+                  setData((prev: PosterData) => ({ ...prev, offerValidityStart: e.target.value ? `${d}/${m}/${y}` : undefined }));
                 }} />
                 <Input type="date" className="text-xs h-9" value={data.offerValidity?.split('/').reverse().join('-') || ''} onChange={e => {
                   const [y,m,d] = e.target.value.split('-');
-                  setData(prev => ({ ...prev, offerValidity: e.target.value ? `${d}/${m}/${y}` : undefined }));
+                  setData((prev: PosterData) => ({ ...prev, offerValidity: e.target.value ? `${d}/${m}/${y}` : undefined }));
                 }} />
               </div>
             </div>
@@ -545,7 +554,5 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
         </CardContent>
       </Card>
     </div>
-  );
-}
   );
 }

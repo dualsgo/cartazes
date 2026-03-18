@@ -38,9 +38,9 @@ export function PosterPreviewLevePague({
   const unitCeil = Math.ceil(pricePerUnit);
 
   const baseFontSize = isA4 ? '12px' : '7px';
-  const headerFontSize = isA4 ? '5.5em' : '4.5em';
-  const descFontSize = isA4 ? '4.2em' : '3.6em';
-  const priceFontSize = isA4 ? '12em' : '10em';
+  const headerFontSize = isA4 ? '6em' : '4.8em';
+  const descFontSize   = isA4 ? '5.2em' : '4em';
+  const priceFontSize  = isA4 ? '13em' : '10.5em';
 
   return (
     <Card 
@@ -75,7 +75,7 @@ export function PosterPreviewLevePague({
           Preço original da unidade: R$ {priceFor}
         </div>
         
-        <div className="font-headline font-black uppercase text-[5em] leading-none mb-2">
+        <div className="font-headline font-black uppercase text-[7em] leading-none mb-2">
           Leve {leveX} por
         </div>
         

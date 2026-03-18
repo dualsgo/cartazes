@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { PosterForm } from '@/app/components/poster-form';
 import { PosterPreview } from '@/app/components/poster-preview';
 import { PosterPreviewAereo } from '@/app/components/poster-preview-aereo';
@@ -12,13 +12,14 @@ import { PosterPreviewCombo } from '@/app/components/poster-preview-combo';
 import { DisclaimerModal } from '@/app/components/disclaimer-modal';
 import { AboutPanel } from '@/app/components/about-panel';
 import { SettingsDialog } from '@/app/components/settings-dialog';
-import type { PosterData, PosterSettings } from '@/app/lib/types';
+import type { PosterData, PosterSettings, PosterType } from '@/app/lib/types';
 import { Printer, Plus, Trash2, FileStack, PackageOpen, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
-type PosterType = 'reliquias' | 'ofertas-imperdiveis' | 'aereo' | 'avaria' | 'etiqueta' | 'totem' | 'leve-pague-a4' | 'leve-pague-a6' | 'combo-a4' | 'combo-a6';
+// The PosterType definition was moved to '@/app/lib/types'
+// type PosterType = 'reliquias' | 'ofertas-imperdiveis' | 'aereo' | 'avaria' | 'etiqueta' | 'totem' | 'leve-pague-a4' | 'leve-pague-a6' | 'combo-a4' | 'combo-a6';
 
 const PER_PAGE: Record<PosterType, number> = {
   reliquias: 4,
@@ -174,14 +175,14 @@ function SinglePosterPreview({
 }
 
 /* ─────────────────────────── renderPageGrid ──────────────────────────────── */
-function PageGrid({ 
-  items, 
-  posterType, 
-  perPage, 
-  settings 
-}: { 
-  items: PosterData[]; 
-  posterType: PosterType; 
+function PageGrid({
+  items,
+  posterType,
+  perPage,
+  settings
+}: {
+  items: PosterData[];
+  posterType: PosterType;
   perPage: number;
   settings: PosterSettings;
 }) {
@@ -191,15 +192,15 @@ function PageGrid({
     // 2 cartazes por página landscape, 1 por linha — cartaz de 190mm cabe na largura total
     return (
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gridTemplateRows: '1fr 1fr', width: '100%', height: '100%', gap: '8mm', padding: '8mm 10mm' }}>
-        {items.map((d, i) => (<div key={i} style={{ width: '100%', height: '100%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}><PosterPreviewAereo {...d} /></div>))}
-        {empties.map((_, i) => <div key={`e${i}`} />)}
+        {items.map((d: PosterData, i: number) => (<div key={i} style={{ width: '100%', height: '100%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}><PosterPreviewAereo {...d} /></div>))}
+        {empties.map((_: undefined, i: number) => <div key={`e${i}`} />)}
       </div>
     );
   }
   if (posterType === 'etiqueta') {
     return (
       <div style={{ display: 'grid', gridTemplateColumns: '90mm 90mm', gridTemplateRows: 'repeat(8, 33.5mm)', gap: '0 6mm', paddingTop: '13mm', paddingBottom: '14mm', paddingLeft: '12mm', paddingRight: '12mm', width: '100%', height: '100%', boxSizing: 'border-box', backgroundColor: 'white' }}>
-        {items.map((d, i) => (<div key={i} style={{ width: '90mm', height: '33.5mm', overflow: 'hidden' }}><PosterPreviewEtiqueta {...d} /></div>))}
+        {items.map((d: PosterData, i: number) => (<div key={i} style={{ width: '90mm', height: '33.5mm', overflow: 'hidden' }}><PosterPreviewEtiqueta {...d} /></div>))}
       </div>
     );
   }
@@ -215,20 +216,20 @@ function PageGrid({
   // leve-pague-a6, combo-a6 (Retrato 4 por página)
   if (posterType === 'leve-pague-a6' || posterType === 'combo-a6') {
     return (
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', 
-        gridTemplateRows: 'minmax(0,1fr) minmax(0,1fr)', 
-        width: '100%', 
-        height: '100%', 
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)',
+        gridTemplateRows: 'minmax(0,1fr) minmax(0,1fr)',
+        width: '100%',
+        height: '100%',
         padding: '1.2cm 1.5cm', // Invertido para Retrato
-        boxSizing: 'border-box', 
-        backgroundColor: 'white' 
+        boxSizing: 'border-box',
+        backgroundColor: 'white'
       }}>
-        {items.map((d, i) => (
-          <div key={i} style={{ 
-            width: '100%', 
-            height: '100%', 
+        {items.map((d: PosterData, i: number) => (
+          <div key={i} style={{
+            width: '100%',
+            height: '100%',
             paddingTop: '0.4cm',
             paddingBottom: '0.4cm',
             paddingLeft: '0.4cm',
@@ -236,35 +237,35 @@ function PageGrid({
             boxSizing: 'border-box',
           }}>
             <div style={{ width: '100%', height: '100%', overflow: 'hidden' }}>
-              {posterType === 'leve-pague-a6' 
+              {posterType === 'leve-pague-a6'
                 ? <PosterPreviewLevePague {...d} isA4={false} />
                 : <PosterPreviewCombo {...d} isA4={false} />}
             </div>
           </div>
         ))}
-        {empties.map((_, i) => <div key={`e${i}`} />)}
+        {empties.map((_: undefined, i: number) => <div key={`e${i}`} />)}
       </div>
     );
   }
   // reliquias, ofertas-imperdiveis, avaria
   return (
-    <div style={{ 
-      display: 'grid', 
-      // Divide a "área util" (após as margens do papel de 1.5cm vert e 1.2cm horiz) 
+    <div style={{
+      display: 'grid',
+      // Divide a "área util" (após as margens do papel de 1.5cm vert e 1.2cm horiz)
       // exatamente ao meio, criando 4 containers idênticos.
-      gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', 
-      gridTemplateRows: 'minmax(0,1fr) minmax(0,1fr)', 
-      width: '100%', 
-      height: '100%', 
+      gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)',
+      gridTemplateRows: 'minmax(0,1fr) minmax(0,1fr)',
+      width: '100%',
+      height: '100%',
       padding: '1.5cm 1.2cm',  // Margens externas (Padrão A4 limpo)
-      boxSizing: 'border-box', 
-      backgroundColor: 'white' 
+      boxSizing: 'border-box',
+      backgroundColor: 'white'
     }}>
-      {items.map((d, i) => (
+      {items.map((d: PosterData, i: number) => (
         // Cada slot tem 100% da sua metade do papel (Aprox 13.x cm por 9cm)
-        <div key={i} style={{ 
-          width: '100%', 
-          height: '100%', 
+        <div key={i} style={{
+          width: '100%',
+          height: '100%',
           // O espaço em branco QUE SEPARA um painel do outro fisicamente:
           // Como as margens encostam, o top de um cartaz respira pro limite
           // e o bottom respira pro mesmo limite.
@@ -277,12 +278,12 @@ function PageGrid({
           {/* O Cartaz real, posicionado nos limites do seu padding interno */}
           <div style={{ width: '100%', height: '100%', overflow: 'hidden' }}>
             {posterType === 'reliquias' || posterType === 'ofertas-imperdiveis'
-              ? <PosterPreview {...d} isImperdiveis={posterType === 'ofertas-imperdiveis'} settings={settings} />
-              : <PosterPreviewDefeito {...d} settings={settings} />}
+              ? <PosterPreview {...(d as PosterData)} isImperdiveis={posterType === 'ofertas-imperdiveis'} settings={settings} />
+              : <PosterPreviewDefeito {...(d as PosterData)} settings={settings} />}
           </div>
         </div>
       ))}
-      {empties.map((_, i) => <div key={`e${i}`} />)}
+      {empties.map((_: undefined, i: number) => <div key={`e${i}`} />)}
     </div>
   );
 }
@@ -313,10 +314,10 @@ export default function Home() {
     localStorage.setItem('poster-settings', JSON.stringify(newSettings));
   };
 
-  const perPage    = PER_PAGE[posterType];
+  const perPage    = PER_PAGE[posterType as PosterType];
   const totalPages = queue.length > 0 ? Math.ceil(queue.length / perPage) : 0;
 
-  /* Print CSS */
+  // Update print CSS immediately when poster type changes
   useEffect(() => {
     const styleId = 'print-page-style';
     let style = document.getElementById(styleId) as HTMLStyleElement | null;
@@ -325,8 +326,8 @@ export default function Home() {
       style.id = styleId;
       document.head.appendChild(style);
     }
-    const orientation = POSTER_ORIENTATION[posterType as PosterType];
-    style.innerHTML = `@media print { @page { size: A4 ${orientation}; margin: 0; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0; padding: 0; } }`;
+    const o = POSTER_ORIENTATION[posterType as PosterType];
+    style.innerHTML = `@media print { @page { size: A4 ${o}; margin: 0; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0; padding: 0; } }`;
   }, [posterType]);
 
   const handlePosterTypeChange = (newType: PosterType) => {
@@ -337,12 +338,12 @@ export default function Home() {
       posterSubType: ['reliquias', 'ofertas-imperdiveis', 'avaria'].includes(newType) ? 'offer' : 'normal',
     });
     setIsProductReady(false);
-    setFormKey(k => k + 1);
+    setFormKey((k: number) => k + 1);
   };
 
   const handleAddToQueue = () => {
     if (!isProductReady) return;
-    setQueue(prev => [...prev, { ...currentPoster }]);
+    setQueue((prev: PosterData[]) => [...prev, { ...currentPoster }]);
     setCurrentPoster({
       ...initialPosterData(),
       posterSubType: currentPoster.posterSubType,
@@ -351,11 +352,11 @@ export default function Home() {
       customDefectDiscount: currentPoster.customDefectDiscount,
     });
     setIsProductReady(false);
-    setFormKey(k => k + 1);
+    setFormKey((k: number) => k + 1);
   };
 
   const handleRemoveFromQueue = (index: number) => {
-    setQueue(prev => prev.filter((_, i) => i !== index));
+    setQueue((prev: PosterData[]) => prev.filter((_: PosterData, i: number) => i !== index));
   };
 
   /* Print content: one div per page, each with page-break */
@@ -366,24 +367,26 @@ export default function Home() {
       pages.push(queue.slice(i, i + perPage));
     }
     const orientation = POSTER_ORIENTATION[posterType as PosterType];
-    const pageW = orientation === 'portrait' ? '21cm' : '29.7cm';
-    const pageH = orientation === 'portrait' ? '29.7cm' : '21cm';
-    return pages.map((pageItems, pageIdx) => (
-      <div
-        key={pageIdx}
-        style={{
-          width: pageW,
-          height: pageH,
-          pageBreakAfter: pageIdx < pages.length - 1 ? 'always' : 'auto',
-          breakAfter:     pageIdx < pages.length - 1 ? 'page'   : 'auto',
-        }}
-      >
-        <PageGrid items={pageItems} posterType={posterType} perPage={perPage} settings={settings} />
-      </div>
-    ));
+    return Array.from({ length: totalPages }).map((_: undefined, pageIdx: number) => {
+      const pageItems = queue.slice(pageIdx * perPage, (pageIdx + 1) * perPage);
+      return (
+        <div
+          key={pageIdx}
+          className="print-page bg-white"
+          style={{
+            width:          orientation === 'landscape' ? '297mm'  : '210mm',
+            height:         orientation === 'landscape' ? '210mm'  : '297mm',
+            pageBreakAfter: pageIdx < totalPages - 1    ? 'always' : 'auto',
+            breakAfter:     pageIdx < totalPages - 1    ? 'page'   : 'auto',
+          }}
+        >
+          <PageGrid items={pageItems} posterType={posterType as PosterType} perPage={perPage} settings={settings} />
+        </div>
+      );
+    });
   };
 
-  const orientation = POSTER_ORIENTATION[posterType];
+  const orientation = POSTER_ORIENTATION[posterType as PosterType];
 
   const typeOptions = [
     { id: 'reliquias',             label: 'Relíquias'          },
@@ -525,7 +528,7 @@ export default function Home() {
                             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider px-3 pt-2 pb-1">
                               Página {pageIdx + 1}
                             </p>
-                            {pageItems.map((item, itemIdx) => {
+                            {pageItems.map((item: PosterData, itemIdx: number) => {
                               const globalIdx = pageIdx * perPage + itemIdx;
                               return (
                                 <div key={globalIdx} className="flex items-center gap-2 px-3 py-2 hover:bg-muted/40 transition-colors">
