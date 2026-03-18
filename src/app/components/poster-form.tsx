@@ -61,7 +61,7 @@ type LookupStatus = 'idle' | 'loading' | 'found' | 'notfound';
 type PosterFormProps = {
   data: PosterData;
   setData: Dispatch<SetStateAction<PosterData>>;
-  posterType: 'reliquias' | 'ofertas-imperdiveis' | 'aereo' | 'avaria' | 'etiqueta' | 'totem';
+  posterType: 'reliquias' | 'ofertas-imperdiveis' | 'aereo' | 'avaria' | 'etiqueta' | 'totem' | 'leve-pague-a4' | 'leve-pague-a6' | 'combo-a4' | 'combo-a6';
   onLookupStatusChange?: (found: boolean) => void;
 };
 
@@ -97,6 +97,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
   const priceFrom = useCurrencyInput(data.priceFrom);
   const maxForCents = priceFrom.cents > 0 ? priceFrom.cents : undefined;
   const priceFor  = useCurrencyInput(data.priceFor, maxForCents);
+  const comboPrice = useCurrencyInput(data.comboPrice || '');
 
   useEffect(() => {
     setData(prev => ({ ...prev, priceFor: priceFor.display }));
@@ -105,6 +106,10 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
   useEffect(() => {
     setData(prev => ({ ...prev, priceFrom: priceFrom.display }));
   }, [priceFrom.display]);
+
+  useEffect(() => {
+    setData(prev => ({ ...prev, comboPrice: comboPrice.display }));
+  }, [comboPrice.display]);
   
   // Recalcula POR automaticamente a partir do DE + desconto do motivo,
   // exceto quando o usuário tiver feito override manual.
@@ -286,7 +291,10 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
     }
   };
   
-  const isOfferType = posterType === 'reliquias' || posterType === 'ofertas-imperdiveis' || posterType === 'totem' || posterType === 'etiqueta' || (posterType === 'aereo' && data.posterSubType === 'offer');
+  const isOfferType = [
+    'reliquias', 'ofertas-imperdiveis', 'totem', 'etiqueta', 
+    'leve-pague-a4', 'leve-pague-a6', 'combo-a4', 'combo-a6'
+  ].includes(posterType) || (posterType === 'aereo' && data.posterSubType === 'offer');
 
   return (
     <div className="space-y-3">
@@ -582,6 +590,69 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
               </div>
             )}
 
+            {(posterType === 'leve-pague-a4' || posterType === 'leve-pague-a6') && (
+              <div className="grid grid-cols-2 gap-4 bg-muted/40 p-4 rounded-xl border-2 border-primary/20 shadow-inner">
+                <div className="space-y-2">
+                  <Label htmlFor="leve-x" className="text-xs font-bold uppercase text-primary">Leve</Label>
+                  <div className="relative">
+                    <Input 
+                      id="leve-x"
+                      type="number"
+                      value={data.leveX}
+                      onChange={e => setData(prev => ({ ...prev, leveX: parseInt(e.target.value) || 0 }))}
+                      className="text-center text-xl font-bold h-12 border-2"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground uppercase">Unid.</span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="pague-y" className="text-xs font-bold uppercase text-primary">Pague</Label>
+                  <div className="relative">
+                    <Input 
+                      id="pague-y"
+                      type="number"
+                      value={data.pagueY}
+                      onChange={e => setData(prev => ({ ...prev, pagueY: parseInt(e.target.value) || 0 }))}
+                      className="text-center text-xl font-bold h-12 border-2"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground uppercase">Unid.</span>
+                  </div>
+                </div>
+                <div className="col-span-2 pt-2 text-center">
+                  <p className="text-[11px] text-muted-foreground italic">
+                    Cálculo: (Preço × {data.pagueY || 0}) ÷ {data.leveX || 1}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {(posterType === 'combo-a4' || posterType === 'combo-a6') && (
+              <div className="space-y-4 bg-muted/40 p-4 rounded-xl border-2 border-primary/20 shadow-inner">
+                <div className="space-y-2">
+                  <Label htmlFor="combo-desc" className="text-xs font-bold uppercase text-primary">Item B (Descrição)</Label>
+                  <Input 
+                    id="combo-desc"
+                    value={data.comboDescription}
+                    onChange={e => setData(prev => ({ ...prev, comboDescription: e.target.value.toUpperCase() }))}
+                    placeholder="DESCRIÇÃO DO SEGUNDO ITEM"
+                    className="uppercase font-semibold border-2"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="combo-price" className="text-xs font-bold uppercase text-primary">Preço Oferta Item B</Label>
+                  <Input 
+                    id="combo-price"
+                    value={comboPrice.display}
+                    onKeyDown={comboPrice.handleKeyDown}
+                    onChange={() => {}}
+                    placeholder="0,00"
+                    className="font-mono text-2xl h-14 font-black border-2"
+                    inputMode="numeric"
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4 items-start">
               {(isOfferType || posterType === 'avaria') && (
                 <div className="space-y-2">
@@ -635,7 +706,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
               </div>
             </div>
 
-            {(posterType === 'reliquias' || posterType === 'ofertas-imperdiveis' || posterType === 'etiqueta' || posterType === 'avaria' || posterType === 'aereo' || posterType === 'totem') && (
+            {(posterType === 'reliquias' || posterType === 'ofertas-imperdiveis' || posterType === 'etiqueta' || posterType === 'avaria' || posterType === 'aereo' || posterType === 'totem' || posterType.startsWith('leve-pague') || posterType.startsWith('combo')) && (
               <div className="space-y-2 pt-2">
                  <Label className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Forma de Pagamento</Label>
                  <div className="flex bg-muted p-1 rounded-lg">
@@ -664,7 +735,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
             )}
             
             {/* 3. SECTION: ACESSÓRIOS */}
-            {(posterType === 'reliquias' || posterType === 'ofertas-imperdiveis' || posterType === 'totem') && (
+            {(posterType === 'reliquias' || posterType === 'ofertas-imperdiveis' || posterType === 'totem' || posterType.startsWith('leve-pague') || posterType.startsWith('combo')) && (
                <div className="pt-4 border-t mt-4 space-y-4">
                  
                  <div className="space-y-2">
