@@ -13,14 +13,6 @@ export type PosterData = {
   defectNote?: string;
   offerValidityStart?: string; // data de início da oferta (ex: "01/03/2026")
   offerValidity?: string; // data de fim da oferta (ex: "31/03/2026")
-  // Novos campos para Leve X Pague Y e Combo
-  leveX?: number;
-  pagueY?: number;
-  comboDescription?: string;
-  comboPrice?: string;
-  comboCode?: string;
-  comboEan?: string;
-  comboReference?: string;
 };
 
 export type PosterSettings = {
@@ -34,8 +26,4 @@ export type PosterType =
   | 'aereo' 
   | 'avaria' 
   | 'etiqueta' 
-  | 'totem' 
-  | 'leve-pague-a4' 
-  | 'leve-pague-a6' 
-  | 'combo-a4' 
-  | 'combo-a6';
+  | 'totem';

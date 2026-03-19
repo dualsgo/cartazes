@@ -61,7 +61,7 @@ type LookupStatus = 'idle' | 'loading' | 'found' | 'notfound';
 type PosterFormProps = {
   data: PosterData;
   setData: Dispatch<SetStateAction<PosterData>>;
-  posterType: 'reliquias' | 'ofertas-imperdiveis' | 'aereo' | 'avaria' | 'etiqueta' | 'totem' | 'leve-pague-a4' | 'leve-pague-a6' | 'combo-a4' | 'combo-a6';
+  posterType: 'reliquias' | 'ofertas-imperdiveis' | 'aereo' | 'avaria' | 'etiqueta' | 'totem';
   onLookupStatusChange?: (found: boolean) => void;
 };
 
@@ -97,7 +97,6 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
   const priceFrom = useCurrencyInput(data.priceFrom);
   const maxForCents = priceFrom.cents > 0 ? priceFrom.cents : undefined;
   const priceFor  = useCurrencyInput(data.priceFor, maxForCents);
-  const comboPrice = useCurrencyInput(data.comboPrice || '');
 
   useEffect(() => {
     setData((prev: PosterData) => ({ ...prev, priceFor: priceFor.display }));
@@ -106,10 +105,6 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
   useEffect(() => {
     setData((prev: PosterData) => ({ ...prev, priceFrom: priceFrom.display }));
   }, [priceFrom.display]);
-
-  useEffect(() => {
-    setData((prev: PosterData) => ({ ...prev, comboPrice: comboPrice.display }));
-  }, [comboPrice.display]);
   
   // Recalcula POR automaticamente a partir do DE + desconto do motivo,
   // exceto quando o usuário tiver feito override manual.
@@ -182,51 +177,40 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
     fetchSuggestions(v);
   };
 
-  const handleLookup = useCallback(async (q: string, target: 'A' | 'B' = 'A') => {
+  const handleLookup = useCallback(async (q: string) => {
     const query = q.trim();
     if (query.length < 3) return;
     setShowSuggestions(false);
     setSuggestions([]);
     const inputType = detectInputType(query);
     setLookupStatus('loading');
-    if (target === 'A') onLookupStatusChange?.(false);
+    onLookupStatusChange?.(false);
 
     try {
       const res = await fetch(`/api/produto?q=${encodeURIComponent(query)}`);
-      if (!res.ok) { setLookupStatus('notfound'); if (target === 'A') onLookupStatusChange?.(false); return; }
+      if (!res.ok) { setLookupStatus('notfound'); onLookupStatusChange?.(false); return; }
 
       const produto = await res.json() as {
         description: string; reference: string; ean?: string; code?: string;
       };
 
-      if (target === 'A') {
-        setData((prev: PosterData) => ({
-          ...prev,
-          description: produto.description,
-          reference:   produto.reference,
-          code:  inputType === 'code' ? query : (produto.code ?? ''),
-          ean:   inputType === 'ean'  ? query : (produto.ean  ?? ''),
-        }));
-        setLookupStatus('found');
-        onLookupStatusChange?.(true);
-      } else {
-        setData((prev: PosterData) => ({
-          ...prev,
-          comboDescription: produto.description,
-          comboReference:   produto.reference,
-          comboCode:  inputType === 'code' ? query : (produto.code ?? ''),
-          comboEan:   inputType === 'ean'  ? query : (produto.ean  ?? ''),
-        }));
-        setLookupStatus('found');
-      }
+      setData((prev: PosterData) => ({
+        ...prev,
+        description: produto.description,
+        reference:   produto.reference,
+        code:  inputType === 'code' ? query : (produto.code ?? ''),
+        ean:   inputType === 'ean'  ? query : (produto.ean  ?? ''),
+      }));
+      setLookupStatus('found');
+      onLookupStatusChange?.(true);
     } catch {
       setLookupStatus('notfound');
-      if (target === 'A') onLookupStatusChange?.(false);
+      onLookupStatusChange?.(false);
     }
   }, [setData, onLookupStatusChange]);
 
-  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, target: 'A' | 'B' = 'A') => {
-    if (e.key === 'Enter') { e.preventDefault(); handleLookup(searchValue, target); }
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') { e.preventDefault(); handleLookup(searchValue); }
     if (e.key === 'Escape') { setShowSuggestions(false); }
     if (e.key === 'ArrowDown' && suggestions.length > 0) {
       e.preventDefault();
@@ -303,18 +287,17 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
   };
   
   const isOfferType = [
-    'reliquias', 'ofertas-imperdiveis', 'totem', 'etiqueta', 
-    'leve-pague-a4', 'leve-pague-a6', 'combo-a4', 'combo-a6'
+    'reliquias', 'ofertas-imperdiveis', 'totem', 'etiqueta'
   ].includes(posterType) || (posterType === 'aereo' && data.posterSubType === 'offer');
 
   return (
     <div className="space-y-4 pb-8">
       {/* SEÇÃO: ITEM A / PRINCIPAL */}
-      <Card className={cn(posterType.startsWith('combo') && "border-2 border-primary/20 bg-primary/5")}>
+      <Card>
         <CardContent className="pt-4 space-y-4">
           <div className="flex items-center justify-between border-b pb-2">
             <Label className="font-extrabold text-base uppercase tracking-tight">
-              {posterType.startsWith('combo') ? 'Item A (Compre)' : 'Informações do Produto'}
+              Informações do Produto
             </Label>
             {lookupStatus === 'found' && (
               <span className="text-[10px] bg-green-600 text-white px-2 py-0.5 rounded-full uppercase font-black">Identificado</span>
@@ -329,7 +312,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
                   value={searchValue}
                   onChange={handleSearchChange}
                   onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-                  onKeyDown={(e) => handleSearchKeyDown(e, 'A')}
+                  onKeyDown={(e) => handleSearchKeyDown(e)}
                   onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
                   placeholder="Ex: 71838"
                   className="h-10 text-lg pr-9 font-bold"
@@ -383,7 +366,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
             </div>
 
             <div className="grid grid-flow-row sm:grid-cols-2 gap-3 pt-2">
-              {isOfferType && !posterType.startsWith('leve-pague') && !posterType.startsWith('combo') && (
+              {isOfferType && (
                 <div className="space-y-1">
                   <Label className="text-[10px] font-bold text-muted-foreground uppercase">Preço DE</Label>
                   <Input 
@@ -394,10 +377,9 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
                   />
                 </div>
               )}
-              <div className={cn("space-y-1", (!isOfferType || posterType.startsWith('leve-pague') || posterType.startsWith('combo')) && "col-span-full")}>
+              <div className={cn("space-y-1", !isOfferType && "col-span-full")}>
                 <Label className="text-[10px] font-extrabold text-foreground uppercase tracking-widest">
-                  {posterType.startsWith('leve-pague') ? 'Preço Unitário' : 
-                   posterType.startsWith('combo') ? 'Preço do Item A' : 'Preço POR'}
+                  Preço POR
                 </Label>
                 <Input 
                   value={priceFor.display}
@@ -411,117 +393,34 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
         </CardContent>
       </Card>
 
-      {/* SEÇÃO: CONFIGURAÇÕES DA OFERTA (Leve Pague / Avaria) */}
-      {(posterType.startsWith('leve-pague') || posterType === 'avaria') && (
+      {/* SEÇÃO: CONFIGURAÇÕES DA OFERTA (Avaria) */}
+      {posterType === 'avaria' && (
         <Card className="bg-muted/40">
           <CardContent className="pt-4 space-y-4">
             <Label className="text-xs font-black uppercase tracking-widest border-b pb-1 flex items-center gap-2">
               <RotateCcw className="h-3 w-3" /> Configuração da Oferta
             </Label>
-            
-            {posterType.startsWith('leve-pague') && (
-              <div className="grid grid-cols-2 gap-4 pb-2">
-                <div className="space-y-1">
-                  <Label className="text-[10px] font-bold uppercase">Leve</Label>
-                  <Input 
-                    type="number"
-                    value={data.leveX}
-                    onChange={e => setData((prev: PosterData) => ({ ...prev, leveX: parseInt(e.target.value) || 0 }))}
-                    className="text-center text-2xl font-black h-14"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-[10px] font-bold uppercase">Pague</Label>
-                  <Input 
-                    type="number"
-                    value={data.pagueY}
-                    onChange={e => setData((prev: PosterData) => ({ ...prev, pagueY: parseInt(e.target.value) || 0 }))}
-                    className="text-center text-2xl font-black h-14"
-                  />
-                </div>
-              </div>
-            )}
-
-            {posterType === 'avaria' && (
-              <div className="space-y-3">
-                <div className="space-y-1">
-                  <Label className="text-[10px] font-bold uppercase">Motivo</Label>
-                  <Select value={data.defectType} onValueChange={handleDefectChange}>
-                    <SelectTrigger className="font-bold"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {defectOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Input 
-                  placeholder="Obs de rodapé (max 60 carac.)"
-                  value={data.defectNote || ''}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setData((prev: PosterData) => ({ ...prev, defectNote: e.target.value.slice(0, 60) }))}
-                />
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* SEÇÃO: ITEM B (Combo) */}
-      {posterType.startsWith('combo') && (
-        <Card className="border-2 border-primary/20 bg-primary/5">
-          <CardContent className="pt-4 space-y-4 font-body">
-            <div className="flex items-center justify-between border-b pb-2">
-              <Label className="font-extrabold text-base uppercase tracking-tight text-primary">Item B (E leve um)</Label>
-            </div>
-
             <div className="space-y-3">
               <div className="space-y-1">
-                <Label className="text-[10px] font-bold text-muted-foreground uppercase">Buscar ou Digitar Item B</Label>
-                <div className="relative">
-                  <Input
-                    onKeyDown={(e) => { if (e.key === 'Enter') handleLookup((e.target as HTMLInputElement).value, 'B'); }}
-                    placeholder="SAP/EAN do Item B..."
-                    className="h-10 text-lg pr-9 font-bold border-primary/20"
-                  />
-                  <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary opacity-50" />
-                </div>
+                <Label className="text-[10px] font-bold uppercase">Motivo</Label>
+                <Select value={data.defectType} onValueChange={handleDefectChange}>
+                  <SelectTrigger className="font-bold"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {defectOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
-
-              <div className="space-y-1">
-                <Label className="text-[10px] font-bold text-muted-foreground uppercase">Descrição Item B</Label>
-                <Input 
-                  value={data.comboDescription}
-                  onChange={e => setData((prev: PosterData) => ({ ...prev, comboDescription: e.target.value.toUpperCase() }))}
-                  className="uppercase font-bold h-10 border-primary/20"
-                />
-              </div>
-
-              <div className="grid grid-cols-3 gap-2">
-                <div className="space-y-1">
-                  <Label className="text-[10px] font-bold uppercase">SAP B</Label>
-                  <Input value={data.comboCode} onChange={e => setData((prev: PosterData) => ({ ...prev, comboCode: e.target.value }))} className="h-8 text-xs" />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-[10px] font-bold uppercase">EAN B</Label>
-                  <Input value={data.comboEan} onChange={e => setData((prev: PosterData) => ({ ...prev, comboEan: e.target.value }))} className="h-8 text-xs" />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-[10px] font-bold uppercase">Ref B</Label>
-                  <Input value={data.comboReference} onChange={e => setData((prev: PosterData) => ({ ...prev, comboReference: e.target.value }))} className="h-8 text-xs" />
-                </div>
-              </div>
-
-              <div className="pt-2">
-                <Label className="text-[10px] font-black text-primary uppercase tracking-widest">Leve o Item B por mais:</Label>
-                <Input 
-                  value={comboPrice.display}
-                  onKeyDown={comboPrice.handleKeyDown}
-                  className="font-mono text-3xl h-16 font-black border-2 border-primary bg-white shadow-[3px_3px_0_0_#0ea5e9]"
-                  onChange={()=>{}}
-                />
-              </div>
+              <Input 
+                placeholder="Obs de rodapé (max 60 carac.)"
+                value={data.defectNote || ''}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setData((prev: PosterData) => ({ ...prev, defectNote: e.target.value.slice(0, 60) }))}
+              />
             </div>
           </CardContent>
         </Card>
       )}
+
+
 
       {/* SEÇÃO: PAGAMENTO E RODAPÉ */}
       <Card>
@@ -536,7 +435,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
             </div>
           )}
 
-          {(posterType === 'reliquias' || posterType === 'ofertas-imperdiveis' || posterType === 'totem' || posterType.startsWith('leve-pague') || posterType.startsWith('combo')) && (
+          {(posterType === 'reliquias' || posterType === 'ofertas-imperdiveis' || posterType === 'totem') && (
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Validade da Oferta</Label>
               <div className="grid grid-cols-2 gap-2">

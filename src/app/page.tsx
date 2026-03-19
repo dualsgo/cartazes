@@ -7,8 +7,6 @@ import { PosterPreviewAereo } from '@/app/components/poster-preview-aereo';
 import { PosterPreviewDefeito } from '@/app/components/poster-preview-defeito';
 import { PosterPreviewEtiqueta } from '@/app/components/poster-preview-etiqueta';
 import { PosterPreviewTotem } from '@/app/components/poster-preview-totem';
-import { PosterPreviewLevePague } from '@/app/components/poster-preview-leve-pague';
-import { PosterPreviewCombo } from '@/app/components/poster-preview-combo';
 import { DisclaimerModal } from '@/app/components/disclaimer-modal';
 import { AboutPanel } from '@/app/components/about-panel';
 import { SettingsDialog } from '@/app/components/settings-dialog';
@@ -28,10 +26,6 @@ const PER_PAGE: Record<PosterType, number> = {
   avaria: 4,
   etiqueta: 16,
   totem: 1,
-  'leve-pague-a4': 1,
-  'leve-pague-a6': 4,
-  'combo-a4': 1,
-  'combo-a6': 4,
 };
 
 // Dimensões do cartaz individual para o preview (px)
@@ -42,10 +36,6 @@ const SINGLE_DIMS: Record<PosterType, { w: number; h: number }> = {
   avaria:               { w: 491, h: 340 },
   etiqueta:             { w: 340, h: 127 },
   totem:                { w: 794, h: 1123 }, // A4 a 96dpi (210×297mm em pixels de tela)
-  'leve-pague-a4':      { w: 794, h: 1123 },
-  'leve-pague-a6':      { w: 340, h: 491 },
-  'combo-a4':           { w: 794, h: 1123 },
-  'combo-a6':           { w: 340, h: 491 },
 };
 
 // Orientação de impressão por tipo de cartaz
@@ -56,10 +46,6 @@ const POSTER_ORIENTATION: Record<PosterType, 'portrait' | 'landscape'> = {
   avaria:               'landscape',
   etiqueta:             'portrait',
   totem:                'portrait',
-  'leve-pague-a4':      'portrait',
-  'leve-pague-a6':      'portrait',
-  'combo-a4':           'portrait',
-  'combo-a6':           'portrait',
 };
 
 const initialPosterData = (): PosterData => ({
@@ -74,13 +60,6 @@ const initialPosterData = (): PosterData => ({
   defectType: 'embalagem_danificada',
   customDefectReason: '',
   customDefectDiscount: 20,
-  leveX: 2,
-  pagueY: 1,
-  comboDescription: '',
-  comboPrice: '',
-  comboCode: '',
-  comboEan: '',
-  comboReference: '',
 });
 
 /* ─────────────────────────── SinglePosterPreview ─────────────────────────── */
@@ -166,8 +145,6 @@ function SinglePosterPreview({
           {posterType === 'avaria'              && <PosterPreviewDefeito {...data} settings={settings} />}
           {posterType === 'etiqueta'            && <PosterPreviewEtiqueta {...data} />}
           {posterType === 'totem'               && <PosterPreviewTotem {...data} settings={settings} />}
-          {(posterType === 'leve-pague-a4' || posterType === 'leve-pague-a6') && <PosterPreviewLevePague {...data} isA4={posterType === 'leve-pague-a4'} />}
-          {(posterType === 'combo-a4' || posterType === 'combo-a6') && <PosterPreviewCombo {...data} isA4={posterType === 'combo-a4'} />}
         </div>
       )}
     </div>
@@ -204,46 +181,10 @@ function PageGrid({
       </div>
     );
   }
-  if (posterType === 'totem' || posterType === 'leve-pague-a4' || posterType === 'combo-a4') {
+  if (posterType === 'totem') {
     return (
       <div style={{ width: '100%', height: '100%', backgroundColor: 'white' }}>
-        {posterType === 'totem' && <PosterPreviewTotem {...items[0]} settings={settings} />}
-        {posterType === 'leve-pague-a4' && <PosterPreviewLevePague {...items[0]} isA4={true} />}
-        {posterType === 'combo-a4' && <PosterPreviewCombo {...items[0]} isA4={true} />}
-      </div>
-    );
-  }
-  // leve-pague-a6, combo-a6 (Retrato 4 por página)
-  if (posterType === 'leve-pague-a6' || posterType === 'combo-a6') {
-    return (
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)',
-        gridTemplateRows: 'minmax(0,1fr) minmax(0,1fr)',
-        width: '100%',
-        height: '100%',
-        padding: '1.2cm 1.5cm', // Invertido para Retrato
-        boxSizing: 'border-box',
-        backgroundColor: 'white'
-      }}>
-        {items.map((d: PosterData, i: number) => (
-          <div key={i} style={{
-            width: '100%',
-            height: '100%',
-            paddingTop: '0.4cm',
-            paddingBottom: '0.4cm',
-            paddingLeft: '0.4cm',
-            paddingRight: '0.4cm',
-            boxSizing: 'border-box',
-          }}>
-            <div style={{ width: '100%', height: '100%', overflow: 'hidden' }}>
-              {posterType === 'leve-pague-a6'
-                ? <PosterPreviewLevePague {...d} isA4={false} />
-                : <PosterPreviewCombo {...d} isA4={false} />}
-            </div>
-          </div>
-        ))}
-        {empties.map((_: undefined, i: number) => <div key={`e${i}`} />)}
+        <PosterPreviewTotem {...items[0]} settings={settings} />
       </div>
     );
   }
@@ -395,10 +336,6 @@ export default function Home() {
     { id: 'aereo',                 label: 'Aéreo'              },
     { id: 'etiqueta',              label: 'Gôndola (com 16)'   },
     { id: 'totem',                 label: 'Totem'              },
-    { id: 'leve-pague-a4',         label: 'Leve Pague (A4)'   },
-    { id: 'leve-pague-a6',         label: 'Leve Pague (A6)'   },
-    { id: 'combo-a4',              label: 'Combo (A4)'         },
-    { id: 'combo-a6',              label: 'Combo (A6)'         },
   ] as const;
 
   return (
