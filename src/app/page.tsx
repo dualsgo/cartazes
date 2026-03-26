@@ -9,8 +9,9 @@ import { PosterPreviewEtiqueta } from '@/app/components/poster-preview-etiqueta'
 import { PosterPreviewTotem } from '@/app/components/poster-preview-totem';
 import { DisclaimerModal } from '@/app/components/disclaimer-modal';
 import { AboutPanel } from '@/app/components/about-panel';
+import { DatabasePanel } from '@/app/components/database-panel';
 import type { PosterData } from '@/app/lib/types';
-import { Printer, Plus, Trash2, FileStack, PackageOpen, Info } from 'lucide-react';
+import { Printer, Plus, Trash2, FileStack, PackageOpen, Info, Database } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
@@ -223,6 +224,7 @@ export default function Home() {
   const [isProductReady, setIsProductReady] = useState(false);
   const [formKey, setFormKey] = useState(0);
   const [showAbout, setShowAbout] = useState(false);
+  const [showDatabase, setShowDatabase] = useState(false);
 
   const perPage    = PER_PAGE[posterType];
   const totalPages = queue.length > 0 ? Math.ceil(queue.length / perPage) : 0;
@@ -318,6 +320,7 @@ export default function Home() {
       {/* Modais */}
       <DisclaimerModal />
       <AboutPanel open={showAbout} onClose={() => setShowAbout(false)} />
+      <DatabasePanel open={showDatabase} onClose={() => setShowDatabase(false)} />
 
       {/* ── Header ── */}
       <header className="no-print shrink-0 px-4 py-3 border-b bg-card">
@@ -358,6 +361,14 @@ export default function Home() {
               ))}
             </div>
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowDatabase(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all border border-border/50 hover:border-border"
+                title="Gerenciar banco de dados"
+              >
+                <Database className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Banco de Dados</span>
+              </button>
               <button
                 onClick={() => setShowAbout(true)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all border border-border/50 hover:border-border"

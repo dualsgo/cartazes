@@ -1,12 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as fs from 'fs';
 import * as path from 'path';
+import { suggestCacheValid, markSuggestCacheValid } from '../../suggest-cache';
 
 type SuggestItem = { key: string; description: string };
 
 let cacheAll: SuggestItem[] | null = null;
 
 function loadAll(): SuggestItem[] {
+    // Invalida cache se um novo produto foi salvo
+    if (!suggestCacheValid) {
+        cacheAll = null;
+        markSuggestCacheValid();
+    }
+
     if (cacheAll) return cacheAll;
 
     const filePath = path.join(process.cwd(), 'src', 'data', 'produtos.json');
