@@ -9,15 +9,10 @@ import { PosterPreviewEtiqueta } from '@/app/components/poster-preview-etiqueta'
 import { PosterPreviewTotem } from '@/app/components/poster-preview-totem';
 import { DisclaimerModal } from '@/app/components/disclaimer-modal';
 import { AboutPanel } from '@/app/components/about-panel';
-<<<<<<< HEAD
 import { DatabasePanel } from '@/app/components/database-panel';
-import type { PosterData } from '@/app/lib/types';
-import { Printer, Plus, Trash2, FileStack, PackageOpen, Info, Database } from 'lucide-react';
-=======
 import { SettingsDialog } from '@/app/components/settings-dialog';
 import type { PosterData, PosterSettings, PosterType } from '@/app/lib/types';
-import { Printer, Plus, Trash2, FileStack, PackageOpen, Info } from 'lucide-react';
->>>>>>> 8a54cb546b832c895d8714e474e72517a05afcf2
+import { Printer, Plus, Trash2, FileStack, PackageOpen, Info, Database } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
@@ -176,7 +171,7 @@ function PageGrid({
     return (
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gridTemplateRows: '1fr 1fr', width: '100%', height: '100%', gap: '8mm', padding: '8mm 10mm' }}>
         {items.map((d: PosterData, i: number) => (<div key={i} style={{ width: '100%', height: '100%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}><PosterPreviewAereo {...d} /></div>))}
-        {empties.map((_: undefined, i: number) => <div key={`e${i}`} />)}
+        {empties.map((_, i: number) => <div key={`e${i}`} />)}
       </div>
     );
   }
@@ -230,7 +225,7 @@ function PageGrid({
           </div>
         </div>
       ))}
-      {empties.map((_: undefined, i: number) => <div key={`e${i}`} />)}
+      {empties.map((_, i: number) => <div key={`e${i}`} />)}
     </div>
   );
 }
@@ -243,14 +238,11 @@ export default function Home() {
   const [isProductReady, setIsProductReady] = useState(false);
   const [formKey, setFormKey] = useState(0);
   const [showAbout, setShowAbout] = useState(false);
-<<<<<<< HEAD
   const [showDatabase, setShowDatabase] = useState(false);
-=======
   const [settings, setSettings] = useState<PosterSettings>({
     maxInstallments: 6,
     minInstallmentAmount: 30,
   });
->>>>>>> 8a54cb546b832c895d8714e474e72517a05afcf2
 
   // Load settings
   useEffect(() => {
@@ -318,7 +310,7 @@ export default function Home() {
       pages.push(queue.slice(i, i + perPage));
     }
     const orientation = POSTER_ORIENTATION[posterType as PosterType];
-    return Array.from({ length: totalPages }).map((_: undefined, pageIdx: number) => {
+    return Array.from({ length: totalPages }).map((_, pageIdx: number) => {
       const pageItems = queue.slice(pageIdx * perPage, (pageIdx + 1) * perPage);
       return (
         <div
