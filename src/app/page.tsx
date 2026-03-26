@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { PosterForm } from '@/app/components/poster-form';
 import { PosterPreview } from '@/app/components/poster-preview';
 import { PosterPreviewAereo } from '@/app/components/poster-preview-aereo';
@@ -9,14 +9,21 @@ import { PosterPreviewEtiqueta } from '@/app/components/poster-preview-etiqueta'
 import { PosterPreviewTotem } from '@/app/components/poster-preview-totem';
 import { DisclaimerModal } from '@/app/components/disclaimer-modal';
 import { AboutPanel } from '@/app/components/about-panel';
+<<<<<<< HEAD
 import { DatabasePanel } from '@/app/components/database-panel';
 import type { PosterData } from '@/app/lib/types';
 import { Printer, Plus, Trash2, FileStack, PackageOpen, Info, Database } from 'lucide-react';
+=======
+import { SettingsDialog } from '@/app/components/settings-dialog';
+import type { PosterData, PosterSettings, PosterType } from '@/app/lib/types';
+import { Printer, Plus, Trash2, FileStack, PackageOpen, Info } from 'lucide-react';
+>>>>>>> 8a54cb546b832c895d8714e474e72517a05afcf2
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
-type PosterType = 'reliquias' | 'ofertas-imperdiveis' | 'aereo' | 'avaria' | 'etiqueta' | 'totem';
+// The PosterType definition was moved to '@/app/lib/types'
+// type PosterType = 'reliquias' | 'ofertas-imperdiveis' | 'aereo' | 'avaria' | 'etiqueta' | 'totem' | 'leve-pague-a4' | 'leve-pague-a6' | 'combo-a4' | 'combo-a6';
 
 const PER_PAGE: Record<PosterType, number> = {
   reliquias: 4,
@@ -67,10 +74,12 @@ function SinglePosterPreview({
   data,
   posterType,
   isReady,
+  settings,
 }: {
   data: PosterData;
   posterType: PosterType;
   isReady: boolean;
+  settings: PosterSettings;
 }) {
   const outerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
@@ -136,12 +145,12 @@ function SinglePosterPreview({
             overflow: 'hidden',
           }}
         >
-          {posterType === 'reliquias'           && <PosterPreview {...data} isImperdiveis={false} />}
-          {posterType === 'ofertas-imperdiveis' && <PosterPreview {...data} isImperdiveis={true}  />}
+          {posterType === 'reliquias'           && <PosterPreview {...data} isImperdiveis={false} settings={settings} />}
+          {posterType === 'ofertas-imperdiveis' && <PosterPreview {...data} isImperdiveis={true}  settings={settings} />}
           {posterType === 'aereo'               && <PosterPreviewAereo {...data} />}
-          {posterType === 'avaria'              && <PosterPreviewDefeito {...data} />}
+          {posterType === 'avaria'              && <PosterPreviewDefeito {...data} settings={settings} />}
           {posterType === 'etiqueta'            && <PosterPreviewEtiqueta {...data} />}
-          {posterType === 'totem'               && <PosterPreviewTotem {...data} />}
+          {posterType === 'totem'               && <PosterPreviewTotem {...data} settings={settings} />}
         </div>
       )}
     </div>
@@ -149,51 +158,61 @@ function SinglePosterPreview({
 }
 
 /* ─────────────────────────── renderPageGrid ──────────────────────────────── */
-function PageGrid({ items, posterType, perPage }: { items: PosterData[]; posterType: PosterType; perPage: number }) {
+function PageGrid({
+  items,
+  posterType,
+  perPage,
+  settings
+}: {
+  items: PosterData[];
+  posterType: PosterType;
+  perPage: number;
+  settings: PosterSettings;
+}) {
   const empties = Array.from({ length: perPage - items.length });
 
   if (posterType === 'aereo') {
     // 2 cartazes por página landscape, 1 por linha — cartaz de 190mm cabe na largura total
     return (
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gridTemplateRows: '1fr 1fr', width: '100%', height: '100%', gap: '8mm', padding: '8mm 10mm' }}>
-        {items.map((d, i) => (<div key={i} style={{ width: '100%', height: '100%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}><PosterPreviewAereo {...d} /></div>))}
-        {empties.map((_, i) => <div key={`e${i}`} />)}
+        {items.map((d: PosterData, i: number) => (<div key={i} style={{ width: '100%', height: '100%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}><PosterPreviewAereo {...d} /></div>))}
+        {empties.map((_: undefined, i: number) => <div key={`e${i}`} />)}
       </div>
     );
   }
   if (posterType === 'etiqueta') {
     return (
       <div style={{ display: 'grid', gridTemplateColumns: '90mm 90mm', gridTemplateRows: 'repeat(8, 33.5mm)', gap: '0 6mm', paddingTop: '13mm', paddingBottom: '14mm', paddingLeft: '12mm', paddingRight: '12mm', width: '100%', height: '100%', boxSizing: 'border-box', backgroundColor: 'white' }}>
-        {items.map((d, i) => (<div key={i} style={{ width: '90mm', height: '33.5mm', overflow: 'hidden' }}><PosterPreviewEtiqueta {...d} /></div>))}
+        {items.map((d: PosterData, i: number) => (<div key={i} style={{ width: '90mm', height: '33.5mm', overflow: 'hidden' }}><PosterPreviewEtiqueta {...d} /></div>))}
       </div>
     );
   }
   if (posterType === 'totem') {
     return (
       <div style={{ width: '100%', height: '100%', backgroundColor: 'white' }}>
-        <PosterPreviewTotem {...items[0]} />
+        <PosterPreviewTotem {...items[0]} settings={settings} />
       </div>
     );
   }
   // reliquias, ofertas-imperdiveis, avaria
   return (
-    <div style={{ 
-      display: 'grid', 
-      // Divide a "área util" (após as margens do papel de 1.5cm vert e 1.2cm horiz) 
+    <div style={{
+      display: 'grid',
+      // Divide a "área util" (após as margens do papel de 1.5cm vert e 1.2cm horiz)
       // exatamente ao meio, criando 4 containers idênticos.
-      gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', 
-      gridTemplateRows: 'minmax(0,1fr) minmax(0,1fr)', 
-      width: '100%', 
-      height: '100%', 
+      gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)',
+      gridTemplateRows: 'minmax(0,1fr) minmax(0,1fr)',
+      width: '100%',
+      height: '100%',
       padding: '1.5cm 1.2cm',  // Margens externas (Padrão A4 limpo)
-      boxSizing: 'border-box', 
-      backgroundColor: 'white' 
+      boxSizing: 'border-box',
+      backgroundColor: 'white'
     }}>
-      {items.map((d, i) => (
+      {items.map((d: PosterData, i: number) => (
         // Cada slot tem 100% da sua metade do papel (Aprox 13.x cm por 9cm)
-        <div key={i} style={{ 
-          width: '100%', 
-          height: '100%', 
+        <div key={i} style={{
+          width: '100%',
+          height: '100%',
           // O espaço em branco QUE SEPARA um painel do outro fisicamente:
           // Como as margens encostam, o top de um cartaz respira pro limite
           // e o bottom respira pro mesmo limite.
@@ -206,12 +225,12 @@ function PageGrid({ items, posterType, perPage }: { items: PosterData[]; posterT
           {/* O Cartaz real, posicionado nos limites do seu padding interno */}
           <div style={{ width: '100%', height: '100%', overflow: 'hidden' }}>
             {posterType === 'reliquias' || posterType === 'ofertas-imperdiveis'
-              ? <PosterPreview {...d} isImperdiveis={posterType === 'ofertas-imperdiveis'} />
-              : <PosterPreviewDefeito {...d} />}
+              ? <PosterPreview {...(d as PosterData)} isImperdiveis={posterType === 'ofertas-imperdiveis'} settings={settings} />
+              : <PosterPreviewDefeito {...(d as PosterData)} settings={settings} />}
           </div>
         </div>
       ))}
-      {empties.map((_, i) => <div key={`e${i}`} />)}
+      {empties.map((_: undefined, i: number) => <div key={`e${i}`} />)}
     </div>
   );
 }
@@ -224,12 +243,32 @@ export default function Home() {
   const [isProductReady, setIsProductReady] = useState(false);
   const [formKey, setFormKey] = useState(0);
   const [showAbout, setShowAbout] = useState(false);
+<<<<<<< HEAD
   const [showDatabase, setShowDatabase] = useState(false);
+=======
+  const [settings, setSettings] = useState<PosterSettings>({
+    maxInstallments: 6,
+    minInstallmentAmount: 30,
+  });
+>>>>>>> 8a54cb546b832c895d8714e474e72517a05afcf2
 
-  const perPage    = PER_PAGE[posterType];
+  // Load settings
+  useEffect(() => {
+    const saved = localStorage.getItem('poster-settings');
+    if (saved) {
+      try { setSettings(JSON.parse(saved)); } catch { /* ignore */ }
+    }
+  }, []);
+
+  const saveSettings = (newSettings: PosterSettings) => {
+    setSettings(newSettings);
+    localStorage.setItem('poster-settings', JSON.stringify(newSettings));
+  };
+
+  const perPage    = PER_PAGE[posterType as PosterType];
   const totalPages = queue.length > 0 ? Math.ceil(queue.length / perPage) : 0;
 
-  /* Print CSS */
+  // Update print CSS immediately when poster type changes
   useEffect(() => {
     const styleId = 'print-page-style';
     let style = document.getElementById(styleId) as HTMLStyleElement | null;
@@ -238,15 +277,8 @@ export default function Home() {
       style.id = styleId;
       document.head.appendChild(style);
     }
-    if (posterType === 'aereo') {
-      style.innerHTML = `@media print { @page { size: A4 landscape; margin: 0; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0; padding: 0; } }`;
-    } else if (posterType === 'etiqueta') {
-      style.innerHTML = `@media print { @page { size: A4 portrait; margin: 0; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0; padding: 0; } }`;
-    } else if (posterType === 'totem') {
-      style.innerHTML = `@media print { @page { size: A4 portrait; margin: 0; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0; padding: 0; } }`;
-    } else {
-      style.innerHTML = `@media print { @page { size: A4 landscape; margin: 0; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0; padding: 0; } }`;
-    }
+    const o = POSTER_ORIENTATION[posterType as PosterType];
+    style.innerHTML = `@media print { @page { size: A4 ${o}; margin: 0; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0; padding: 0; } }`;
   }, [posterType]);
 
   const handlePosterTypeChange = (newType: PosterType) => {
@@ -257,12 +289,12 @@ export default function Home() {
       posterSubType: ['reliquias', 'ofertas-imperdiveis', 'avaria'].includes(newType) ? 'offer' : 'normal',
     });
     setIsProductReady(false);
-    setFormKey(k => k + 1);
+    setFormKey((k: number) => k + 1);
   };
 
   const handleAddToQueue = () => {
     if (!isProductReady) return;
-    setQueue(prev => [...prev, { ...currentPoster }]);
+    setQueue((prev: PosterData[]) => [...prev, { ...currentPoster }]);
     setCurrentPoster({
       ...initialPosterData(),
       posterSubType: currentPoster.posterSubType,
@@ -271,11 +303,11 @@ export default function Home() {
       customDefectDiscount: currentPoster.customDefectDiscount,
     });
     setIsProductReady(false);
-    setFormKey(k => k + 1);
+    setFormKey((k: number) => k + 1);
   };
 
   const handleRemoveFromQueue = (index: number) => {
-    setQueue(prev => prev.filter((_, i) => i !== index));
+    setQueue((prev: PosterData[]) => prev.filter((_: PosterData, i: number) => i !== index));
   };
 
   /* Print content: one div per page, each with page-break */
@@ -285,25 +317,27 @@ export default function Home() {
     for (let i = 0; i < queue.length; i += perPage) {
       pages.push(queue.slice(i, i + perPage));
     }
-    const isPortrait = ['etiqueta', 'totem'].includes(posterType);
-    const pageW = isPortrait ? '21cm' : '29.7cm';
-    const pageH = isPortrait ? '29.7cm' : '21cm';
-    return pages.map((pageItems, pageIdx) => (
-      <div
-        key={pageIdx}
-        style={{
-          width: pageW,
-          height: pageH,
-          pageBreakAfter: pageIdx < pages.length - 1 ? 'always' : 'auto',
-          breakAfter:     pageIdx < pages.length - 1 ? 'page'   : 'auto',
-        }}
-      >
-        <PageGrid items={pageItems} posterType={posterType} perPage={perPage} />
-      </div>
-    ));
+    const orientation = POSTER_ORIENTATION[posterType as PosterType];
+    return Array.from({ length: totalPages }).map((_: undefined, pageIdx: number) => {
+      const pageItems = queue.slice(pageIdx * perPage, (pageIdx + 1) * perPage);
+      return (
+        <div
+          key={pageIdx}
+          className="print-page bg-white"
+          style={{
+            width:          orientation === 'landscape' ? '297mm'  : '210mm',
+            height:         orientation === 'landscape' ? '210mm'  : '297mm',
+            pageBreakAfter: pageIdx < totalPages - 1    ? 'always' : 'auto',
+            breakAfter:     pageIdx < totalPages - 1    ? 'page'   : 'auto',
+          }}
+        >
+          <PageGrid items={pageItems} posterType={posterType as PosterType} perPage={perPage} settings={settings} />
+        </div>
+      );
+    });
   };
 
-  const orientation: 'portrait' | 'landscape' = ['aereo', 'etiqueta', 'totem'].includes(posterType) ? 'portrait' : 'landscape';
+  const orientation = POSTER_ORIENTATION[posterType as PosterType];
 
   const typeOptions = [
     { id: 'reliquias',             label: 'Relíquias'          },
@@ -377,6 +411,7 @@ export default function Home() {
                 <Info className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Sobre</span>
               </button>
+              <SettingsDialog settings={settings} onSave={saveSettings} />
               <Button
                 onClick={() => window.print()}
                 disabled={queue.length === 0}
@@ -449,7 +484,7 @@ export default function Home() {
                             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider px-3 pt-2 pb-1">
                               Página {pageIdx + 1}
                             </p>
-                            {pageItems.map((item, itemIdx) => {
+                            {pageItems.map((item: PosterData, itemIdx: number) => {
                               const globalIdx = pageIdx * perPage + itemIdx;
                               return (
                                 <div key={globalIdx} className="flex items-center gap-2 px-3 py-2 hover:bg-muted/40 transition-colors">
@@ -496,6 +531,7 @@ export default function Home() {
                   data={currentPoster}
                   posterType={posterType}
                   isReady={isProductReady}
+                  settings={settings}
                 />
               </div>
             </div>

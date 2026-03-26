@@ -1,18 +1,7 @@
-import React from 'react';
-import type { PosterData } from '@/app/lib/types';
+import type { PosterData, PosterSettings } from '@/app/lib/types';
 import { Card } from '@/components/ui/card';
 import { OfertasHeader } from './ofertas-header';
-
-function parsePrice(price: string): number {
-  return parseFloat(price.replace('.', '').replace(',', '.')) || 0;
-}
-
-function formatCurrency(value: number): string {
-  return value.toLocaleString('pt-br', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-}
+import { parsePrice, formatCurrency, calculateInstallments } from '@/app/lib/poster-utils';
 
 export function PosterPreviewTotem({
   description,
@@ -24,7 +13,8 @@ export function PosterPreviewTotem({
   paymentOption,
   offerValidityStart,
   offerValidity,
-}: PosterData) {
+  settings,
+}: PosterData & { settings: PosterSettings }) {
   const valDe = parsePrice(priceFrom);
   const valPor = parsePrice(priceFor);
 
@@ -33,10 +23,7 @@ export function PosterPreviewTotem({
 
   const [porInteger, porDecimal] = formatCurrency(valPor).split(',');
 
-  const numInstallments = valPor > 0 ? Math.floor(valPor / 29.99) : 0;
-  const maxInstallments = Math.min(numInstallments, 6);
-  const rawInstallment = maxInstallments > 1 && valPor > 0 ? valPor / maxInstallments : 0;
-  const installmentValue = Math.ceil(rawInstallment * 100) / 100;
+  const { maxInstallments, installmentValue } = calculateInstallments(valPor, settings);
   
   const hasInstallments = paymentOption === 'installment' && maxInstallments > 1;
 

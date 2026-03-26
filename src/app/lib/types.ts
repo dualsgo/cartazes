@@ -14,3 +14,16 @@ export type PosterData = {
   offerValidityStart?: string; // data de início da oferta (ex: "01/03/2026")
   offerValidity?: string; // data de fim da oferta (ex: "31/03/2026")
 };
+
+export type PosterSettings = {
+  maxInstallments: number;
+  minInstallmentAmount: number;
+};
+
+export type PosterType = 
+  | 'reliquias' 
+  | 'ofertas-imperdiveis' 
+  | 'aereo' 
+  | 'avaria' 
+  | 'etiqueta' 
+  | 'totem';
