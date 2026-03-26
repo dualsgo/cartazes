@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
@@ -72,8 +72,8 @@ function detectInputType(value: string): 'ean' | 'code' {
 const defectOptions = [
   { value: 'embalagem_danificada', label: 'Embalagem Danificada', discount: 20 },
   { value: 'marcas_de_uso', label: 'Marcas de Uso', discount: 30 },
-  { value: 'pelucia_suja', label: 'Pelúcia Suja', discount: 40 },
-  { value: 'peca_faltando', label: 'Peça Faltando', discount: 50 },
+  { value: 'pelucia_suja', label: 'Pel├║cia Suja', discount: 40 },
+  { value: 'peca_faltando', label: 'Pe├ºa Faltando', discount: 50 },
   { value: 'outro', label: 'Outro (descrever)', discount: null },
 ];
 
@@ -82,7 +82,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
   const [searchValue, setSearchValue] = useState('');
   const [suggestions, setSuggestions] = useState<{ key: string; description: string }[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  // true = usuário digitou manualmente no campo POR → não recalcula automaticamente
+  // true = usu├írio digitou manualmente no campo POR ÔåÆ n├úo recalcula automaticamente
   const [priceForOverridden, setPriceForOverridden] = useState(false);
   const suggestTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -99,15 +99,15 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
   const priceFor  = useCurrencyInput(data.priceFor, maxForCents);
 
   useEffect(() => {
-    setData((prev: PosterData) => ({ ...prev, priceFor: priceFor.display }));
+    setData(prev => ({ ...prev, priceFor: priceFor.display }));
   }, [priceFor.display]);
 
   useEffect(() => {
-    setData((prev: PosterData) => ({ ...prev, priceFrom: priceFrom.display }));
+    setData(prev => ({ ...prev, priceFrom: priceFrom.display }));
   }, [priceFrom.display]);
   
   // Recalcula POR automaticamente a partir do DE + desconto do motivo,
-  // exceto quando o usuário tiver feito override manual.
+  // exceto quando o usu├írio tiver feito override manual.
   useEffect(() => {
     if (posterType !== 'avaria') return;
     if (priceForOverridden) return;
@@ -138,7 +138,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [priceFrom.cents, data.defectType, data.customDefectDiscount, posterType, priceForOverridden]);
 
-  // Quando o usuário muda o motivo/DE, volta para auto-calc
+  // Quando o usu├írio muda o motivo/DE, volta para auto-calc
   useEffect(() => {
     setPriceForOverridden(false);
   }, [priceFrom.cents, data.defectType, data.customDefectDiscount]);
@@ -177,7 +177,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
     fetchSuggestions(v);
   };
 
-  const handleLookup = useCallback(async (q: string) => {
+  const handleLookup = useCallback(async (q = searchValue) => {
     const query = q.trim();
     if (query.length < 3) return;
     setShowSuggestions(false);
@@ -194,7 +194,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
         description: string; reference: string; ean?: string; code?: string;
       };
 
-      setData((prev: PosterData) => ({
+      setData(prev => ({
         ...prev,
         description: produto.description,
         reference:   produto.reference,
@@ -207,10 +207,10 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
       setLookupStatus('notfound');
       onLookupStatusChange?.(false);
     }
-  }, [setData, onLookupStatusChange]);
+  }, [searchValue, setData, onLookupStatusChange]);
 
   const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') { e.preventDefault(); handleLookup(searchValue); }
+    if (e.key === 'Enter') { e.preventDefault(); handleLookup(); }
     if (e.key === 'Escape') { setShowSuggestions(false); }
     if (e.key === 'ArrowDown' && suggestions.length > 0) {
       e.preventDefault();
@@ -227,11 +227,11 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
   };
 
   const handlePaymentOptionChange = (value: string) => {
-    setData((prev: PosterData) => ({ ...prev, paymentOption: value as 'normal' | 'installment' }));
+    setData(prev => ({ ...prev, paymentOption: value as 'normal' | 'installment' }));
   };
 
   const handleSubTypeChange = (value: string) => {
-    setData((prev: PosterData) => ({
+    setData(prev => ({
       ...prev,
       posterSubType: value as 'offer' | 'normal',
       priceFrom: value === 'normal' ? '' : prev.priceFrom,
@@ -240,7 +240,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
   };
 
   const handleDefectChange = (value: string) => {
-    setData((prev: PosterData) => ({
+    setData(prev => ({
       ...prev,
       defectType: value,
       customDefectReason: value === 'outro' ? prev.customDefectReason : '',
@@ -248,15 +248,15 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
   };
 
   const handleCustomDiscountChange = (value: number[]) => {
-    setData((prev: PosterData) => ({ ...prev, customDefectDiscount: value[0] }));
+    setData(prev => ({ ...prev, customDefectDiscount: value[0] }));
   };
 
-  const statusIcon = ({
+  const statusIcon = {
     idle:     <Search className="h-4 w-4 text-muted-foreground" />,
     loading:  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />,
     found:    <CheckCircle2 className="h-4 w-4 text-green-500" />,
     notfound: <XCircle className="h-4 w-4 text-destructive" />,
-  } as Record<string, any>)[lookupStatus];
+  }[lookupStatus];
 
   const handleRegister = async () => {
     const key = regCode.trim() || regEan.trim();
@@ -286,172 +286,442 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
     }
   };
   
-  const isOfferType = [
-    'reliquias', 'ofertas-imperdiveis', 'totem', 'etiqueta'
-  ].includes(posterType) || (posterType === 'aereo' && data.posterSubType === 'offer');
+  const isOfferType = posterType === 'reliquias' || posterType === 'ofertas-imperdiveis' || posterType === 'totem' || posterType === 'etiqueta' || (posterType === 'aereo' && data.posterSubType === 'offer');
 
   return (
-    <div className="space-y-4 pb-8">
-      {/* SEÇÃO: ITEM A / PRINCIPAL */}
+    <div className="space-y-3">
+      {/* 1. SECTION: BUSCA (Sempre vis├¡vel) */}
       <Card>
         <CardContent className="pt-4 space-y-4">
-          <div className="flex items-center justify-between border-b pb-2">
-            <Label className="font-extrabold text-base uppercase tracking-tight">
-              Informações do Produto
+          <div className="space-y-1" ref={wrapperRef}>
+            <Label htmlFor="search-code" className="font-semibold text-lg">
+              1. Buscar Produto
             </Label>
-            {lookupStatus === 'found' && (
-              <span className="text-[10px] bg-green-600 text-white px-2 py-0.5 rounded-full uppercase font-black">Identificado</span>
+            <div className="relative">
+              <Input
+                id="search-code"
+                value={searchValue}
+                onChange={handleSearchChange}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                onKeyDown={handleSearchKeyDown}
+                onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+                placeholder="SAP (ex: 71838) ou EAN (13 d├¡gitos)ÔÇª"
+                className={cn(
+                  'pr-9 h-12 text-lg',
+                  lookupStatus === 'found'    && 'border-green-500 ring-green-500',
+                  lookupStatus === 'notfound' && 'border-destructive',
+                )}
+                autoComplete="off"
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                {statusIcon}
+              </span>
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute z-50 w-full mt-1 bg-popover border border-border rounded-md shadow-lg overflow-hidden">
+                  {suggestions.map((s, i) => (
+                    <button
+                      key={s.key}
+                      data-suggestion
+                      tabIndex={0}
+                      className="w-full text-left px-3 py-2 hover:bg-accent focus:bg-accent focus:outline-none"
+                      onMouseDown={() => handleSuggestionSelect(s.key)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') handleSuggestionSelect(s.key);
+                        if (e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          const next = wrapperRef.current?.querySelectorAll<HTMLButtonElement>('[data-suggestion]')[i + 1];
+                          next?.focus();
+                        }
+                        if (e.key === 'ArrowUp') {
+                          e.preventDefault();
+                          if (i === 0) document.getElementById('search-code')?.focus();
+                          else wrapperRef.current?.querySelectorAll<HTMLButtonElement>('[data-suggestion]')[i - 1]?.focus();
+                        }
+                      }}
+                    >
+                      <span className="font-mono text-sm">{s.key}</span>
+                      {s.description && (
+                        <span className="ml-2 text-xs text-muted-foreground truncate">{s.description}</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            {lookupStatus === 'notfound' && (
+              <p className="text-xs text-destructive">C├│digo n├úo encontrado</p>
             )}
           </div>
 
-          <div className="space-y-3">
-            <div className="space-y-1" ref={wrapperRef}>
-              <Label className="text-[10px] font-bold text-muted-foreground uppercase">Buscar ou Digitar SAP/EAN</Label>
-              <div className="relative">
-                <Input
-                  value={searchValue}
-                  onChange={handleSearchChange}
-                  onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-                  onKeyDown={(e) => handleSearchKeyDown(e)}
-                  onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-                  placeholder="Ex: 71838"
-                  className="h-10 text-lg pr-9 font-bold"
-                  autoComplete="off"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                  {statusIcon}
-                </span>
-                
-                {showSuggestions && suggestions.length > 0 && (
-                  <div className="absolute z-50 w-full mt-1 bg-popover border border-border rounded-md shadow-lg overflow-hidden">
-                    {suggestions.map((s: any) => (
-                      <button
-                        key={s.key}
-                        data-suggestion
-                        type="button"
-                        className="w-full text-left px-3 py-2 hover:bg-accent focus:bg-accent focus:outline-none flex justify-between"
-                        onMouseDown={() => handleSuggestionSelect(s.key)}
-                      >
-                        <span className="font-mono text-sm font-bold">{s.key}</span>
-                        <span className="text-xs text-muted-foreground truncate ml-4">{s.description}</span>
-                      </button>
-                    ))}
+          {lookupStatus === 'notfound' && (
+            <div className="rounded-md border border-orange-200 bg-orange-50/60 p-3 dark:bg-orange-950/20 dark:border-orange-900 space-y-3">
+              <p className="text-[11px] font-bold text-orange-700 dark:text-orange-400 uppercase tracking-wide flex items-center gap-1">
+                <PlusCircle className="h-3.5 w-3.5" /> Cadastrar produto na base
+              </p>
+
+              {/* Confirmation panel */}
+              {regConfirming ? (
+                <div className="space-y-3">
+                  <div className="rounded-md bg-orange-100 dark:bg-orange-900/30 p-3 space-y-1 text-sm">
+                    <p className="font-bold text-orange-900 dark:text-orange-200">Confirmar cadastro?</p>
+                    <p><span className="text-xs text-muted-foreground">Descri├º├úo:</span> <b>{regDescription}</b></p>
+                    {regCode && <p><span className="text-xs text-muted-foreground">SAP:</span> <b className="font-mono">{regCode}</b></p>}
+                    {regEan  && <p><span className="text-xs text-muted-foreground">EAN:</span> <b className="font-mono">{regEan}</b></p>}
+                    {regReference && <p><span className="text-xs text-muted-foreground">Refer├¬ncia:</span> <b>{regReference}</b></p>}
                   </div>
-                )}
+                  <p className="text-[10px] text-orange-700 dark:text-orange-400">
+                    Este produto ser├í salvo permanentemente na base de dados.
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setRegConfirming(false)}
+                      className="flex-1 rounded-md border border-border text-sm font-medium py-2 hover:bg-muted transition-colors"
+                    >
+                      Corrigir
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleRegister}
+                      disabled={regStatus === 'saving'}
+                      className="flex-1 flex items-center justify-center gap-2 rounded-md bg-orange-600 text-white text-sm font-semibold py-2 hover:bg-orange-700 disabled:opacity-40 transition-colors"
+                    >
+                      {regStatus === 'saving' ? (
+                        <><Loader2 className="h-4 w-4 animate-spin" /> Salvando...</>
+                      ) : (
+                        <><CheckCircle2 className="h-4 w-4" /> Confirmar e Salvar</>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="space-y-1">
+                    <Label htmlFor="reg-description" className="text-xs text-muted-foreground">Descri├º├úo *</Label>
+                    <Input
+                      id="reg-description"
+                      value={regDescription}
+                      onChange={e => setRegDescription(e.target.value.toUpperCase())}
+                      placeholder="NOME DO PRODUTO"
+                      className="text-sm uppercase"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label htmlFor="reg-code" className="text-xs text-muted-foreground">C├│d. SAP</Label>
+                      <Input
+                        id="reg-code"
+                        value={regCode}
+                        onChange={e => setRegCode(e.target.value.replace(/\D/g, ''))}
+                        placeholder="71838"
+                        inputMode="numeric"
+                        className="text-sm font-mono"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="reg-ean" className="text-xs text-muted-foreground">EAN</Label>
+                      <Input
+                        id="reg-ean"
+                        value={regEan}
+                        onChange={e => setRegEan(e.target.value.replace(/\D/g, ''))}
+                        placeholder="7891234567890"
+                        inputMode="numeric"
+                        className="text-sm font-mono"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="reg-reference" className="text-xs text-muted-foreground">Refer├¬ncia <span className="font-normal opacity-70">(Opcional)</span></Label>
+                    <Input
+                      id="reg-reference"
+                      value={regReference}
+                      onChange={e => setRegReference(e.target.value)}
+                      placeholder="Ex: ABC-123"
+                      className="text-sm"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    disabled={(!regCode && !regEan) || !regDescription}
+                    onClick={() => setRegConfirming(true)}
+                    className="w-full flex items-center justify-center gap-2 rounded-md bg-orange-600 text-white text-sm font-semibold py-2 px-3 hover:bg-orange-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {regStatus === 'saved' ? (
+                      <><CheckCircle2 className="h-4 w-4" /> Cadastrado com sucesso!</>
+                    ) : regStatus === 'error' ? (
+                      <><XCircle className="h-4 w-4" /> Erro ao salvar. Tente novamente.</>
+                    ) : (
+                      <><PlusCircle className="h-4 w-4" /> Revisar e Cadastrar &rarr;</>
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {lookupStatus === 'found' && (
+            <div className="rounded-md border border-green-200 bg-green-50/50 p-3 dark:bg-green-950/20 dark:border-green-900">
+              <p className="text-[10px] font-bold text-green-700 dark:text-green-400 uppercase tracking-wide mb-1">
+                Produto selecionado
+              </p>
+              <p className="font-semibold text-sm leading-tight mb-2">{data.description}</p>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                {data.code && <span>SAP: <b className="text-foreground">{data.code}</b></span>}
+                {data.ean  && <span>EAN: <b className="text-foreground">{data.ean}</b></span>}
+                {data.reference && <span>Ref.: <b className="text-foreground">{data.reference}</b></span>}
               </div>
             </div>
+          )}
+        </CardContent>
+      </Card>
 
-            <div className="space-y-1">
-              <Label className="text-[10px] font-bold text-muted-foreground uppercase">Descrição</Label>
-              <Input 
-                value={data.description}
-                onChange={e => setData((prev: PosterData) => ({ ...prev, description: e.target.value.toUpperCase() }))}
-                className="uppercase font-bold h-10 border-foreground/20"
-              />
-            </div>
+      {/* 2. SECTION: CONFIGURA├ç├òES DO CARTAZ (Bloqueado se n├úo encontrou) */}
+      <fieldset 
+        className={cn(
+          "space-y-3 transition-opacity duration-200", 
+          lookupStatus !== 'found' && "opacity-40 pointer-events-none grayscale-[0.5]"
+        )}
+        disabled={lookupStatus !== 'found'}
+      >
+        <Card>
+          <CardContent className="pt-4 space-y-5">
+            <Label className="font-semibold text-lg border-b pb-2 block">
+              2. Pre├ºos e Formato
+            </Label>
+            
+            {posterType === 'aereo' && (
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Tipo de A├®reo</Label>
+                <div className="flex bg-muted p-1 rounded-lg">
+                  <button
+                    type="button"
+                    onClick={() => handleSubTypeChange('normal')}
+                    className={cn(
+                      "flex-1 px-3 py-2 rounded-md text-sm font-medium transition-all",
+                      data.posterSubType === 'normal' ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:bg-black/5"
+                    )}
+                  >
+                    Pre├ºo Normal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSubTypeChange('offer')}
+                    className={cn(
+                      "flex-1 px-3 py-2 rounded-md text-sm font-medium transition-all",
+                      data.posterSubType === 'offer' ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:bg-black/5"
+                    )}
+                  >
+                    Oferta
+                  </button>
+                </div>
+              </div>
+            )}
 
-            <div className="grid grid-cols-3 gap-2">
-              <div className="space-y-1">
-                <Label className="text-[10px] font-bold text-muted-foreground uppercase">SAP</Label>
-                <Input value={data.code} onChange={e => setData((prev: PosterData) => ({ ...prev, code: e.target.value }))} className="h-8 text-xs font-mono" />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-[10px] font-bold text-muted-foreground uppercase">EAN</Label>
-                <Input value={data.ean} onChange={e => setData((prev: PosterData) => ({ ...prev, ean: e.target.value }))} className="h-8 text-xs font-mono" />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-[10px] font-bold text-muted-foreground uppercase">Ref.</Label>
-                <Input value={data.reference} onChange={e => setData((prev: PosterData) => ({ ...prev, reference: e.target.value }))} className="h-8 text-xs" />
-              </div>
-            </div>
-
-            <div className="grid grid-flow-row sm:grid-cols-2 gap-3 pt-2">
-              {isOfferType && (
+            {posterType === 'avaria' && (
+              <div className="space-y-4 bg-muted/30 p-3 rounded-lg border border-border/50">
                 <div className="space-y-1">
-                  <Label className="text-[10px] font-bold text-muted-foreground uppercase">Preço DE</Label>
-                  <Input 
+                  <Label htmlFor="defect-reason" className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Motivo da Avaria</Label>
+                  <Select onValueChange={handleDefectChange} value={data.defectType}>
+                    <SelectTrigger id="defect-reason" className="bg-background">
+                      <SelectValue placeholder="Selecione um motivo..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {defectOptions.map(opt => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {data.defectType === 'outro' && (
+                  <>
+                    <div className="space-y-1">
+                      <Label htmlFor="custom-defect-reason" className="text-xs text-muted-foreground uppercase tracking-wider">Descri├º├úo do Motivo</Label>
+                      <Input
+                        id="custom-defect-reason"
+                        value={data.customDefectReason}
+                        onChange={e => setData(prev => ({ ...prev, customDefectReason: e.target.value }))}
+                        placeholder="Ex: Pequeno rasgo na caixa"
+                        className="bg-background"
+                      />
+                    </div>
+                    <div className="space-y-1 pt-2">
+                      <Label htmlFor="custom-discount" className="text-xs text-muted-foreground uppercase tracking-wider">Desconto Aplicado: <span className="font-bold text-foreground">{data.customDefectDiscount}%</span></Label>
+                      <Slider
+                        id="custom-discount"
+                        min={0}
+                        max={50}
+                        step={5}
+                        value={[data.customDefectDiscount ?? 0]}
+                        onValueChange={handleCustomDiscountChange}
+                        className="pt-2"
+                      />
+                    </div>
+                  </>
+                )}
+
+                <div className="pt-2 border-t border-border/50 mt-2 space-y-1">
+                  <div className="flex items-baseline justify-between">
+                    <Label htmlFor="defect-note" className="text-xs text-muted-foreground uppercase font-bold tracking-wider">
+                      Observa├º├úo de Rodap├®
+                    </Label>
+                    <span className="text-[10px] text-muted-foreground">
+                      {(data.defectNote ?? '').length}/60
+                    </span>
+                  </div>
+                  <Input
+                    id="defect-note"
+                    value={data.defectNote ?? ''}
+                    onChange={e => setData(prev => ({ ...prev, defectNote: e.target.value.slice(0, 60) }))}
+                    placeholder="Ex: arranhado na lateral, sem bateriaÔÇª"
+                    className="text-sm bg-background"
+                    maxLength={60}
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-4 items-start">
+              {(isOfferType || posterType === 'avaria') && (
+                <div className="space-y-2">
+                  <Label htmlFor="price-from" className="text-xs text-muted-foreground uppercase font-bold tracking-wider">
+                    {posterType === 'avaria' ? 'Pre├ºo Original' : 'Prec╠ºo DE'}
+                  </Label>
+                  <Input
+                    id="price-from"
                     value={priceFrom.display}
                     onKeyDown={priceFrom.handleKeyDown}
-                    className="font-mono text-xl h-12 font-black border-2"
-                    onChange={()=>{}}
+                    onChange={() => {/* no-op */}}
+                    placeholder="0,00"
+                    className="font-mono text-xl h-12"
+                    inputMode="numeric"
                   />
                 </div>
               )}
-              <div className={cn("space-y-1", !isOfferType && "col-span-full")}>
-                <Label className="text-[10px] font-extrabold text-foreground uppercase tracking-widest">
-                  Preço POR
-                </Label>
-                <Input 
+              
+              <div className={cn('space-y-2', !(isOfferType || posterType === 'avaria') && 'col-span-2')}>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="price-for" className="text-xs text-muted-foreground uppercase font-bold tracking-wider text-black">
+                    {(isOfferType || posterType === 'avaria') ? 'Prec╠ºo POR' : 'Prec╠ºo Final'}
+                  </Label>
+                  {posterType === 'avaria' && priceForOverridden && (
+                    <button
+                      type="button"
+                      onClick={() => setPriceForOverridden(false)}
+                      className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors bg-muted px-2 py-0.5 rounded-full"
+                      title="Recalcular automaticamente"
+                    >
+                      <RotateCcw className="h-3 w-3" /> Auto
+                    </button>
+                  )}
+                </div>
+                <Input
+                  id="price-for"
                   value={priceFor.display}
-                  onKeyDown={priceFor.handleKeyDown}
-                  className="font-mono text-2xl h-14 font-black border-2 border-foreground shadow-[2px_2px_0_0_rgba(0,0,0,1)]"
-                  onChange={()=>{}}
+                  onKeyDown={(e) => {
+                    if (posterType === 'avaria') setPriceForOverridden(true);
+                    priceFor.handleKeyDown(e);
+                  }}
+                  onChange={() => {/* no-op */}}
+                  placeholder="0,00"
+                  className={cn(
+                    'font-mono text-xl h-12 font-bold ring-offset-2',
+                    posterType === 'avaria' && !priceForOverridden && 'bg-primary/5 border-primary/20 text-primary',
+                    lookupStatus === 'found' && 'border-primary ring-1 ring-primary/50'
+                  )}
+                  inputMode="numeric"
                 />
               </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* SEÇÃO: CONFIGURAÇÕES DA OFERTA (Avaria) */}
-      {posterType === 'avaria' && (
-        <Card className="bg-muted/40">
-          <CardContent className="pt-4 space-y-4">
-            <Label className="text-xs font-black uppercase tracking-widest border-b pb-1 flex items-center gap-2">
-              <RotateCcw className="h-3 w-3" /> Configuração da Oferta
-            </Label>
-            <div className="space-y-3">
-              <div className="space-y-1">
-                <Label className="text-[10px] font-bold uppercase">Motivo</Label>
-                <Select value={data.defectType} onValueChange={handleDefectChange}>
-                  <SelectTrigger className="font-bold"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {defectOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+            {(posterType === 'reliquias' || posterType === 'ofertas-imperdiveis' || posterType === 'etiqueta' || posterType === 'avaria' || posterType === 'aereo' || posterType === 'totem') && (
+              <div className="space-y-2 pt-2">
+                 <Label className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Forma de Pagamento</Label>
+                 <div className="flex bg-muted p-1 rounded-lg">
+                  <button
+                    type="button"
+                    onClick={() => handlePaymentOptionChange('normal')}
+                    className={cn(
+                      "flex-1 px-3 py-2 rounded-md text-sm font-medium transition-all",
+                      data.paymentOption === 'normal' ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:bg-black/5"
+                    )}
+                  >
+                    ├Ç vista
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handlePaymentOptionChange('installment')}
+                    className={cn(
+                      "flex-1 px-3 py-2 rounded-md text-sm font-medium transition-all",
+                      data.paymentOption === 'installment' ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:bg-black/5"
+                    )}
+                  >
+                    Parcelado
+                  </button>
+                </div>
               </div>
-              <Input 
-                placeholder="Obs de rodapé (max 60 carac.)"
-                value={data.defectNote || ''}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setData((prev: PosterData) => ({ ...prev, defectNote: e.target.value.slice(0, 60) }))}
-              />
-            </div>
+            )}
+            
+            {/* 3. SECTION: ACESS├ôRIOS */}
+            {(posterType === 'reliquias' || posterType === 'ofertas-imperdiveis' || posterType === 'totem') && (
+               <div className="pt-4 border-t mt-4 space-y-4">
+                 
+                 <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground uppercase font-bold tracking-wider block">
+                      Per├¡odo da Oferta <span className="font-normal normal-case opacity-70">(Opcional)</span>
+                    </Label>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1">
+                        <Input
+                          type="date"
+                          value={
+                            data.offerValidityStart
+                              ? data.offerValidityStart.split('/').reverse().join('-')
+                              : ''
+                          }
+                          onChange={e => {
+                            const iso = e.target.value;
+                            if (!iso) {
+                              setData(prev => ({ ...prev, offerValidityStart: undefined }));
+                              return;
+                            }
+                            const [y, m, d] = iso.split('-');
+                            setData(prev => ({ ...prev, offerValidityStart: `${d}/${m}/${y}` }));
+                          }}
+                          className="text-sm bg-muted/30"
+                          title="Data de In├¡cio"
+                        />
+                      </div>
+                      <span className="text-muted-foreground text-sm">at├®</span>
+                      <div className="flex-1">
+                        <Input
+                          type="date"
+                          value={
+                            data.offerValidity
+                              ? data.offerValidity.split('/').reverse().join('-')
+                              : ''
+                          }
+                          onChange={e => {
+                            const iso = e.target.value;
+                            if (!iso) {
+                              setData(prev => ({ ...prev, offerValidity: undefined }));
+                              return;
+                            }
+                            const [y, m, d] = iso.split('-');
+                            setData(prev => ({ ...prev, offerValidity: `${d}/${m}/${y}` }));
+                          }}
+                          className="text-sm bg-muted/30"
+                          title="Data de T├®rmino"
+                        />
+                      </div>
+                    </div>
+                  </div>
+               </div>
+            )}
           </CardContent>
         </Card>
-      )}
-
-
-
-      {/* SEÇÃO: PAGAMENTO E RODAPÉ */}
-      <Card>
-        <CardContent className="pt-4 space-y-4">
-          {['reliquias', 'ofertas-imperdiveis', 'etiqueta', 'avaria', 'aereo', 'totem'].includes(posterType) && (
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Forma de Pagamento</Label>
-              <div className="flex bg-muted p-1 rounded-xl">
-                <button type="button" onClick={() => handlePaymentOptionChange('normal')} className={cn("flex-1 py-1.5 rounded-lg text-xs font-black uppercase", data.paymentOption === 'normal' ? "bg-white shadow-sm" : "opacity-40")}>À vista</button>
-                <button type="button" onClick={() => handlePaymentOptionChange('installment')} className={cn("flex-1 py-1.5 rounded-lg text-xs font-black uppercase", data.paymentOption === 'installment' ? "bg-white shadow-sm" : "opacity-40")}>Parcelado</button>
-              </div>
-            </div>
-          )}
-
-          {(posterType === 'reliquias' || posterType === 'ofertas-imperdiveis' || posterType === 'totem') && (
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Validade da Oferta</Label>
-              <div className="grid grid-cols-2 gap-2">
-                <Input type="date" className="text-xs h-9" value={data.offerValidityStart?.split('/').reverse().join('-') || ''} onChange={e => {
-                  const [y,m,d] = e.target.value.split('-');
-                  setData((prev: PosterData) => ({ ...prev, offerValidityStart: e.target.value ? `${d}/${m}/${y}` : undefined }));
-                }} />
-                <Input type="date" className="text-xs h-9" value={data.offerValidity?.split('/').reverse().join('-') || ''} onChange={e => {
-                  const [y,m,d] = e.target.value.split('-');
-                  setData((prev: PosterData) => ({ ...prev, offerValidity: e.target.value ? `${d}/${m}/${y}` : undefined }));
-                }} />
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      </fieldset>
     </div>
   );
 }
