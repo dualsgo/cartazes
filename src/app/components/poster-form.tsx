@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
@@ -72,8 +72,8 @@ function detectInputType(value: string): 'ean' | 'code' {
 const defectOptions = [
   { value: 'embalagem_danificada', label: 'Embalagem Danificada', discount: 20 },
   { value: 'marcas_de_uso', label: 'Marcas de Uso', discount: 30 },
-  { value: 'pelucia_suja', label: 'Pel├║cia Suja', discount: 40 },
-  { value: 'peca_faltando', label: 'Pe├ºa Faltando', discount: 50 },
+  { value: 'pelucia_suja', label: 'Pelúcia Suja', discount: 40 },
+  { value: 'peca_faltando', label: 'Peça Faltando', discount: 50 },
   { value: 'outro', label: 'Outro (descrever)', discount: null },
 ];
 
@@ -82,7 +82,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
   const [searchValue, setSearchValue] = useState('');
   const [suggestions, setSuggestions] = useState<{ key: string; description: string }[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  // true = usu├írio digitou manualmente no campo POR ÔåÆ n├úo recalcula automaticamente
+  // true = usuário digitou manualmente no campo POR → não recalcula automaticamente
   const [priceForOverridden, setPriceForOverridden] = useState(false);
   const suggestTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -107,7 +107,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
   }, [priceFrom.display]);
   
   // Recalcula POR automaticamente a partir do DE + desconto do motivo,
-  // exceto quando o usu├írio tiver feito override manual.
+  // exceto quando o usuário tiver feito override manual.
   useEffect(() => {
     if (posterType !== 'avaria') return;
     if (priceForOverridden) return;
@@ -138,7 +138,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [priceFrom.cents, data.defectType, data.customDefectDiscount, posterType, priceForOverridden]);
 
-  // Quando o usu├írio muda o motivo/DE, volta para auto-calc
+  // Quando o usuário muda o motivo/DE, volta para auto-calc
   useEffect(() => {
     setPriceForOverridden(false);
   }, [priceFrom.cents, data.defectType, data.customDefectDiscount]);
@@ -290,7 +290,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
 
   return (
     <div className="space-y-3">
-      {/* 1. SECTION: BUSCA (Sempre vis├¡vel) */}
+      {/* 1. SECTION: BUSCA (Sempre visível) */}
       <Card>
         <CardContent className="pt-4 space-y-4">
           <div className="space-y-1" ref={wrapperRef}>
@@ -305,7 +305,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
                 onKeyDown={handleSearchKeyDown}
                 onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-                placeholder="SAP (ex: 71838) ou EAN (13 d├¡gitos)ÔÇª"
+                placeholder="SAP (ex: 71838) ou EAN (13 dígitos)…"
                 className={cn(
                   'pr-9 h-12 text-lg',
                   lookupStatus === 'found'    && 'border-green-500 ring-green-500',
@@ -349,7 +349,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
               )}
             </div>
             {lookupStatus === 'notfound' && (
-              <p className="text-xs text-destructive">C├│digo n├úo encontrado</p>
+              <p className="text-xs text-destructive">Código não encontrado</p>
             )}
           </div>
 
@@ -364,13 +364,13 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
                 <div className="space-y-3">
                   <div className="rounded-md bg-orange-100 dark:bg-orange-900/30 p-3 space-y-1 text-sm">
                     <p className="font-bold text-orange-900 dark:text-orange-200">Confirmar cadastro?</p>
-                    <p><span className="text-xs text-muted-foreground">Descri├º├úo:</span> <b>{regDescription}</b></p>
+                    <p><span className="text-xs text-muted-foreground">Descrição:</span> <b>{regDescription}</b></p>
                     {regCode && <p><span className="text-xs text-muted-foreground">SAP:</span> <b className="font-mono">{regCode}</b></p>}
                     {regEan  && <p><span className="text-xs text-muted-foreground">EAN:</span> <b className="font-mono">{regEan}</b></p>}
-                    {regReference && <p><span className="text-xs text-muted-foreground">Refer├¬ncia:</span> <b>{regReference}</b></p>}
+                    {regReference && <p><span className="text-xs text-muted-foreground">Referência:</span> <b>{regReference}</b></p>}
                   </div>
                   <p className="text-[10px] text-orange-700 dark:text-orange-400">
-                    Este produto ser├í salvo permanentemente na base de dados.
+                    Este produto será salvo permanentemente na base de dados.
                   </p>
                   <div className="flex gap-2">
                     <button
@@ -397,7 +397,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
               ) : (
                 <div className="space-y-2">
                   <div className="space-y-1">
-                    <Label htmlFor="reg-description" className="text-xs text-muted-foreground">Descri├º├úo *</Label>
+                    <Label htmlFor="reg-description" className="text-xs text-muted-foreground">Descrição *</Label>
                     <Input
                       id="reg-description"
                       value={regDescription}
@@ -408,7 +408,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">
-                      <Label htmlFor="reg-code" className="text-xs text-muted-foreground">C├│d. SAP</Label>
+                      <Label htmlFor="reg-code" className="text-xs text-muted-foreground">Cód. SAP</Label>
                       <Input
                         id="reg-code"
                         value={regCode}
@@ -431,7 +431,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <Label htmlFor="reg-reference" className="text-xs text-muted-foreground">Refer├¬ncia <span className="font-normal opacity-70">(Opcional)</span></Label>
+                    <Label htmlFor="reg-reference" className="text-xs text-muted-foreground">Referência <span className="font-normal opacity-70">(Opcional)</span></Label>
                     <Input
                       id="reg-reference"
                       value={regReference}
@@ -475,7 +475,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
         </CardContent>
       </Card>
 
-      {/* 2. SECTION: CONFIGURA├ç├òES DO CARTAZ (Bloqueado se n├úo encontrou) */}
+      {/* 2. SECTION: CONFIGURAÇÕES DO CARTAZ (Bloqueado se não encontrou) */}
       <fieldset 
         className={cn(
           "space-y-3 transition-opacity duration-200", 
@@ -486,12 +486,12 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
         <Card>
           <CardContent className="pt-4 space-y-5">
             <Label className="font-semibold text-lg border-b pb-2 block">
-              2. Pre├ºos e Formato
+              2. Preços e Formato
             </Label>
             
             {posterType === 'aereo' && (
               <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Tipo de A├®reo</Label>
+                <Label className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Tipo de Aéreo</Label>
                 <div className="flex bg-muted p-1 rounded-lg">
                   <button
                     type="button"
@@ -501,7 +501,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
                       data.posterSubType === 'normal' ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:bg-black/5"
                     )}
                   >
-                    Pre├ºo Normal
+                    Preço Normal
                   </button>
                   <button
                     type="button"
@@ -537,7 +537,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
                 {data.defectType === 'outro' && (
                   <>
                     <div className="space-y-1">
-                      <Label htmlFor="custom-defect-reason" className="text-xs text-muted-foreground uppercase tracking-wider">Descri├º├úo do Motivo</Label>
+                      <Label htmlFor="custom-defect-reason" className="text-xs text-muted-foreground uppercase tracking-wider">Descrição do Motivo</Label>
                       <Input
                         id="custom-defect-reason"
                         value={data.customDefectReason}
@@ -564,7 +564,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
                 <div className="pt-2 border-t border-border/50 mt-2 space-y-1">
                   <div className="flex items-baseline justify-between">
                     <Label htmlFor="defect-note" className="text-xs text-muted-foreground uppercase font-bold tracking-wider">
-                      Observa├º├úo de Rodap├®
+                      Observação de Rodapé
                     </Label>
                     <span className="text-[10px] text-muted-foreground">
                       {(data.defectNote ?? '').length}/60
@@ -574,7 +574,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
                     id="defect-note"
                     value={data.defectNote ?? ''}
                     onChange={e => setData(prev => ({ ...prev, defectNote: e.target.value.slice(0, 60) }))}
-                    placeholder="Ex: arranhado na lateral, sem bateriaÔÇª"
+                    placeholder="Ex: arranhado na lateral, sem bateria…"
                     className="text-sm bg-background"
                     maxLength={60}
                   />
@@ -586,7 +586,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
               {(isOfferType || posterType === 'avaria') && (
                 <div className="space-y-2">
                   <Label htmlFor="price-from" className="text-xs text-muted-foreground uppercase font-bold tracking-wider">
-                    {posterType === 'avaria' ? 'Pre├ºo Original' : 'Prec╠ºo DE'}
+                    {posterType === 'avaria' ? 'Preço Original' : 'Preço DE'}
                   </Label>
                   <Input
                     id="price-from"
@@ -603,7 +603,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
               <div className={cn('space-y-2', !(isOfferType || posterType === 'avaria') && 'col-span-2')}>
                 <div className="flex items-center justify-between">
                   <Label htmlFor="price-for" className="text-xs text-muted-foreground uppercase font-bold tracking-wider text-black">
-                    {(isOfferType || posterType === 'avaria') ? 'Prec╠ºo POR' : 'Prec╠ºo Final'}
+                    {(isOfferType || posterType === 'avaria') ? 'Preço POR' : 'Preço Final'}
                   </Label>
                   {posterType === 'avaria' && priceForOverridden && (
                     <button
@@ -647,7 +647,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
                       data.paymentOption === 'normal' ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:bg-black/5"
                     )}
                   >
-                    ├Ç vista
+                    À vista
                   </button>
                   <button
                     type="button"
@@ -663,13 +663,13 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
               </div>
             )}
             
-            {/* 3. SECTION: ACESS├ôRIOS */}
+            {/* 3. SECTION: ACESSÓRIOS */}
             {(posterType === 'reliquias' || posterType === 'ofertas-imperdiveis' || posterType === 'totem') && (
                <div className="pt-4 border-t mt-4 space-y-4">
                  
                  <div className="space-y-2">
                     <Label className="text-xs text-muted-foreground uppercase font-bold tracking-wider block">
-                      Per├¡odo da Oferta <span className="font-normal normal-case opacity-70">(Opcional)</span>
+                      Período da Oferta <span className="font-normal normal-case opacity-70">(Opcional)</span>
                     </Label>
                     <div className="flex items-center gap-2">
                       <div className="flex-1">
@@ -690,10 +690,10 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
                             setData(prev => ({ ...prev, offerValidityStart: `${d}/${m}/${y}` }));
                           }}
                           className="text-sm bg-muted/30"
-                          title="Data de In├¡cio"
+                          title="Data de Início"
                         />
                       </div>
-                      <span className="text-muted-foreground text-sm">at├®</span>
+                      <span className="text-muted-foreground text-sm">até</span>
                       <div className="flex-1">
                         <Input
                           type="date"
@@ -712,7 +712,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
                             setData(prev => ({ ...prev, offerValidity: `${d}/${m}/${y}` }));
                           }}
                           className="text-sm bg-muted/30"
-                          title="Data de T├®rmino"
+                          title="Data de Término"
                         />
                       </div>
                     </div>
