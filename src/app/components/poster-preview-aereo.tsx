@@ -86,7 +86,7 @@ export function PosterPreviewAereo({
       </div>
 
       {/* MEIO: DESCRIÇÃO */}
-      <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '3.5mm 9.4mm', background: 'rgba(0,0,0,0.08)' }}>
+      <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '3.5mm 9.4mm', borderTop: '1px solid black', borderBottom: '1px solid black' }}>
         <h2 style={{ fontSize: '18pt', fontWeight: 900, textTransform: 'uppercase', lineHeight: 1.2, margin: 0, flex: 1, fontFamily: 'inherit', wordBreak: 'break-word', color: 'black' }}>
           {description}
         </h2>

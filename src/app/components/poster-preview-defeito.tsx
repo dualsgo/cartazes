@@ -120,7 +120,7 @@ export function PosterPreviewDefeito({
                 
                 {/* OBSERVAÇÃO OPCIONAL */}
                 <div className="flex items-center justify-center w-full h-[0.9em] mb-1.5 px-2">
-                  <span className="text-[0.6em] font-medium tracking-wide leading-tight uppercase text-gray-400 text-center line-clamp-2">
+                  <span className="text-[0.6em] font-medium tracking-wide leading-tight uppercase text-white text-center line-clamp-2">
                     {defectNote}
                   </span>
                 </div>

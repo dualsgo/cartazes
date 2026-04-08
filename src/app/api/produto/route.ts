@@ -8,6 +8,7 @@ type ProdutoEntry = {
     reference: string;
     code?: string;
     ean?: string;
+    supplier?: string;
 };
 
 let produtosCache: Record<string, ProdutoEntry> | null = null;
@@ -54,7 +55,7 @@ export async function GET(request: NextRequest) {
         const produtos = loadProdutos();
 
         const seen = new Set<string>();
-        const entries: { key: string; description: string; reference: string; ean?: string; code?: string }[] = [];
+        const entries: { key: string; description: string; reference: string; ean?: string; code?: string; supplier?: string }[] = [];
 
         for (const [key, val] of Object.entries(produtos)) {
             // Usa apenas chaves SAP (≤ 10 dígitos) como canônicas; ignora aliases EAN de 13
@@ -67,7 +68,7 @@ export async function GET(request: NextRequest) {
                 const haystack = `${key} ${val.description} ${val.reference ?? ''} ${val.ean ?? ''} ${val.code ?? ''}`.toUpperCase();
                 if (!haystack.includes(search)) continue;
             }
-            entries.push({ key, description: val.description, reference: val.reference, ean: val.ean, code: val.code });
+            entries.push({ key, description: val.description, reference: val.reference, ean: val.ean, code: val.code, supplier: val.supplier });
         }
 
         entries.sort((a, b) => a.key.localeCompare(b.key, undefined, { numeric: true }));
@@ -97,9 +98,9 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json() as {
-            key: string; description: string; reference?: string; ean?: string; code?: string;
+            key: string; description: string; reference?: string; ean?: string; code?: string; supplier?: string;
         };
-        const { key, description, reference, ean, code } = body;
+        const { key, description, reference, ean, code, supplier } = body;
         if (!key || !description) {
             return NextResponse.json({ error: 'Campos "key" e "description" são obrigatórios.' }, { status: 400 });
         }
@@ -124,6 +125,7 @@ export async function POST(request: NextRequest) {
             reference: refClean ?? '',
             ...(eanClean  ? { ean:  eanClean  } : {}),
             ...(codeClean ? { code: codeClean } : {}),
+            ...(supplier  ? { supplier: String(supplier).trim().toUpperCase() } : {}),
         };
 
         produtos[keyClean] = entry;
@@ -142,9 +144,9 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
     try {
         const body = await request.json() as {
-            key: string; description?: string; reference?: string; ean?: string; code?: string;
+            key: string; description?: string; reference?: string; ean?: string; code?: string; supplier?: string;
         };
-        const { key, description, reference, ean, code } = body;
+        const { key, description, reference, ean, code, supplier } = body;
         if (!key) return NextResponse.json({ error: 'Campo "key" é obrigatório.' }, { status: 400 });
 
         const keyClean  = String(key).trim();
@@ -171,6 +173,7 @@ export async function PATCH(request: NextRequest) {
             reference:   refClean   ?? existing.reference,
             ...(eanClean  !== undefined ? (eanClean  ? { ean:  eanClean  } : {}) : (existing.ean  ? { ean:  existing.ean  } : {})),
             ...(codeClean !== undefined ? (codeClean ? { code: codeClean } : {}) : (existing.code ? { code: existing.code } : {})),
+            ...(supplier !== undefined ? (supplier ? { supplier: String(supplier).trim().toUpperCase() } : {}) : (existing.supplier ? { supplier: existing.supplier } : {})),
         };
 
         produtos[keyClean] = updated;

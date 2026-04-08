@@ -91,6 +91,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
   const [regCode, setRegCode] = useState('');
   const [regEan, setRegEan] = useState('');
   const [regReference, setRegReference] = useState('');
+  const [regSupplier, setRegSupplier] = useState('');
   const [regStatus, setRegStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [regConfirming, setRegConfirming] = useState(false);
 
@@ -191,7 +192,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
       if (!res.ok) { setLookupStatus('notfound'); onLookupStatusChange?.(false); return; }
 
       const produto = await res.json() as {
-        description: string; reference: string; ean?: string; code?: string;
+        description: string; reference: string; ean?: string; code?: string; supplier?: string;
       };
 
       setData(prev => ({
@@ -200,6 +201,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
         reference:   produto.reference,
         code:  inputType === 'code' ? query : (produto.code ?? ''),
         ean:   inputType === 'ean'  ? query : (produto.ean  ?? ''),
+        supplier: produto.supplier ?? '',
       }));
       setLookupStatus('found');
       onLookupStatusChange?.(true);
@@ -273,12 +275,13 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
           reference: regReference || undefined,
           ean: regEan || undefined,
           code: regCode || undefined,
+          supplier: regSupplier || undefined,
         }),
       });
       if (!res.ok) throw new Error();
       setRegStatus('saved');
       await handleLookup(key);
-      setRegDescription(''); setRegCode(''); setRegEan(''); setRegReference('');
+      setRegDescription(''); setRegCode(''); setRegEan(''); setRegReference(''); setRegSupplier('');
       setTimeout(() => setRegStatus('idle'), 3000);
     } catch {
       setRegStatus('error');
@@ -286,7 +289,11 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
     }
   };
   
-  const isOfferType = posterType === 'reliquias' || posterType === 'ofertas-imperdiveis' || posterType === 'totem' || posterType === 'etiqueta' || (posterType === 'aereo' && data.posterSubType === 'offer');
+  const isOfferType = 
+    posterType === 'reliquias' || 
+    posterType === 'ofertas-imperdiveis' || 
+    posterType === 'totem' || 
+    ((posterType === 'etiqueta' || posterType === 'aereo') && data.posterSubType === 'offer');
 
   return (
     <div className="space-y-3">
@@ -368,6 +375,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
                     {regCode && <p><span className="text-xs text-muted-foreground">SAP:</span> <b className="font-mono">{regCode}</b></p>}
                     {regEan  && <p><span className="text-xs text-muted-foreground">EAN:</span> <b className="font-mono">{regEan}</b></p>}
                     {regReference && <p><span className="text-xs text-muted-foreground">Referência:</span> <b>{regReference}</b></p>}
+                    {regSupplier && <p><span className="text-xs text-muted-foreground">Fornecedor:</span> <b>{regSupplier}</b></p>}
                   </div>
                   <p className="text-[10px] text-orange-700 dark:text-orange-400">
                     Este produto será salvo permanentemente na base de dados.
@@ -430,15 +438,27 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
                       />
                     </div>
                   </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="reg-reference" className="text-xs text-muted-foreground">Referência <span className="font-normal opacity-70">(Opcional)</span></Label>
-                    <Input
-                      id="reg-reference"
-                      value={regReference}
-                      onChange={e => setRegReference(e.target.value)}
-                      placeholder="Ex: ABC-123"
-                      className="text-sm"
-                    />
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label htmlFor="reg-reference" className="text-xs text-muted-foreground">Referência</Label>
+                      <Input
+                        id="reg-reference"
+                        value={regReference}
+                        onChange={e => setRegReference(e.target.value)}
+                        placeholder="Ex: ABC-123"
+                        className="text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="reg-supplier" className="text-xs text-muted-foreground">Fornecedor</Label>
+                      <Input
+                        id="reg-supplier"
+                        value={regSupplier}
+                        onChange={e => setRegSupplier(e.target.value.toUpperCase())}
+                        placeholder="FORNECEDOR"
+                        className="text-sm uppercase"
+                      />
+                    </div>
                   </div>
                   <button
                     type="button"
@@ -465,11 +485,23 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
                 Produto selecionado
               </p>
               <p className="font-semibold text-sm leading-tight mb-2">{data.description}</p>
-              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground mt-2 pt-2 border-t border-border/30">
                 {data.code && <span>SAP: <b className="text-foreground">{data.code}</b></span>}
                 {data.ean  && <span>EAN: <b className="text-foreground">{data.ean}</b></span>}
                 {data.reference && <span>Ref.: <b className="text-foreground">{data.reference}</b></span>}
               </div>
+              {posterType === 'etiqueta' && (
+                <div className="mt-3 space-y-1">
+                   <Label htmlFor="supplier" className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Fornecedor</Label>
+                   <Input
+                     id="supplier"
+                     value={data.supplier ?? ''}
+                     onChange={e => setData(prev => ({ ...prev, supplier: e.target.value.toUpperCase() }))}
+                     placeholder="NOME DO FORNECEDOR"
+                     className="h-8 text-xs uppercase"
+                   />
+                </div>
+              )}
             </div>
           )}
         </CardContent>
@@ -489,9 +521,11 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
               2. Preços e Formato
             </Label>
             
-            {posterType === 'aereo' && (
+            {(posterType === 'aereo' || posterType === 'etiqueta') && (
               <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Tipo de Aéreo</Label>
+                <Label className="text-xs text-muted-foreground uppercase font-bold tracking-wider">
+                  Tipo de {posterType === 'aereo' ? 'Aéreo' : 'Etiqueta'}
+                </Label>
                 <div className="flex bg-muted p-1 rounded-lg">
                   <button
                     type="button"

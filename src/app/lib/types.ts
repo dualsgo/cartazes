@@ -13,6 +13,7 @@ export type PosterData = {
   defectNote?: string;
   offerValidityStart?: string; // data de início da oferta (ex: "01/03/2026")
   offerValidity?: string; // data de fim da oferta (ex: "31/03/2026")
+  supplier?: string;
 };
 
 export type PosterSettings = {

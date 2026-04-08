@@ -61,6 +61,7 @@ const initialPosterData = (): PosterData => ({
   defectType: 'embalagem_danificada',
   customDefectReason: '',
   customDefectDiscount: 20,
+  supplier: '',
 });
 
 /* ─────────────────────────── SinglePosterPreview ─────────────────────────── */
@@ -177,7 +178,7 @@ function PageGrid({
   }
   if (posterType === 'etiqueta') {
     return (
-      <div style={{ display: 'grid', gridTemplateColumns: '90mm 90mm', gridTemplateRows: 'repeat(8, 33.5mm)', gap: '0 6mm', paddingTop: '13mm', paddingBottom: '14mm', paddingLeft: '12mm', paddingRight: '12mm', width: '100%', height: '100%', boxSizing: 'border-box', backgroundColor: 'white' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '90mm 90mm', gridTemplateRows: 'repeat(8, 33.5mm)', gap: '0 6mm', paddingTop: '13.5mm', paddingBottom: '13.5mm', paddingLeft: '12.5mm', paddingRight: '11.5mm', width: '100%', height: '100%', boxSizing: 'border-box', backgroundColor: 'white' }}>
         {items.map((d: PosterData, i: number) => (<div key={i} style={{ width: '90mm', height: '33.5mm', overflow: 'hidden' }}><PosterPreviewEtiqueta {...d} /></div>))}
       </div>
     );

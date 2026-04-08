@@ -101,7 +101,7 @@ export function PosterPreviewTotem({
           <div className="mt-4" style={{ height: '4.8em' }}></div> // Espaçador para segurar o layout
         )}
 
-        <div className="text-[1.2em] text-center w-full shrink-0 leading-tight text-gray-800 font-semibold mt-6 pt-4 border-t border-gray-300">
+        <div className="text-[1.2em] text-center w-full shrink-0 leading-tight text-black font-semibold mt-6 pt-4 border-t border-black">
           {(offerValidityStart || offerValidity) ? (
             <span>
               Oferta válida{' '}
@@ -110,7 +110,7 @@ export function PosterPreviewTotem({
               ou enquanto durarem os estoques.
             </span>
           ) : (
-             <span className="opacity-0">Validade</span>
+             <span>Oferta válida por tempo indeterminado ou enquanto durarem os estoques.</span>
           )}
         </div>
       </div>
