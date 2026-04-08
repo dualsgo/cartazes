@@ -68,7 +68,7 @@ export function PosterPreviewDefeito({
   else if (porInteger.length === 5) priceFontSize = '3.2rem';
 
   return (
-    <Card className="w-full h-full overflow-hidden shadow-none border-none rounded-none bg-white text-black font-body relative">
+    <div className="w-full h-full overflow-hidden bg-white text-black font-body relative">
       <div className="flex h-full w-full">
         {/* ── Left Column ── */}
         <div className="w-1/2 p-[0.35cm] flex flex-col overflow-hidden">
@@ -164,6 +164,6 @@ export function PosterPreviewDefeito({
           Item de ponta de estoque, vendido no estado. Não possui direito a troca.
         </p>
       </div>
-    </Card>
+    </div>
   );
 }

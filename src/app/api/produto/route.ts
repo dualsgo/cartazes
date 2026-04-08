@@ -34,9 +34,14 @@ function loadProdutos(): Record<string, ProdutoEntry> {
 }
 
 function saveProdutos(data: Record<string, ProdutoEntry>): void {
-    fs.writeFileSync(DATA_FILE, JSON.stringify(data), 'utf8');
-    produtosCache = data;
-    invalidateSuggestCache();
+    try {
+        fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8');
+        produtosCache = data;
+        invalidateSuggestCache();
+    } catch (err) {
+        console.error('[api/produto] Erro ao salvar produtos.json:', err);
+        throw err;
+    }
 }
 
 function removeAliases(produtos: Record<string, ProdutoEntry>, keys: string[]): void {

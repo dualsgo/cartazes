@@ -23,7 +23,7 @@ import { cn } from '@/lib/utils';
 const PER_PAGE: Record<PosterType, number> = {
   reliquias: 4,
   'ofertas-imperdiveis': 4,
-  aereo: 2,           // 2 por página em landscape
+  aereo: 4,           // 4 por página (cada um ocupa 4 espaços de gôndola 2x2)
   avaria: 4,
   etiqueta: 16,
   totem: 1,
@@ -33,7 +33,7 @@ const PER_PAGE: Record<PosterType, number> = {
 const SINGLE_DIMS: Record<PosterType, { w: number; h: number }> = {
   reliquias:            { w: 491, h: 340 },
   'ofertas-imperdiveis':{ w: 491, h: 340 },
-  aereo:                { w: 720, h: 262 },  // 190mm × 69mm @ 96dpi
+  aereo:                { w: 720, h: 268 },  // proporcional a 180mm x 67mm
   avaria:               { w: 491, h: 340 },
   etiqueta:             { w: 340, h: 127 },
   totem:                { w: 794, h: 1123 }, // A4 a 96dpi (210×297mm em pixels de tela)
@@ -43,7 +43,7 @@ const SINGLE_DIMS: Record<PosterType, { w: number; h: number }> = {
 const POSTER_ORIENTATION: Record<PosterType, 'portrait' | 'landscape'> = {
   reliquias:            'landscape',
   'ofertas-imperdiveis':'landscape',
-  aereo:                'landscape',  // landscape: 2 cartazes por página
+  aereo:                'portrait',
   avaria:               'landscape',
   etiqueta:             'portrait',
   totem:                'portrait',
@@ -168,10 +168,28 @@ function PageGrid({
   const empties = Array.from({ length: perPage - items.length });
 
   if (posterType === 'aereo') {
-    // 2 cartazes por página landscape, 1 por linha — cartaz de 190mm cabe na largura total
+    // 4 cartazes por página portrait, cada um ocupando 2 colunas e 2 linhas de gôndola (180mm x 67mm)
+    // Segue o gabarito original das etiquetas de gôndola
     return (
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gridTemplateRows: '1fr 1fr', width: '100%', height: '100%', gap: '8mm', padding: '8mm 10mm' }}>
-        {items.map((d: PosterData, i: number) => (<div key={i} style={{ width: '100%', height: '100%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}><PosterPreviewAereo {...d} /></div>))}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: '180mm', 
+        gridTemplateRows: 'repeat(4, 67mm)', 
+        gap: '0', 
+        paddingTop: '13.5mm', 
+        paddingBottom: '13.5mm', 
+        paddingLeft: '12.5mm', 
+        paddingRight: '11.5mm', 
+        width: '100%', 
+        height: '100%', 
+        boxSizing: 'border-box', 
+        backgroundColor: 'white' 
+      }}>
+        {items.map((d: PosterData, i: number) => (
+          <div key={i} style={{ width: '180mm', height: '67mm', overflow: 'hidden' }}>
+            <PosterPreviewAereo {...d} />
+          </div>
+        ))}
         {empties.map((_, i: number) => <div key={`e${i}`} />)}
       </div>
     );

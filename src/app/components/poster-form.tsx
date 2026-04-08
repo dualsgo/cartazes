@@ -490,18 +490,14 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
                 {data.ean  && <span>EAN: <b className="text-foreground">{data.ean}</b></span>}
                 {data.reference && <span>Ref.: <b className="text-foreground">{data.reference}</b></span>}
               </div>
-              {posterType === 'etiqueta' && (
+               {posterType === 'etiqueta' && data.supplier && (
                 <div className="mt-3 space-y-1">
-                   <Label htmlFor="supplier" className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Fornecedor</Label>
-                   <Input
-                     id="supplier"
-                     value={data.supplier ?? ''}
-                     onChange={e => setData(prev => ({ ...prev, supplier: e.target.value.toUpperCase() }))}
-                     placeholder="NOME DO FORNECEDOR"
-                     className="h-8 text-xs uppercase"
-                   />
+                   <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Fornecedor</Label>
+                   <div className="h-8 flex items-center px-3 text-xs uppercase bg-muted/50 rounded-md border border-border/50 text-muted-foreground font-medium">
+                     {data.supplier}
+                   </div>
                 </div>
-              )}
+               )}
             </div>
           )}
         </CardContent>

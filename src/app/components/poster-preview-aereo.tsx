@@ -20,6 +20,7 @@ export function PosterPreviewAereo({
   code,
   ean,
   reference,
+  supplier,
   paymentOption,
   posterSubType,
 }: PosterData) {
@@ -38,71 +39,116 @@ export function PosterPreviewAereo({
   const showInstallment  = paymentOption === 'installment' && maxInstallments > 1;
 
   return (
-    <div style={{ width: '190mm', height: '69mm', background: 'white', color: 'black', display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: 'inherit', boxSizing: 'border-box' }}>
-
-      {/* TOPO: PREÇO */}
-      <div 
-        style={{ 
-          flex: 1, 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center', 
-          gap: '11mm', 
-          padding: '0 9.5mm', 
-          minHeight: 0,
-          transform: isOffer && showInstallment ? 'scale(0.9)' : 'none',
-          transformOrigin: 'center'
-        }}
-      >
-
-        {isOffer && discount > 0 && (
-          <div style={{ flexShrink: 0, textAlign: 'center', backgroundColor: 'black', color: 'white', padding: '3mm 6mm', lineHeight: 1, borderRadius: '2mm' }}>
-            <div style={{ fontSize: '12pt', fontWeight: 900, letterSpacing: '0.02em', fontFamily: 'inherit' }}>DESCONTO DE</div>
-            <div style={{ fontSize: '50pt', fontWeight: 900, lineHeight: 1, fontFamily: 'inherit' }}>{discount}%</div>
+    <div style={{ width: '180mm', height: '67mm', background: 'white', color: 'black', display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: 'inherit', boxSizing: 'border-box', position: 'relative' }}>
+      
+      {/* Barra Lateral de Oferta (Lado Direito) */}
+      {isOffer && (
+        <div style={{ 
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          width: '18mm',
+          height: '100%',
+          backgroundColor: 'black',
+          color: 'white',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 20
+        }}>
+          <div style={{ 
+            fontSize: '28pt', 
+            fontWeight: 900, 
+            letterSpacing: '2mm',
+            textTransform: 'uppercase',
+            writingMode: 'vertical-rl',
+            transform: 'rotate(180deg)',
+            fontFamily: 'inherit'
+          }}>
+            OFERTA
           </div>
-        )}
+        </div>
+      )}
 
-        <div style={{ display: 'flex', alignItems: 'flex-start', lineHeight: 1, gap: '1mm' }}>
-          <span style={{ fontSize: '18pt', fontWeight: 900, marginTop: '3mm', fontFamily: 'inherit' }}>R$</span>
-          <span style={{ fontSize: '73pt', fontWeight: 900, lineHeight: 1, fontFamily: 'inherit' }}>{porInt}</span>
-          <div style={{ display: 'flex', flexDirection: 'column', marginTop: '3mm' }}>
-            <span style={{ fontSize: '32pt', fontWeight: 900, lineHeight: 1, fontFamily: 'inherit' }}>,{porDec}</span>
-            {valPor > 0 && (
-              <span style={{ fontSize: '11pt', fontWeight: 900, lineHeight: 1, fontFamily: 'inherit' }}>un.</span>
-            )}
+      {/* 1. DESCRIÇÃO NO TOPO CENTRALIZADA */}
+      <div style={{ padding: isOffer ? '3mm 22mm 1mm 4mm' : '3mm 8mm 1mm 8mm', textAlign: 'center', height: '18mm', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <h2 style={{ fontSize: '24pt', fontWeight: 900, textTransform: 'uppercase', lineHeight: 1.1, margin: 0, fontFamily: 'inherit', wordBreak: 'break-word', color: 'black' }}>
+          {description}
+        </h2>
+      </div>
+
+      {/* 2. ÁREA CENTRAL: PREÇOS E CONTEÚDO */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 0, gap: '1mm' }}>
+        
+        {/* BLOCO DE PREÇO PRINCIPAL */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5mm', width: '100%', height: '32mm', position: 'relative' }}>
+          
+          {/* Preço de Oferta (DE) */}
+          {isOffer && valDe > valPor && (
+            <div style={{ 
+              position: 'absolute', 
+              top: '0mm', 
+              left: '8mm', 
+              lineHeight: 1,
+              display: 'flex',
+              flexDirection: 'column'
+            }}>
+              <span style={{ fontSize: '10pt', fontWeight: 900, fontFamily: 'inherit' }}>DE:</span>
+              <span style={{ fontSize: '16pt', fontWeight: 900, textDecoration: 'line-through', fontFamily: 'inherit' }}>R$ {formatCurrency(valDe)}</span>
+            </div>
+          )}
+
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            {/* Preço Principal (POR / FINAL) */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4mm' }}>
+              {(isOffer || valDe > 0) && <span style={{ fontSize: '20pt', fontWeight: 900, fontFamily: 'inherit' }}>POR:</span>}
+              <div style={{ display: 'flex', alignItems: 'flex-start', lineHeight: 1, gap: '4mm' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1mm' }}>
+                  <span style={{ fontSize: '20pt', fontWeight: 900, marginTop: '2.5mm', fontFamily: 'inherit' }}>R$</span>
+                  <span style={{ fontSize: '82pt', fontWeight: 900, lineHeight: 0.75, fontFamily: 'inherit' }}>{porInt}</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', marginTop: '1.5mm', alignItems: 'center' }}>
+                  <span style={{ fontSize: '36pt', fontWeight: 900, lineHeight: 1, fontFamily: 'inherit' }}>,{porDec}</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '0.5mm' }}>
+                    <span style={{ fontSize: '11pt', fontWeight: 900, lineHeight: 1, fontFamily: 'inherit' }}>un.</span>
+                    <span style={{ fontSize: '12pt', fontWeight: 900, textTransform: 'uppercase', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>à vista</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {showInstallment && (
-          <div style={{ flexShrink: 0, textAlign: 'center', fontSize: '16pt', fontWeight: 900, lineHeight: 1.3, fontFamily: 'inherit' }}>
-            ou {maxInstallments}x de<br />
-            <span style={{ fontSize: '27pt', fontWeight: 900 }}>R$ {formatCurrency(installmentValue)}</span>
+        {/* CONTORNO CURVO APENAS NO PARCELAMENTO */}
+        {showInstallment ? (
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            padding: '2mm 10mm',
+            border: '0.4mm solid black',
+            borderRadius: '10mm',
+            width: '140mm',
+            boxSizing: 'border-box',
+            textAlign: 'center', 
+            fontSize: '14pt', 
+            fontWeight: 900, 
+            lineHeight: 1,
+            marginTop: '1mm'
+          }}>
+            ou em até <span style={{ fontSize: '18pt', margin: '0 2mm' }}>{maxInstallments}x</span> de <span style={{ fontSize: '28pt', fontWeight: 900, marginLeft: '2mm' }}>R$ {formatCurrency(installmentValue)}</span>
           </div>
-        )}
-
-        {valPor > 0 && !showInstallment && (
-          <span style={{ fontSize: '16pt', fontWeight: 900, alignSelf: 'flex-end', marginBottom: '3mm', fontFamily: 'inherit' }}>à vista</span>
+        ) : (
+          <div style={{ height: '10mm' }} />
         )}
       </div>
 
-      {/* MEIO: DESCRIÇÃO */}
-      <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '3.5mm 9.4mm', borderTop: '1px solid black', borderBottom: '1px solid black' }}>
-        <h2 style={{ fontSize: '18pt', fontWeight: 900, textTransform: 'uppercase', lineHeight: 1.2, margin: 0, flex: 1, fontFamily: 'inherit', wordBreak: 'break-word', color: 'black' }}>
-          {description}
-        </h2>
-        {isOffer && valDe > valPor && (
-          <div style={{ flexShrink: 0, marginLeft: '7.5mm', textAlign: 'right', color: 'black' }}>
-            <div style={{ fontSize: '18pt', fontWeight: 900, fontFamily: 'inherit' }}>DE:</div>
-            <div style={{ fontSize: '28pt', fontWeight: 900, textDecoration: 'line-through', fontFamily: 'inherit' }}>R$ {formatCurrency(valDe)}</div>
-          </div>
-        )}
-      </div>
-
-      {/* BASE: METADADOS */}
-      <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: '7.5mm', padding: '2mm 9.4mm', fontSize: '11pt', fontWeight: 700, fontFamily: 'monospace', color: 'black' }}>
-        {code      && <span>SAP: <b style={{ fontWeight: 900 }}>{code}</b></span>}
-        {ean       && <span>EAN: <b style={{ fontWeight: 900 }}>{ean}</b></span>}
-        {reference && <span>Ref.: <b style={{ fontWeight: 900 }}>{reference}</b></span>}
+      {/* 3. BASE: METADADOS (DISCRETOS) */}
+      <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6mm', paddingBottom: '3mm', paddingTop: '1mm', fontSize: '8.5pt', fontWeight: 700, fontFamily: 'monospace', opacity: 0.8 }}>
+        {code      && <span>SAP: {code}</span>}
+        {ean       && <span>EAN: {ean}</span>}
+        {reference && <span>REF: {reference}</span>}
+        {supplier  && <span style={{ textTransform: 'uppercase', maxWidth: '65mm', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>FORN: {supplier}</span>}
       </div>
     </div>
   );

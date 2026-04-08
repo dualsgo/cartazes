@@ -48,7 +48,7 @@ export function PosterPreview({
   else if (porInteger.length === 5) priceFontSize = '3.2rem';
 
   return (
-    <Card className="w-full h-full overflow-hidden shadow-none border-none rounded-none bg-white text-black font-body relative">
+    <div className="w-full h-full overflow-hidden bg-white text-black font-body relative">
       {/* Layout: duas colunas, cada uma com grid de 3 linhas fixas */}
       <div className="flex h-full w-full">
 
@@ -134,6 +134,6 @@ export function PosterPreview({
         </div>
 
       </div>
-    </Card>
+    </div>
   );
 }
