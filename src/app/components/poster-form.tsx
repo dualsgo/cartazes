@@ -666,29 +666,44 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
             </div>
 
             {(posterType === 'reliquias' || posterType === 'ofertas-imperdiveis' || posterType === 'etiqueta' || posterType === 'avaria' || posterType === 'aereo' || posterType === 'totem') && (
-              <div className="space-y-2 pt-2">
-                 <Label className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Forma de Pagamento</Label>
-                 <div className="flex bg-muted p-1 rounded-lg">
-                  <button
-                    type="button"
-                    onClick={() => handlePaymentOptionChange('normal')}
-                    className={cn(
-                      "flex-1 px-3 py-2 rounded-md text-sm font-medium transition-all",
-                      data.paymentOption === 'normal' ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:bg-black/5"
-                    )}
-                  >
-                    À vista
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handlePaymentOptionChange('installment')}
-                    className={cn(
-                      "flex-1 px-3 py-2 rounded-md text-sm font-medium transition-all",
-                      data.paymentOption === 'installment' ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:bg-black/5"
-                    )}
-                  >
-                    Parcelado
-                  </button>
+              <div className="grid grid-cols-2 gap-4 pt-2">
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Forma de Pagamento</Label>
+                  <div className="flex bg-muted p-1 rounded-lg">
+                    <button
+                      type="button"
+                      onClick={() => handlePaymentOptionChange('normal')}
+                      className={cn(
+                        "flex-1 px-3 py-2 rounded-md text-sm font-medium transition-all",
+                        data.paymentOption === 'normal' ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:bg-black/5"
+                      )}
+                    >
+                      À vista
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handlePaymentOptionChange('installment')}
+                      className={cn(
+                        "flex-1 px-3 py-2 rounded-md text-sm font-medium transition-all",
+                        data.paymentOption === 'installment' ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:bg-black/5"
+                      )}
+                    >
+                      Parcelado
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="quantity" className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Quantidade de Cópias</Label>
+                  <Input
+                    id="quantity"
+                    type="number"
+                    min={1}
+                    max={99}
+                    value={data.quantity || 1}
+                    onChange={e => setData(prev => ({ ...prev, quantity: Math.max(1, parseInt(e.target.value) || 1) }))}
+                    className="h-10 text-center font-bold"
+                  />
                 </div>
               </div>
             )}

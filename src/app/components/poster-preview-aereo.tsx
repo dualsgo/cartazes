@@ -95,8 +95,8 @@ export function PosterPreviewAereo({
               display: 'flex',
               flexDirection: 'column'
             }}>
-              <span style={{ fontSize: '10pt', fontWeight: 900, fontFamily: 'inherit' }}>DE:</span>
-              <span style={{ fontSize: '16pt', fontWeight: 900, textDecoration: 'line-through', fontFamily: 'inherit' }}>R$ {formatCurrency(valDe)}</span>
+              <span style={{ fontSize: '12pt', fontWeight: 900, fontFamily: 'inherit' }}>DE:</span>
+              <span style={{ fontSize: '22pt', fontWeight: 900, textDecoration: 'line-through', fontFamily: 'inherit' }}>R$ {formatCurrency(valDe)}</span>
             </div>
           )}
 

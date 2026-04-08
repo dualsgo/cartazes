@@ -62,6 +62,7 @@ const initialPosterData = (): PosterData => ({
   customDefectReason: '',
   customDefectDiscount: 20,
   supplier: '',
+  quantity: 1,
 });
 
 /* ─────────────────────────── SinglePosterPreview ─────────────────────────── */
@@ -258,6 +259,7 @@ export default function Home() {
   const [formKey, setFormKey] = useState(0);
   const [showAbout, setShowAbout] = useState(false);
   const [showDatabase, setShowDatabase] = useState(false);
+  const [queueFilter, setQueueFilter] = useState<'all' | 'offer' | 'normal'>('all');
   const [settings, setSettings] = useState<PosterSettings>({
     maxInstallments: 6,
     minInstallmentAmount: 30,
@@ -277,7 +279,16 @@ export default function Home() {
   };
 
   const perPage    = PER_PAGE[posterType as PosterType];
-  const totalPages = queue.length > 0 ? Math.ceil(queue.length / perPage) : 0;
+  
+  const filteredQueue = useMemo(() => {
+    if (queueFilter === 'all') return queue;
+    return queue.filter(item => {
+      const isOfferType = item.posterSubType === 'offer';
+      return queueFilter === 'offer' ? isOfferType : !isOfferType;
+    });
+  }, [queue, queueFilter]);
+
+  const totalPages = filteredQueue.length > 0 ? Math.ceil(filteredQueue.length / perPage) : 0;
 
   // Update print CSS immediately when poster type changes
   useEffect(() => {
@@ -305,13 +316,16 @@ export default function Home() {
 
   const handleAddToQueue = () => {
     if (!isProductReady) return;
-    setQueue((prev: PosterData[]) => [...prev, { ...currentPoster }]);
+    const copies = Math.max(1, currentPoster.quantity || 1);
+    const itemsToAdd = Array.from({ length: copies }, () => ({ ...currentPoster }));
+    setQueue((prev: PosterData[]) => [...prev, ...itemsToAdd]);
     setCurrentPoster({
       ...initialPosterData(),
       posterSubType: currentPoster.posterSubType,
       paymentOption: currentPoster.paymentOption,
       defectType: currentPoster.defectType,
       customDefectDiscount: currentPoster.customDefectDiscount,
+      quantity: 1
     });
     setIsProductReady(false);
     setFormKey((k: number) => k + 1);
@@ -323,14 +337,10 @@ export default function Home() {
 
   /* Print content: one div per page, each with page-break */
   const renderPrintContent = () => {
-    if (queue.length === 0) return null;
-    const pages: PosterData[][] = [];
-    for (let i = 0; i < queue.length; i += perPage) {
-      pages.push(queue.slice(i, i + perPage));
-    }
+    if (filteredQueue.length === 0) return null;
     const orientation = POSTER_ORIENTATION[posterType as PosterType];
     return Array.from({ length: totalPages }).map((_, pageIdx: number) => {
-      const pageItems = queue.slice(pageIdx * perPage, (pageIdx + 1) * perPage);
+      const pageItems = filteredQueue.slice(pageIdx * perPage, (pageIdx + 1) * perPage);
       return (
         <div
           key={pageIdx}
@@ -487,6 +497,22 @@ export default function Home() {
                       </button>
                     </div>
 
+                    {/* Filter Toggle */}
+                    <div className="flex border-b divide-x divide-border/50">
+                      {(['all', 'offer', 'normal'] as const).map((f) => (
+                        <button
+                          key={f}
+                          onClick={() => setQueueFilter(f)}
+                          className={cn(
+                            "flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-colors",
+                            queueFilter === f ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted/50"
+                          )}
+                        >
+                          {f === 'all' ? 'Tudo' : f === 'offer' ? 'Ofertas' : 'Normal'}
+                        </button>
+                      ))}
+                    </div>
+
                     <div className="divide-y divide-border/50">
                       {Array.from({ length: totalPages }).map((_, pageIdx) => {
                         const pageItems = queue.slice(pageIdx * perPage, (pageIdx + 1) * perPage);
@@ -496,20 +522,54 @@ export default function Home() {
                               Página {pageIdx + 1}
                             </p>
                             {pageItems.map((item: PosterData, itemIdx: number) => {
-                              const globalIdx = pageIdx * perPage + itemIdx;
+                              const globalIdxInFiltered = pageIdx * perPage + itemIdx;
+                              // Find original index in full queue for deletion
+                              // This is tricky if we have duplicates. 
+                              // For simplicity, let's just use the filtered list and update the whole queue.
+                              // Actually, if we delete from the filtered list, we should delete that specific instance.
+                              
+                              const handleRemove = () => {
+                                const newQueue = [...queue];
+                                // This finds the exact instance if we identify them by something.
+                                // Since they are plain objects, let's find the Nth occurrence that matches.
+                                let count = 0;
+                                const originalIdx = queue.findIndex(qItem => {
+                                  let matches = qItem === item; // Simple ref check if possible, but they are cloned.
+                                  // Since they are cloned, we check value equality + occurrence index
+                                  // BUT the filtered list is just a slice.
+                                  // Better: just find the index of this item in the filtered list and remove it from the total queue.
+                                  // Actually, since we want to remove the specific one clicked:
+                                  return false; // placeholder for logic below
+                                });
+                                // Revised logic: pass the item and remove it from queue by reference? No, they are clones.
+                                // Let's just filter the queue to remove exactly this instance.
+                                setQueue(prev => {
+                                  const idxToRemove = prev.indexOf(item); // Only works if we don't clone every turn.
+                                  // Let's just use indices in the filtered list to manage state.
+                                  const updated = [...prev];
+                                  const itemInPrev = filteredQueue[globalIdxInFiltered];
+                                  const realIdx = prev.indexOf(itemInPrev);
+                                  if (realIdx > -1) updated.splice(realIdx, 1);
+                                  return updated;
+                                });
+                              };
+
                               return (
-                                <div key={globalIdx} className="flex items-center gap-2 px-3 py-2 hover:bg-muted/40 transition-colors">
+                                <div key={globalIdxInFiltered} className="flex items-center gap-2 px-3 py-2 hover:bg-muted/40 transition-colors">
                                   <span className="text-[10px] font-mono text-muted-foreground w-5 shrink-0 text-right">
-                                    {globalIdx + 1}.
+                                    {globalIdxInFiltered + 1}.
                                   </span>
                                   <span className="text-xs font-medium flex-1 truncate">{item.description}</span>
                                   {item.priceFor && (
-                                    <span className="text-xs text-muted-foreground shrink-0 font-mono">
-                                      R$ {item.priceFor}
+                                    <span className={cn(
+                                      "text-[9px] px-1 rounded font-bold uppercase",
+                                      item.posterSubType === 'offer' ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
+                                    )}>
+                                      {item.posterSubType === 'offer' ? 'OFERTA' : 'NORMAL'}
                                     </span>
                                   )}
                                   <button
-                                    onClick={() => handleRemoveFromQueue(globalIdx)}
+                                    onClick={handleRemove}
                                     className="shrink-0 text-muted-foreground hover:text-destructive transition-colors ml-1"
                                     title="Remover"
                                   >
