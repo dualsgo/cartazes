@@ -39,7 +39,7 @@ export function PosterPreviewAereo({
   const showInstallment  = paymentOption === 'installment' && maxInstallments > 1;
 
   return (
-    <div style={{ width: '180mm', height: '67mm', background: 'white', color: 'black', display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: 'inherit', boxSizing: 'border-box', position: 'relative' }}>
+    <div style={{ width: '100%', height: '100%', background: 'white', color: 'black', display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: 'inherit', boxSizing: 'border-box', position: 'relative' }}>
       
       {/* Barra Lateral de Oferta (Lado Direito) */}
       {isOffer && (
@@ -52,8 +52,10 @@ export function PosterPreviewAereo({
           backgroundColor: 'black',
           color: 'white',
           display: 'flex',
-          alignItems: 'center',
+          flexDirection: 'column',
+          alignItems: 'flex-end',
           justifyContent: 'center',
+          paddingRight: '1mm',
           zIndex: 20
         }}>
           <div style={{ 

@@ -33,7 +33,7 @@ const PER_PAGE: Record<PosterType, number> = {
 const SINGLE_DIMS: Record<PosterType, { w: number; h: number }> = {
   reliquias:            { w: 491, h: 340 },
   'ofertas-imperdiveis':{ w: 491, h: 340 },
-  aereo:                { w: 720, h: 268 },  // proporcional a 180mm x 67mm
+  aereo:                { w: 760, h: 268 },  // proporcional a 190mm x 67mm (4px/mm)
   avaria:               { w: 491, h: 340 },
   etiqueta:             { w: 340, h: 127 },
   totem:                { w: 794, h: 1123 }, // A4 a 96dpi (210×297mm em pixels de tela)
@@ -173,20 +173,20 @@ function PageGrid({
     return (
       <div style={{ 
         display: 'grid', 
-        gridTemplateColumns: '180mm', 
+        gridTemplateColumns: '190mm', 
         gridTemplateRows: 'repeat(4, 67mm)', 
         gap: '0', 
         paddingTop: '13.5mm', 
         paddingBottom: '13.5mm', 
-        paddingLeft: '12.5mm', 
-        paddingRight: '11.5mm', 
+        paddingLeft: '11mm', 
+        paddingRight: '9mm', 
         width: '100%', 
         height: '100%', 
         boxSizing: 'border-box', 
         backgroundColor: 'white' 
       }}>
         {items.map((d: PosterData, i: number) => (
-          <div key={i} style={{ width: '180mm', height: '67mm', overflow: 'hidden' }}>
+          <div key={i} style={{ width: '190mm', height: '67mm', overflow: 'hidden' }}>
             <PosterPreviewAereo {...d} />
           </div>
         ))}
