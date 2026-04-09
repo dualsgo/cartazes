@@ -81,10 +81,13 @@ function SinglePosterPreview({
   const outerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
   const [ready, setReady] = useState(false);
-  const { w, h } = SINGLE_DIMS[posterType];
+  
+  // Safety check to prevent crash if dimensions are missing
+  const dims = SINGLE_DIMS[posterType] || { w: 491, h: 340 };
+  const { w, h } = dims;
 
   useEffect(() => {
-    // Recalcula escala quando o tipo muda
+    // Recalcula escala quando o tipo muda ou dimensões mudam
     setReady(false);
 
     const outer = outerRef.current;
@@ -318,7 +321,7 @@ export default function Home() {
     localStorage.setItem('poster-settings', JSON.stringify(newSettings));
   };
 
-  const perPage    = PER_PAGE[posterType as PosterType];
+  const perPage    = PER_PAGE[posterType as PosterType] || 4;
   
   const filteredQueue = useMemo(() => {
     if (queueFilter === 'all') return queue;
@@ -339,7 +342,7 @@ export default function Home() {
       style.id = styleId;
       document.head.appendChild(style);
     }
-    const o = POSTER_ORIENTATION[posterType as PosterType];
+    const o = POSTER_ORIENTATION[posterType as PosterType] || 'landscape';
     style.innerHTML = `@media print { @page { size: A4 ${o}; margin: 0; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0; padding: 0; } }`;
   }, [posterType]);
 
