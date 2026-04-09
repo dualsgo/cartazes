@@ -197,8 +197,48 @@ function PageGrid({
   }
   if (posterType === 'etiqueta') {
     return (
-      <div style={{ display: 'grid', gridTemplateColumns: '90mm 90mm', gridTemplateRows: 'repeat(8, 33.5mm)', gap: '0 6mm', paddingTop: '13.5mm', paddingBottom: '13.5mm', paddingLeft: '12.5mm', paddingRight: '11.5mm', width: '100%', height: '100%', boxSizing: 'border-box', backgroundColor: 'white' }}>
-        {items.map((d: PosterData, i: number) => (<div key={i} style={{ width: '90mm', height: '33.5mm', overflow: 'hidden' }}><PosterPreviewEtiqueta {...d} /></div>))}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: '90mm 90mm', 
+        // 8 linhas com recompensas de espaço em pontos específicos do papel serrilhado
+        gridTemplateRows: '33.5mm 0.5mm 33.5mm 0.5mm 33.5mm 1.5mm 33.5mm 0.5mm 33.5mm 1.5mm 33.5mm 0.5mm 33.5mm 0.5mm 33.5mm',
+        columnGap: '0.5mm', 
+        paddingTop: '11.75mm', 
+        paddingBottom: '11.75mm', 
+        paddingLeft: '14.75mm', 
+        paddingRight: '14.75mm', 
+        width: '100%', 
+        height: '100%', 
+        boxSizing: 'border-box', 
+        backgroundColor: 'white' 
+      }}>
+        {items.map((d: PosterData, i: number) => {
+          // Calculamos a linha visual (0-7) para saber se precisamos de spacer
+          // Na verdade o grid-template-rows acima já define os gaps como linhas do grid.
+          // Então precisamos pular as linhas de "gap" ao posicionar os itens.
+          const rowIdx = Math.floor(i / 2);
+          const colIdx = i % 2;
+          // Mapeamento de linha de dados para linha de grid (considerando os gaps intercalados)
+          // Linhas de dados: 0, 1, 2, 3, 4, 5, 6, 7
+          // Linhas de grid: 1, 3, 5, 7, 9, 11, 13, 15
+          const gridRow = rowIdx * 2 + 1;
+          const gridCol = colIdx + 1;
+          
+          return (
+            <div 
+              key={i} 
+              style={{ 
+                gridRow: gridRow,
+                gridColumn: gridCol,
+                width: '90mm', 
+                height: '33.5mm', 
+                overflow: 'hidden' 
+              }}
+            >
+              <PosterPreviewEtiqueta {...d} />
+            </div>
+          );
+        })}
       </div>
     );
   }

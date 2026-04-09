@@ -71,7 +71,7 @@ export function PosterPreviewEtiqueta({
         )}
 
         {/* Lado Direito Inteiro: Nome em cima, Preços em baixo */}
-        <div className={cn("flex-1 px-2 pt-1.5 pb-1 flex flex-col h-full overflow-hidden pr-[20mm]", isOffer ? "pl-1.5" : "pl-3")}>
+        <div className={cn("flex-1 px-2 pt-[2px] pb-[1px] flex flex-col h-full overflow-hidden pr-[18mm]", isOffer ? "pl-1.5" : "pl-3")}>
           
           {/* TOPO: Descrição */}
           <h2 className={cn("font-headline font-bold text-[16px] leading-[1.1] uppercase overflow-hidden w-full max-h-[2.5em] shrink-0", !isOffer && "text-center text-black")}>
