@@ -4,7 +4,7 @@ import type { PosterData, PosterSettings } from '@/app/lib/types';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { AvariaHeader } from './avaria-header';
-import { parsePrice, formatCurrency, calculateInstallments } from '@/app/lib/poster-utils';
+import { parsePrice, formatCurrency, calculateInstallments, truncateMultiLine } from '@/app/lib/poster-utils';
 
 const defectOptions = [
   { value: 'embalagem_danificada', label: 'Embalagem Danificada', discount: 20 },
@@ -15,13 +15,9 @@ const defectOptions = [
 ];
 
 /** Tamanho dinâmico da fonte da descrição */
-function descFontSize(desc: string): string {
-  const len = desc.length;
-  if (len <= 15)  return '1.85em';
-  if (len <= 25)  return '1.55em';
-  if (len <= 40)  return '1.3em';
-  if (len <= 60)  return '1.1em';
-  return '0.95em';
+function descFontSize(linesCount: number): string {
+  if (linesCount === 1) return '1.85em';
+  return '1.55em';
 }
 
 export function PosterPreviewDefeito({
@@ -40,6 +36,8 @@ export function PosterPreviewDefeito({
 }: PosterData & { settings: PosterSettings }) {
   const valDe = parsePrice(priceFrom);
   const valPor = parsePrice(priceFor);
+
+  const displayDescriptionLines = truncateMultiLine(description, 13, 2);
 
   const selectedDefect = defectOptions.find(opt => opt.value === defectType);
   
@@ -81,10 +79,12 @@ export function PosterPreviewDefeito({
           {/* ZONA 2: Descrição (flexível, fonte dinâmica) */}
           <div className="flex-1 flex items-center justify-center min-h-0 overflow-hidden py-1">
             <h2
-              className="font-headline font-black uppercase leading-tight break-words text-center text-black"
-              style={{ fontSize: descFontSize(description) }}
+              className="font-headline font-black uppercase leading-[1] break-words text-center text-black"
+              style={{ fontSize: descFontSize(displayDescriptionLines.length) }}
             >
-              {description}
+              {displayDescriptionLines.map((line, i) => (
+                <span key={i} className="block">{line}</span>
+              ))}
             </h2>
           </div>
 

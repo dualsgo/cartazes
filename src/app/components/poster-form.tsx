@@ -695,15 +695,39 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
 
                 <div className="space-y-2">
                   <Label htmlFor="quantity" className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Quantidade de Cópias</Label>
-                  <Input
-                    id="quantity"
-                    type="number"
-                    min={1}
-                    max={99}
-                    value={data.quantity || 1}
-                    onChange={e => setData(prev => ({ ...prev, quantity: Math.max(1, parseInt(e.target.value) || 1) }))}
-                    className="h-10 text-center font-bold"
-                  />
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setData(prev => ({ ...prev, quantity: Math.max(1, (prev.quantity || 1) - 1) }))}
+                      className="w-10 h-10 flex items-center justify-center rounded-md border border-border bg-background hover:bg-muted font-bold text-lg transition-colors"
+                    >
+                      -
+                    </button>
+                    <Input
+                      id="quantity"
+                      type="text"
+                      inputMode="numeric"
+                      value={data.quantity === 0 ? '' : data.quantity}
+                      onChange={e => {
+                        const val = e.target.value.replace(/\D/g, '');
+                        const num = val === '' ? 0 : parseInt(val, 10);
+                        setData(prev => ({ ...prev, quantity: Math.min(99, num) }));
+                      }}
+                      onBlur={() => {
+                        if (!data.quantity || data.quantity < 1) {
+                          setData(prev => ({ ...prev, quantity: 1 }));
+                        }
+                      }}
+                      className="h-10 text-center font-bold text-lg flex-1"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setData(prev => ({ ...prev, quantity: Math.min(99, (prev.quantity || 1) + 1) }))}
+                      className="w-10 h-10 flex items-center justify-center rounded-md border border-border bg-background hover:bg-muted font-bold text-lg transition-colors"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

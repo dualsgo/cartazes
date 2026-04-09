@@ -1,18 +1,8 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
-import type { PosterData } from '@/app/lib/types';
 import { BarcodeSAP } from './barcode-sap';
-
-function parsePrice(price: string): number {
-  return parseFloat(price.replace('.', '').replace(',', '.')) || 0;
-}
-
-function formatCurrency(value: number): string {
-  return value.toLocaleString('pt-br', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-}
+import type { PosterData } from '@/app/lib/types';
+import { parsePrice, formatCurrency, calculateInstallments, truncateDescription } from '@/app/lib/poster-utils';
 
 export function PosterPreviewEtiqueta({
   description,
@@ -28,15 +18,14 @@ export function PosterPreviewEtiqueta({
   const valDe = parsePrice(priceFrom);
   const valPor = parsePrice(priceFor);
 
+  const displayDescription = truncateDescription(description, 20);
+
   const isOffer = posterSubType === 'offer';
   const hasDiscount = valDe > 0 && valPor > 0 && valDe > valPor;
 
   const [porInteger, porDecimal] = formatCurrency(valPor).split(',');
 
-  const numInstallments = valPor > 0 ? Math.floor(valPor / 29.99) : 0;
-  const maxInstallments = Math.min(numInstallments, 6);
-  const rawInstallment = maxInstallments > 1 && valPor > 0 ? valPor / maxInstallments : 0;
-  const installmentValue = Math.ceil(rawInstallment * 100) / 100;
+  const { maxInstallments, installmentValue } = calculateInstallments(valPor, { maxInstallments: 6, minInstallmentAmount: 30 });
   
   const hasInstallments = paymentOption === 'installment' && maxInstallments > 1;
 
@@ -75,7 +64,7 @@ export function PosterPreviewEtiqueta({
           
           {/* TOPO: Descrição */}
           <h2 className={cn("font-headline font-bold text-[16px] leading-[1.1] uppercase overflow-hidden w-full max-h-[2.5em] shrink-0", !isOffer && "text-center text-black")}>
-            {description}
+            {displayDescription}
           </h2>
 
           {/* MEIO + BASE: DE em cima (compacto), POR em baixo (grande) */}

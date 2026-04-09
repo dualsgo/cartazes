@@ -34,3 +34,61 @@ export function formatCurrency(value: number): string {
     maximumFractionDigits: 2,
   });
 }
+
+/**
+ * Limita o texto em N caracteres sem cortar palavras ao meio.
+ */
+export function truncateDescription(text: string, limit: number): string {
+  if (!text || text.length <= limit) return text;
+  
+  const words = text.split(' ');
+  let result = '';
+  
+  for (const word of words) {
+    const space = result ? ' ' : '';
+    if ((result + space + word).length <= limit) {
+      result += space + word;
+    } else {
+      break;
+    }
+  }
+  
+  return result || text.slice(0, limit);
+}
+
+/**
+ * Divide o texto em múltiplas linhas com limite de caracteres por linha,
+ * sem cortar palavras e respeitando o número máximo de linhas.
+ */
+export function truncateMultiLine(text: string, charsPerLine: number, maxLines: number): string[] {
+  if (!text) return [];
+  
+  const words = text.split(' ');
+  const lines: string[] = [];
+  let currentLine = '';
+  
+  for (const word of words) {
+    const space = currentLine ? ' ' : '';
+    if ((currentLine + space + word).length <= charsPerLine) {
+      currentLine += space + word;
+    } else {
+      if (currentLine) lines.push(currentLine);
+      currentLine = word;
+      
+      if (currentLine.length > charsPerLine) {
+        currentLine = currentLine.slice(0, charsPerLine);
+      }
+      
+      if (lines.length >= maxLines) {
+        currentLine = '';
+        break;
+      }
+    }
+  }
+  
+  if (currentLine && lines.length < maxLines) {
+    lines.push(currentLine);
+  }
+  
+  return lines;
+}

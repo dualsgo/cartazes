@@ -1,39 +1,4 @@
-'use client';
-
-import type { PosterData } from '@/app/lib/types';
-
-function parsePrice(price: string): number {
-  return parseFloat(price.replace('.', '').replace(',', '.')) || 0;
-}
-
-function formatCurrency(value: number): string {
-  return value.toLocaleString('pt-br', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-}
-
-/** 
- * Limita a descrição em 25 caracteres sem cortar palavras ao meio.
- * Se a próxima palavra exceder o limite, ela não é incluída.
- */
-function truncateDescription(text: string, limit: number = 25): string {
-  if (!text || text.length <= limit) return text;
-  
-  const words = text.split(' ');
-  let result = '';
-  
-  for (const word of words) {
-    const space = result ? ' ' : '';
-    if ((result + space + word).length <= limit) {
-      result += space + word;
-    } else {
-      break;
-    }
-  }
-  
-  return result || text.slice(0, limit); // Fallback caso a primeira palavra já seja maior que o limite
-}
+import { parsePrice, formatCurrency, truncateDescription } from '@/app/lib/poster-utils';
 
 export function PosterPreviewAereo({
   description,

@@ -1,7 +1,7 @@
 import type { PosterData, PosterSettings } from '@/app/lib/types';
 import { Card } from '@/components/ui/card';
 import { OfertasHeader } from './ofertas-header';
-import { parsePrice, formatCurrency, calculateInstallments } from '@/app/lib/poster-utils';
+import { parsePrice, formatCurrency, calculateInstallments, truncateMultiLine } from '@/app/lib/poster-utils';
 
 export function PosterPreviewTotem({
   description,
@@ -18,6 +18,8 @@ export function PosterPreviewTotem({
   const valDe = parsePrice(priceFrom);
   const valPor = parsePrice(priceFor);
 
+  const displayDescriptionLines = truncateMultiLine(description, 20, 2);
+
   const hasDiscount = valDe > 0 && valPor > 0 && valDe > valPor;
   const discount = hasDiscount ? Math.round(((valDe - valPor) / valDe) * 100) : 0;
 
@@ -27,7 +29,8 @@ export function PosterPreviewTotem({
   
   const hasInstallments = paymentOption === 'installment' && maxInstallments > 1;
 
-  let priceFontSize = description.length > 50 ? '10em' : '13em';
+  const isLongDesc = displayDescriptionLines.length > 1 || (displayDescriptionLines[0]?.length || 0) > 15;
+  let priceFontSize = isLongDesc ? '10em' : '13em';
   if (porInteger.length >= 6) {
     priceFontSize = '8em';
   } else if (porInteger.length === 5) {
@@ -37,15 +40,17 @@ export function PosterPreviewTotem({
   return (
     <Card 
       className="w-full h-full overflow-hidden shadow-none border-none rounded-none bg-white text-black font-body relative flex flex-col items-center justify-between p-[0.8cm] box-border"
-      style={{ fontSize: '12px' }} // Reduz o tamanho de todos os itens 'em' para 75%  do tamanho original (12/16px)
+      style={{ fontSize: '12px' }} 
     >
       
       {/* TOPO: Cabeçalho OFERTAS + Nome do Produto + SAP/EAN */}
       <div className="flex flex-col items-center w-full shrink-0 px-8">
         <OfertasHeader textSize={60} />
         
-        <h2 className="font-headline font-black uppercase text-[4em] leading-tight break-words text-center mt-6 mb-2 w-full">
-          {description}
+        <h2 className="font-headline font-black uppercase text-[4em] leading-[1] break-words text-center mt-6 mb-2 w-full">
+          {displayDescriptionLines.map((line, i) => (
+            <span key={i} className="block">{line}</span>
+          ))}
         </h2>
 
         <div className="text-[1.2em] flex flex-wrap justify-center gap-x-4 gap-y-1 text-black font-semibold text-center w-full">
@@ -98,7 +103,7 @@ export function PosterPreviewTotem({
             ou {maxInstallments}x de R$ {formatCurrency(installmentValue)}
           </div>
         ) : (
-          <div className="mt-4" style={{ height: '4.8em' }}></div> // Espaçador para segurar o layout
+          <div className="mt-4" style={{ height: '4.8em' }}></div>
         )}
 
         <div className="text-[1.2em] text-center w-full shrink-0 leading-tight text-black font-semibold mt-6 pt-4 border-t border-black">
@@ -110,7 +115,7 @@ export function PosterPreviewTotem({
               ou enquanto durarem os estoques.
             </span>
           ) : (
-             <span>Oferta válida por tempo indeterminado ou enquanto durarem os estoques.</span>
+            <span>Oferta válida por tempo indeterminado ou enquanto durarem os estoques.</span>
           )}
         </div>
       </div>
