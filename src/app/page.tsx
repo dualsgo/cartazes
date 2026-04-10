@@ -35,7 +35,7 @@ const SINGLE_DIMS: Record<PosterType, { w: number; h: number }> = {
   'ofertas-imperdiveis':{ w: 491, h: 340 },
   aereo:                { w: 760, h: 268 },  // proporcional a 190mm x 67mm (4px/mm)
   avaria:               { w: 491, h: 340 },
-  etiqueta:             { w: 340, h: 127 },
+  etiqueta:             { w: 364, h: 135 },
   totem:                { w: 794, h: 1123 }, // A4 a 96dpi (210×297mm em pixels de tela)
 };
 
@@ -202,46 +202,43 @@ function PageGrid({
     return (
       <div style={{ 
         display: 'grid', 
-        gridTemplateColumns: '90mm 90mm', 
-        // 8 linhas com recompensas de espaço em pontos específicos do papel serrilhado
-        gridTemplateRows: '33.5mm 0.5mm 33.5mm 0.5mm 33.5mm 1.5mm 33.5mm 0.5mm 33.5mm 1.5mm 33.5mm 0.5mm 33.5mm 0.5mm 33.5mm',
-        columnGap: '0.5mm', 
-        paddingTop: '11.75mm', 
-        paddingBottom: '11.75mm', 
-        paddingLeft: '14.75mm', 
-        paddingRight: '14.75mm', 
+        gridTemplateColumns: '91mm 91mm', 
+        gridTemplateRows: 'repeat(8, 33.8mm)',
+        columnGap: '0', 
+        paddingTop: '10mm', 
+        paddingBottom: '15mm', 
+        paddingLeft: '14mm', 
+        paddingRight: '14mm', 
         width: '100%', 
         height: '100%', 
         boxSizing: 'border-box', 
         backgroundColor: 'white' 
       }}>
-        {items.map((d: PosterData, i: number) => {
-          // Calculamos a linha visual (0-7) para saber se precisamos de spacer
-          // Na verdade o grid-template-rows acima já define os gaps como linhas do grid.
-          // Então precisamos pular as linhas de "gap" ao posicionar os itens.
-          const rowIdx = Math.floor(i / 2);
-          const colIdx = i % 2;
-          // Mapeamento de linha de dados para linha de grid (considerando os gaps intercalados)
-          // Linhas de dados: 0, 1, 2, 3, 4, 5, 6, 7
-          // Linhas de grid: 1, 3, 5, 7, 9, 11, 13, 15
-          const gridRow = rowIdx * 2 + 1;
-          const gridCol = colIdx + 1;
-          
-          return (
-            <div 
-              key={i} 
-              style={{ 
-                gridRow: gridRow,
-                gridColumn: gridCol,
-                width: '90mm', 
-                height: '33.5mm', 
-                overflow: 'hidden' 
-              }}
-            >
-              <PosterPreviewEtiqueta {...d} />
-            </div>
-          );
-        })}
+        {items.map((d: PosterData, i: number) => (
+          <div 
+            key={i} 
+            style={{ 
+              width: '91mm', 
+              height: '33.8mm', 
+              overflow: 'hidden',
+              outline: '0.1mm dashed #eee', // Guia de corte leve
+              outlineOffset: '-0.1mm'
+            }}
+          >
+            <PosterPreviewEtiqueta {...d} />
+          </div>
+        ))}
+        {empties.map((_, i: number) => (
+          <div 
+            key={`e${i}`} 
+            style={{ 
+              width: '91mm', 
+              height: '33.8mm', 
+              outline: '0.1mm dashed #eee',
+              outlineOffset: '-0.1mm'
+            }}
+          />
+        ))}
       </div>
     );
   }
