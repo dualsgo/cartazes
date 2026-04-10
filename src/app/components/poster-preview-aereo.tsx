@@ -1,4 +1,7 @@
-import { parsePrice, formatCurrency, truncateDescription } from '@/app/lib/poster-utils';
+import React from 'react';
+import { cn } from '@/lib/utils';
+import { parsePrice, formatCurrency, calculateInstallments, truncateDescription } from '@/app/lib/poster-utils';
+import type { PosterData } from '@/app/lib/types';
 
 export function PosterPreviewAereo({
   description,
@@ -14,163 +17,95 @@ export function PosterPreviewAereo({
   const valDe  = parsePrice(priceFrom);
   const valPor = parsePrice(priceFor);
 
-  const isOffer    = posterSubType === 'offer' && valDe > valPor;
-  // const discount   = isOffer ? Math.round(((valDe - valPor) / valDe) * 100) : 0; // Not used but kept for logic
+  const isOffer = posterSubType === 'offer';
+  const hasDiscount = valDe > 0 && valPor > 0 && valDe > valPor;
 
   const [porInt, porDec] = formatCurrency(valPor).split(',');
 
-  const numInstallments  = valPor > 0 ? Math.floor(valPor / 29.99) : 0;
-  const maxInstallments  = Math.min(numInstallments, 6);
-  const rawInstallment   = maxInstallments > 1 && valPor > 0 ? valPor / maxInstallments : 0;
-  const installmentValue = Math.ceil(rawInstallment * 100) / 100;
+  const { maxInstallments, installmentValue } = calculateInstallments(valPor, { maxInstallments: 6, minInstallmentAmount: 30 });
   const showInstallment  = paymentOption === 'installment' && maxInstallments > 1;
 
   // Aplica o limite de caracteres na descrição
-  const displayDescription = truncateDescription(description, 25);
+  const displayDescription = truncateDescription(description, 35);
+
+  // Lógica de fonte dinâmica para o Aéreo
+  let priceFontSize = '82px';
+  let deFontSize = '24px';
+
+  if (porInt.length >= 6) {
+    priceFontSize = '56px';
+    deFontSize = '20px';
+  } else if (porInt.length === 5) {
+    priceFontSize = '64px';
+    deFontSize = '22px';
+  } else if (porInt.length === 4) {
+    priceFontSize = '74px';
+  }
 
   return (
-    <div style={{ width: '100%', height: '100%', background: 'white', color: 'black', display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: 'inherit', boxSizing: 'border-box', position: 'relative' }}>
+    <div className="w-full h-full bg-white text-black font-body overflow-hidden relative flex flex-col justify-between box-border px-[6mm] py-[2.5mm]">
       
-      {/* Barra Lateral de Oferta - Afastada da borda para não cortar */}
+      {/* Faixa vertical de OFERTA integrada à direita */}
       {isOffer && (
-        <div style={{ 
-          position: 'absolute',
-          top: '4mm',
-          bottom: '4mm',
-          right: '8mm', // Recuado da borda
-          width: '14mm', // Mais estreita
-          backgroundColor: 'black',
-          color: 'white',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 20,
-          borderRadius: '2mm' // Contorno para estilo premium
-        }}>
-          <div style={{ 
-            fontSize: '24pt', 
-            fontWeight: 900, 
-            letterSpacing: '1.5mm',
-            textTransform: 'uppercase',
-            writingMode: 'vertical-rl',
-            transform: 'rotate(180deg)',
-            fontFamily: 'inherit'
-          }}>
+        <div className="absolute right-[4mm] top-[4mm] bottom-[4mm] w-[12mm] bg-black text-white flex flex-col items-center justify-center rounded-md z-10">
+          <span className="font-headline font-black text-[22pt] leading-none uppercase tracking-[4px]" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
             OFERTA
-          </div>
+          </span>
         </div>
       )}
 
-      {/* 1. DESCRIÇÃO NO TOPO CENTRALIZADA - Padding aumentado na direita quando em oferta */}
-      <div style={{ 
-        padding: isOffer ? '4mm 26mm 1mm 6mm' : '4mm 8mm 1mm 8mm', 
-        textAlign: 'center', 
-        height: '20mm', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center' 
-      }}>
-        <h2 style={{ fontSize: '24pt', fontWeight: 900, textTransform: 'uppercase', lineHeight: 1.1, margin: 0, fontFamily: 'inherit', wordBreak: 'break-word', color: 'black' }}>
+      {/* 1. TOPO: DESCRIÇÃO */}
+      <div className={cn("w-full h-[18mm] flex items-center justify-center shrink-0", isOffer && "pr-[14mm]")}>
+        <h2 className="font-headline font-black text-[24pt] leading-[1] uppercase text-center overflow-hidden max-h-[2.2em]">
           {displayDescription}
         </h2>
       </div>
 
-      {/* 2. ÁREA CENTRAL: PREÇOS E CONTEÚDO */}
-      <div style={{ 
-        flex: 1, 
-        display: 'flex', 
-        flexDirection: 'column', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        minHeight: 0, 
-        gap: '1mm',
-        paddingRight: isOffer ? '24mm' : '0', // Ajusta para não sobrepor a faixa de oferta
-        paddingLeft: isOffer ? '4mm' : '0'    // Ajusta margem esquerda
-      }}>
+      {/* 2. MEIO: ÁREA DE PREÇOS */}
+      <div className={cn("flex-1 flex flex-col items-center justify-center relative min-h-0", isOffer && "pr-[14mm]")}>
         
-        {/* BLOCO DE PREÇO PRINCIPAL */}
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center', 
-          width: '100%', 
-          height: '32mm', 
-          position: 'relative' 
-        }}>
-          
-          {/* Preço de Oferta (DE) - Recuado para evitar sobreposição */}
-          {isOffer && valDe > valPor && (
-            <div style={{ 
-              position: 'absolute', 
-              top: '0mm', 
-              left: '4mm', // Mais à esquerda
-              lineHeight: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              opacity: 0.9
-            }}>
-              <span style={{ fontSize: '11pt', fontWeight: 900, fontFamily: 'inherit' }}>DE:</span>
-              <span style={{ fontSize: '20pt', fontWeight: 900, textDecoration: 'line-through', fontFamily: 'inherit' }}>R$ {formatCurrency(valDe)}</span>
-            </div>
-          )}
+        {/* Preço DE flutuando à esquerda */}
+        {isOffer && hasDiscount && (
+          <div className="absolute left-0 top-1 transition-opacity flex flex-col">
+            <span className="font-black text-[9pt] uppercase leading-none opacity-80">DE:</span>
+            <span className="font-bold leading-none line-through" style={{ fontSize: deFontSize }}>
+              R$ {formatCurrency(valDe)}
+            </span>
+          </div>
+        )}
 
-          <div style={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            justifyContent: 'center',
-            marginLeft: isOffer ? '14mm' : '0' // Afasta o bloco POR do DE para não sobrepor
-          }}>
-            {/* Preço Principal (POR / FINAL) */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4mm' }}>
-              {(isOffer || valDe > 0) && <span style={{ fontSize: '20pt', fontWeight: 900, fontFamily: 'inherit' }}>POR:</span>}
-              <div style={{ display: 'flex', alignItems: 'flex-start', lineHeight: 1, gap: '4mm' }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1mm' }}>
-                  <span style={{ fontSize: '20pt', fontWeight: 900, marginTop: '2.5mm', fontFamily: 'inherit' }}>R$</span>
-                  <span style={{ fontSize: '82pt', fontWeight: 900, lineHeight: 0.75, fontFamily: 'inherit' }}>{porInt}</span>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', marginTop: '1.5mm', alignItems: 'center' }}>
-                  <span style={{ fontSize: '36pt', fontWeight: 900, lineHeight: 1, fontFamily: 'inherit' }}>,{porDec}</span>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '0.5mm' }}>
-                    <span style={{ fontSize: '11pt', fontWeight: 900, lineHeight: 1, fontFamily: 'inherit' }}>un.</span>
-                    <span style={{ fontSize: '12pt', fontWeight: 900, textTransform: 'uppercase', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>à vista</span>
-                  </div>
-                </div>
+        {/* Preço POR e Parcelamento Empilhados */}
+        <div className="flex flex-col items-center justify-center">
+          <div className="flex items-center gap-3">
+            <span className="font-headline font-black text-[18pt] leading-none mb-[-4mm]">POR:</span>
+            <div className="flex items-end">
+              <span className="font-headline font-black text-[18pt] mr-1 pb-1">R$</span>
+              <span className="font-headline font-black leading-[0.75] tracking-tighter" style={{ fontSize: priceFontSize }}>{porInt}</span>
+              <div className="flex flex-col items-start ml-1 pb-1">
+                <span className="font-headline font-black text-[30pt] leading-none">,{porDec}</span>
+                <span className="font-bold text-[10pt] uppercase leading-none mt-1">un. à vista</span>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* CONTORNO CURVO: Otimizado para aproveitar espaço e não cortar */}
-        {showInstallment ? (
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            padding: '2mm 6mm',
-            border: '0.4mm solid black',
-            borderRadius: '10mm',
-            width: '125mm', // Comprimido de 140mm para 125mm
-            boxSizing: 'border-box',
-            textAlign: 'center', 
-            fontSize: '13pt', // Reduzido levemente
-            fontWeight: 900, 
-            lineHeight: 1,
-            marginTop: '1mm'
-          }}>
-            ou em até <span style={{ fontSize: '17pt', margin: '0 1.5mm' }}>{maxInstallments}x</span> de <span style={{ fontSize: '26pt', fontWeight: 900, marginLeft: '1.5mm' }}>R$ {formatCurrency(installmentValue)}</span>
-          </div>
-        ) : (
-          <div style={{ height: '10mm' }} />
-        )}
+          {/* Parcelamento estilo CAPSULA (Pill) */}
+          {showInstallment && (
+             <div className="mt-2 border-[0.5mm] border-black rounded-full px-5 py-1 flex items-center gap-2">
+                <span className="font-headline font-bold text-[13pt] leading-none">ou em até</span>
+                <span className="font-headline font-black text-[17pt] leading-none">{maxInstallments}x</span>
+                <span className="font-headline font-bold text-[13pt] leading-none">de</span>
+                <span className="font-headline font-black text-[22pt] leading-none">R$ {formatCurrency(installmentValue)}</span>
+             </div>
+          )}
+        </div>
       </div>
 
-      {/* 3. BASE: METADADOS (DISCRETOS) */}
-      <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6mm', paddingBottom: '3mm', paddingTop: '1mm', fontSize: '8.5pt', fontWeight: 700, fontFamily: 'monospace', opacity: 0.8, paddingRight: isOffer ? '24mm' : '0' }}>
-        {code      && <span>SAP: {code}</span>}
-        {ean       && <span>EAN: {ean}</span>}
-        {reference && <span>REF: {reference}</span>}
-        {supplier  && <span style={{ textTransform: 'uppercase', maxWidth: '55mm', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>FORN: {supplier}</span>}
+      {/* 3. BASE: METADADOS E FORNECEDOR EM LINHA ÚNICA */}
+      <div className={cn("w-full flex items-center justify-center gap-x-4 flex-wrap text-[7.5pt] font-mono font-bold uppercase opacity-80", isOffer && "pr-[14mm]")}>
+          {code && <span>SAP: {code}</span>}
+          {ean && <span>EAN: {ean}</span>}
+          {reference && <span>REF: {reference}</span>}
+          {supplier && <span className="text-black font-black whitespace-nowrap overflow-hidden text-ellipsis max-w-[40%]">| FORN: {supplier}</span>}
       </div>
     </div>
   );

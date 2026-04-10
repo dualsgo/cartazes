@@ -35,11 +35,15 @@ function loadProdutos(): Record<string, ProdutoEntry> {
 
 function saveProdutos(data: Record<string, ProdutoEntry>): void {
     try {
+        const dir = path.dirname(DATA_FILE);
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+        }
         fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8');
         produtosCache = data;
         invalidateSuggestCache();
     } catch (err) {
-        console.error('[api/produto] Erro ao salvar produtos.json:', err);
+        console.error(`[api/produto] Erro ao salvar produtos.json em ${DATA_FILE}:`, err);
         throw err;
     }
 }
@@ -98,7 +102,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         const contentLength = request.headers.get('content-length');
-        if (contentLength && parseInt(contentLength, 10) > 2048) {
+        if (contentLength && parseInt(contentLength, 10) > 1024 * 1024) {
             return NextResponse.json({ error: 'Payload muito grande.' }, { status: 413 });
         }
 

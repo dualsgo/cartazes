@@ -172,29 +172,54 @@ function PageGrid({
   const empties = Array.from({ length: perPage - items.length });
 
   if (posterType === 'aereo') {
-    // 4 cartazes por página portrait, cada um ocupando 2 colunas e 2 linhas de gôndola (180mm x 67mm)
-    // Segue o gabarito original das etiquetas de gôndola
     return (
       <div style={{ 
         display: 'grid', 
-        gridTemplateColumns: '190mm', 
-        gridTemplateRows: 'repeat(4, 67mm)', 
+        gridTemplateColumns: '182mm', 
+        gridTemplateRows: 'repeat(4, 67.6mm)', 
         gap: '0', 
-        paddingTop: '13.5mm', 
-        paddingBottom: '13.5mm', 
-        paddingLeft: '11mm', 
-        paddingRight: '9mm', 
+        paddingTop: '12.5mm', 
+        paddingBottom: '14.1mm', 
+        paddingLeft: '14mm', 
+        paddingRight: '14mm', 
         width: '100%', 
         height: '100%', 
         boxSizing: 'border-box', 
-        backgroundColor: 'white' 
+        backgroundColor: 'white',
+        border: '0.1mm solid #eee'
       }}>
-        {items.map((d: PosterData, i: number) => (
-          <div key={i} style={{ width: '190mm', height: '67mm', overflow: 'hidden' }}>
-            <PosterPreviewAereo {...d} />
-          </div>
-        ))}
-        {empties.map((_, i: number) => <div key={`e${i}`} />)}
+        {items.map((d: PosterData, i: number) => {
+          const isBottom = i === 3;
+          return (
+            <div 
+              key={i} 
+              style={{ 
+                width: '182mm', 
+                height: '67.6mm', 
+                overflow: 'hidden',
+                borderBottom: !isBottom ? '0.3mm dashed #ccc' : 'none',
+                boxSizing: 'border-box'
+              }}
+            >
+              <PosterPreviewAereo {...d} />
+            </div>
+          );
+        })}
+        {empties.map((_, i: number) => {
+          const idx = items.length + i;
+          const isBottom = idx === 3;
+          return (
+            <div 
+              key={`e${i}`} 
+              style={{ 
+                width: '182mm', 
+                height: '67.6mm',
+                borderBottom: !isBottom ? '0.3mm dashed #ccc' : 'none',
+                boxSizing: 'border-box'
+              }}
+            />
+          );
+        })}
       </div>
     );
   }

@@ -139,7 +139,7 @@ export function PosterPreviewEtiqueta({
                </div>
              )}
              {supplier && (
-                <div className="text-[7.5px] text-black font-black uppercase tracking-[0.15em] text-center w-full truncate border-t border-black/10 pt-0.5">
+                <div className="text-[7.5px] text-black font-black uppercase tracking-[0.15em] text-center w-full truncate">
                   {supplier}
                 </div>
               )}
