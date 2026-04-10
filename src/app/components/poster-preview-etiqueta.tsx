@@ -49,23 +49,23 @@ export function PosterPreviewEtiqueta({
   }
 
   return (
-    <div className="w-full h-full bg-white text-black font-body overflow-hidden relative flex flex-col justify-center box-border p-[1mm]">
-      {/* Etiqueta 91x33.8mm - Centered Content */}
+    <div className="w-full h-full bg-white text-black font-body overflow-hidden relative flex flex-col justify-center box-border px-[1mm] py-[2.5mm]">
+      {/* Etiqueta 91x33.8mm - High Tolerance Center */}
       <div className="flex w-full h-full relative items-center">
         {/* Esquerda: Black Block with text OFERTAS (Somente se for tipo oferta) */}
         {isOffer && (
-          <div className="w-[8%] h-[95%] bg-black text-white flex flex-col justify-center items-center shrink-0 rounded-sm">
-              <span className="font-headline font-black text-[12px] leading-none text-center uppercase tracking-wider" style={{ transform: 'rotate(-90deg)', whiteSpace: 'nowrap' }}>
+          <div className="w-[8%] h-[98%] bg-black text-white flex flex-col justify-center items-center shrink-0 rounded-sm">
+              <span className="font-headline font-black text-[11px] leading-none text-center uppercase tracking-wider" style={{ transform: 'rotate(-90deg)', whiteSpace: 'nowrap' }}>
                   OFERTAS
               </span>
           </div>
         )}
 
         {/* Lado Direito Inteiro: Nome em cima, Preços em baixo */}
-        <div className={cn("flex-1 px-2 pt-[1px] pb-[1px] flex flex-col h-full justify-center overflow-hidden pr-[20mm]", isOffer ? "pl-2" : "pl-4")}>
+        <div className={cn("flex-1 px-2 flex flex-col h-full justify-center overflow-hidden pr-[19mm]", isOffer ? "pl-2" : "pl-4")}>
           
           {/* TOPO: Descrição */}
-          <h2 className={cn("font-headline font-bold text-[15px] leading-[1] uppercase overflow-hidden w-full max-h-[2.2em] shrink-0", !isOffer && "text-center text-black")}>
+          <h2 className={cn("font-headline font-bold text-[14px] leading-[0.95] uppercase overflow-hidden w-full max-h-[2em] shrink-0", !isOffer && "text-center text-black")}>
             {displayDescription}
           </h2>
 
@@ -75,7 +75,7 @@ export function PosterPreviewEtiqueta({
             {/* Preço DE — Logo abaixo da descrição */}
             {isOffer && (
               <div className={cn("w-full flex pb-0 pl-1", hasDiscount ? 'opacity-100' : 'opacity-0')}>
-                <div className="text-[11px] font-bold leading-none">
+                <div className="text-[10px] font-bold leading-none">
                   DE: <span className="line-through">R$ {formatCurrency(valDe)}</span>
                 </div>
               </div>
@@ -84,7 +84,7 @@ export function PosterPreviewEtiqueta({
             {/* Rótulo POR: — Nivelado abaixo do DE: */}
             {isOffer && (
               <div className="w-full flex pl-1">
-                <span className="font-headline font-black uppercase tracking-tighter text-[10px] leading-none text-black">POR:</span>
+                <span className="font-headline font-black uppercase tracking-tighter text-[9px] leading-none text-black">POR:</span>
               </div>
             )}
 
@@ -94,24 +94,24 @@ export function PosterPreviewEtiqueta({
               {/* Símbolo R$ */}
               {isOffer && (
                 <div className="flex flex-col items-end mr-0.5 shrink-0 pb-1">
-                  <span className="font-headline font-black text-[14px] leading-tight">R$</span>
+                  <span className="font-headline font-black text-[13px] leading-tight">R$</span>
                 </div>
               )}
               
-              {!isOffer && <span className="font-headline font-black self-start mt-1 mr-0.5 text-[18px]">R$</span>}
+              {!isOffer && <span className="font-headline font-black self-start mt-1 mr-0.5 text-[17px]">R$</span>}
 
               {/* Centro: Inteiro */}
-              <span className="font-headline font-black leading-[0.75] tracking-tighter" style={{ fontSize: isOffer ? '45px' : priceFontSize }}>
+              <span className="font-headline font-black leading-[0.75] tracking-tighter" style={{ fontSize: isOffer ? '42px' : priceFontSize }}>
                 {porInteger}
               </span>
 
               {/* Lado Direito do Preço: Decimal e un. à vista */}
               <div className="flex flex-col items-start ml-0.5 shrink-0 pb-1 text-black">
-                <span className="font-headline font-black leading-none" style={{ fontSize: isOffer ? '18px' : decimalFontSize }}>
+                <span className="font-headline font-black leading-none" style={{ fontSize: isOffer ? '17px' : decimalFontSize }}>
                   ,{porDecimal}
                 </span>
                 {isOffer && (
-                  <span className="font-bold whitespace-nowrap leading-none mt-0.5" style={{ fontSize: '7.5px' }}>
+                  <span className="font-bold whitespace-nowrap leading-none mt-0.5" style={{ fontSize: '7px' }}>
                     un. à vista
                   </span>
                 )}
@@ -120,10 +120,10 @@ export function PosterPreviewEtiqueta({
 
             {/* Rodapé Dinâmico (Parcelamento em modo Oferta) */}
             {isOffer && (
-              <div className="flex w-full justify-center mt-1 pb-0.5 min-h-[12px] pr-2">
+              <div className="flex w-full justify-center mt-0.5 pb-0 min-h-[10px] pr-2">
                 {hasInstallments && (
                    <div className="bg-black text-white px-2 py-0.5 rounded-full flex items-center justify-center border border-black">
-                      <span className="font-headline font-bold leading-none whitespace-nowrap text-[11px] tracking-tight">
+                      <span className="font-headline font-bold leading-none whitespace-nowrap text-[10px] tracking-tight">
                         ou {maxInstallments}x R$ {formatCurrency(installmentValue)}
                       </span>
                    </div>
@@ -133,10 +133,10 @@ export function PosterPreviewEtiqueta({
 
             {/* Rodapé Normal (un. à vista) */}
             {!isOffer && (
-              <div className="flex items-center gap-2 mt-1 shrink-0 justify-center">
-                 <span className="font-bold whitespace-nowrap text-black text-[12px]">un. à vista</span>
+              <div className="flex items-center gap-2 mt-0.5 shrink-0 justify-center">
+                 <span className="font-bold whitespace-nowrap text-black text-[11px]">un. à vista</span>
                  {hasInstallments && (
-                    <span className="font-headline font-bold leading-tight text-right whitespace-nowrap text-black text-[12px]">
+                    <span className="font-headline font-bold leading-tight text-right whitespace-nowrap text-black text-[11px]">
                       ou {maxInstallments}x R$ {formatCurrency(installmentValue)}
                     </span>
                  )}
@@ -147,7 +147,7 @@ export function PosterPreviewEtiqueta({
 
           {/* Rodapé Central (Fornecedor) */}
           {supplier && (
-            <div className="text-[6.5px] text-black font-bold uppercase tracking-widest text-center mt-0.5 truncate w-full">
+            <div className="text-[6px] text-black font-bold uppercase tracking-widest text-center mt-0.5 truncate w-full">
               {supplier}
             </div>
           )}
@@ -155,26 +155,26 @@ export function PosterPreviewEtiqueta({
 
         {/* CÓDIGO DE BARRAS VERTICAL (SAP) - Posição compactada à direita */}
         {code && (
-          <div className="absolute right-[10mm] top-0 bottom-0 w-[9mm] flex items-center justify-center">
+          <div className="absolute right-[9.5mm] top-0 bottom-0 w-[9mm] flex items-center justify-center">
              <BarcodeSAP 
                value={code} 
                orientation="vertical"
-               height="28mm" 
-               width="6mm" 
+               height="24mm" 
+               width="5.5mm" 
              />
           </div>
         )}
 
         {/* Blocos Verticais de Códigos - Posição compactada à direita extremo */}
-        <div className="absolute right-[0.5mm] top-0 bottom-0 flex flex-row-reverse items-center gap-0 text-[7pt] text-black font-mono leading-none font-bold">
+        <div className="absolute right-[0.5mm] top-0 bottom-0 flex flex-row-reverse items-center gap-0 text-[6.5pt] text-black font-mono leading-none font-bold">
           {/* Coluna: SAP e REF */}
-          <div className="flex flex-col justify-center items-center h-full w-[4.2mm]">
+          <div className="flex flex-col justify-center items-center h-full w-[4mm]">
               <div className="rotate-90 whitespace-nowrap whitespace-pre">
                 {code ? `SAP: ${code}` : ''} {reference ? ` | ${reference}` : ''}
               </div>
           </div>
           {/* Coluna: EAN */}
-          <div className="flex flex-col justify-center items-center h-full w-[3.8mm]">
+          <div className="flex flex-col justify-center items-center h-full w-[3.5mm]">
               <div className="rotate-90 whitespace-nowrap">
                 {ean ? `EAN: ${ean}` : ''}
               </div>

@@ -205,40 +205,55 @@ function PageGrid({
         gridTemplateColumns: '91mm 91mm', 
         gridTemplateRows: 'repeat(8, 33.8mm)',
         columnGap: '0', 
-        paddingTop: '10mm', 
-        paddingBottom: '15mm', 
+        // Equilibrando as margens 10mm/15mm para 12.5mm (média) 
+        // para dar tolerância caso a folha seja invertida
+        paddingTop: '12.5mm', 
+        paddingBottom: '14.1mm', 
         paddingLeft: '14mm', 
         paddingRight: '14mm', 
         width: '100%', 
         height: '100%', 
         boxSizing: 'border-box', 
-        backgroundColor: 'white' 
+        backgroundColor: 'white',
+        border: '0.1mm solid #eee' // Borda limite da folha
       }}>
-        {items.map((d: PosterData, i: number) => (
-          <div 
-            key={i} 
-            style={{ 
-              width: '91mm', 
-              height: '33.8mm', 
-              overflow: 'hidden',
-              outline: '0.1mm dashed #eee', // Guia de corte leve
-              outlineOffset: '-0.1mm'
-            }}
-          >
-            <PosterPreviewEtiqueta {...d} />
-          </div>
-        ))}
-        {empties.map((_, i: number) => (
-          <div 
-            key={`e${i}`} 
-            style={{ 
-              width: '91mm', 
-              height: '33.8mm', 
-              outline: '0.1mm dashed #eee',
-              outlineOffset: '-0.1mm'
-            }}
-          />
-        ))}
+        {items.map((d: PosterData, i: number) => {
+          const isLeft = i % 2 === 0;
+          const isBottom = i >= 14;
+          return (
+            <div 
+              key={i} 
+              style={{ 
+                width: '91mm', 
+                height: '33.8mm', 
+                overflow: 'hidden',
+                // Simulação do picote em toda a grade
+                borderRight: isLeft ? '0.2mm dashed #ccc' : 'none',
+                borderBottom: !isBottom ? '0.2mm dashed #ccc' : 'none',
+                boxSizing: 'border-box'
+              }}
+            >
+              <PosterPreviewEtiqueta {...d} />
+            </div>
+          );
+        })}
+        {empties.map((_, i: number) => {
+          const idx = items.length + i;
+          const isLeft = idx % 2 === 0;
+          const isBottom = idx >= 14;
+          return (
+            <div 
+              key={`e${i}`} 
+              style={{ 
+                width: '91mm', 
+                height: '33.8mm', 
+                borderRight: isLeft ? '0.2mm dashed #ccc' : 'none',
+                borderBottom: !isBottom ? '0.2mm dashed #ccc' : 'none',
+                boxSizing: 'border-box'
+              }}
+            />
+          );
+        })}
       </div>
     );
   }
