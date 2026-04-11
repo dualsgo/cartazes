@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { PosterData } from '@/app/lib/types';
 import { cn } from '@/lib/utils';
-import { Loader2, CheckCircle2, XCircle, Search, RotateCcw, PlusCircle } from 'lucide-react';
+import { Loader2, CheckCircle2, XCircle, Search, RotateCcw, PlusCircle, Info } from 'lucide-react';
 
 function centsToDisplay(cents: number): string {
   if (cents === 0) return '';
@@ -136,7 +136,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
     } else {
       priceFor.setValue('');
     }
-  }, [priceFrom.cents, data.defectType, data.customDefectDiscount, posterType, priceForOverridden, priceFor]);
+  }, [priceFrom.cents, data.defectType, data.customDefectDiscount, posterType, priceForOverridden, priceFor.setValue]);
 
   useEffect(() => {
     setPriceForOverridden(false);
