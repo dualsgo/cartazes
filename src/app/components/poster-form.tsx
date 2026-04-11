@@ -85,6 +85,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
 
   const [regStatus, setRegStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
+  const [showWarning, setShowWarning] = useState(false);
   const [isManualMode, setIsManualMode] = useState(false);
   const [manualDescription, setManualDescription] = useState('');
   const [manualCode, setManualCode] = useState('');
@@ -141,6 +142,28 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
     setPriceForOverridden(false);
   }, [priceFrom.cents, data.defectType, data.customDefectDiscount]);
 
+  // Validação para habilitar o botão "Adicionar ao Lote" no modo manual
+  useEffect(() => {
+    if (isManualMode) {
+      const hasDescription = manualDescription.trim().length >= 2;
+      const hasCodeOrEan = manualCode.trim().length >= 3 || manualEan.trim().length >= 3;
+      const isValid = hasDescription && hasCodeOrEan;
+      
+      onLookupStatusChange?.(isValid);
+      
+      if (isValid) {
+        setData(prev => ({
+          ...prev,
+          description: manualDescription.trim().toUpperCase(),
+          code: manualCode.trim(),
+          ean: manualEan.trim(),
+          reference: manualReference.trim(),
+          supplier: manualSupplier.trim().toUpperCase(),
+        }));
+      }
+    }
+  }, [isManualMode, manualDescription, manualCode, manualEan, manualReference, manualSupplier, onLookupStatusChange, setData]);
+
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
@@ -170,6 +193,8 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
     const v = e.target.value;
     setSearchValue(v);
     setLookupStatus('idle');
+    setIsManualMode(false);
+    setShowWarning(false);
     fetchSuggestions(v);
   };
 
@@ -184,7 +209,12 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
 
     try {
       const res = await fetch(`/api/produto?q=${encodeURIComponent(query)}`);
-      if (!res.ok) { setLookupStatus('notfound'); onLookupStatusChange?.(false); return; }
+      if (!res.ok) { 
+        setLookupStatus('notfound'); 
+        setShowWarning(true);
+        onLookupStatusChange?.(false); 
+        return; 
+      }
 
       const produto = await res.json() as {
         description: string; reference: string; ean?: string; code?: string; supplier?: string;
@@ -231,44 +261,13 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
     if (value === 'normal') priceFrom.reset();
   };
 
-  const handleManualUse = () => {
-    setData(prev => ({
-      ...prev,
-      description: manualDescription || 'PRODUTO MANUAL',
-      code: manualCode,
-      ean: manualEan,
-      reference: manualReference,
-      supplier: manualSupplier,
-    }));
+  const handleDismissWarning = () => {
+    setShowWarning(false);
     setIsManualMode(true);
-    setLookupStatus('found');
-  };
-
-  const handleRegister = async () => {
-    const key = manualCode.trim() || manualEan.trim();
-    if (!key || !manualDescription.trim()) return;
-    setRegStatus('saving');
-    try {
-      const res = await fetch('/api/produto', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          key,
-          description: manualDescription,
-          reference: manualReference || undefined,
-          ean: manualEan || undefined,
-          code: manualCode || undefined,
-          supplier: manualSupplier || undefined,
-        }),
-      });
-      if (!res.ok) throw new Error();
-      setRegStatus('saved');
-      handleManualUse();
-      setTimeout(() => setRegStatus('idle'), 3000);
-    } catch {
-      setRegStatus('error');
-      setTimeout(() => setRegStatus('idle'), 3000);
-    }
+    // Tenta preencher o SAP ou EAN conforme o que foi pesquisado
+    const query = searchValue.trim();
+    if (detectInputType(query) === 'code') setManualCode(query);
+    else setManualEan(query);
   };
 
   const statusIcon = {
@@ -343,70 +342,103 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
           </div>
         </div>
 
-        {(lookupStatus === 'notfound' || isManualMode) ? (
-          <div className={cn(
-            "p-4 rounded-lg border",
-            isManualMode ? "bg-blue-50/50 border-blue-100" : "bg-orange-50/50 border-orange-100"
-          )}>
+        {showWarning && (
+          <div className="bg-amber-50 border border-amber-200 p-5 rounded-xl space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="flex items-start gap-3">
+              <div className="bg-amber-100 p-2 rounded-lg">
+                <Info className="h-5 w-5 text-amber-700" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="font-bold text-amber-900 uppercase text-xs tracking-tight">Produto não encontrado</h4>
+                <p className="text-xs text-amber-800 leading-relaxed">
+                  Este código não está na nossa base de dados. Você precisará digitar as informações manualmente. 
+                  <span className="font-bold underline"> Preencha com atenção</span> para evitar erros e prejuízos no PDV.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleDismissWarning}
+              className="w-full bg-amber-900 text-white py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider active:scale-[0.98] transition-all hover:bg-amber-800 shadow-sm"
+            >
+              Li e entendi
+            </button>
+          </div>
+        )}
+
+        {isManualMode ? (
+          <div className="p-5 rounded-xl border bg-blue-50/30 border-blue-100/50 space-y-4 animate-in fade-in duration-300">
+            <div className="flex items-center justify-between border-b border-blue-100 pb-2 mb-2">
+              <span className="text-[10px] font-black text-blue-700 uppercase tracking-widest">Preenchimento Manual</span>
+              <button 
+                onClick={() => { setIsManualMode(false); setLookupStatus('idle'); setSearchValue(''); onLookupStatusChange?.(false); }}
+                className="text-[10px] font-bold text-blue-600 hover:underline px-2 py-1 bg-blue-100/50 rounded"
+              >
+                Voltar para Busca
+              </button>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2 space-y-1">
-                <Label className="text-[10px] font-bold text-gray-500 uppercase">Descrição Completa</Label>
+              <div className="md:col-span-2 space-y-1.5">
+                <Label className="text-[10px] font-bold text-gray-500 uppercase flex items-center gap-1">
+                   Descrição Completa <span className="text-red-500">*</span>
+                </Label>
                 <Input
-                  value={isManualMode ? data.description : manualDescription}
-                  onChange={e => {
-                    const v = e.target.value.toUpperCase();
-                    if (isManualMode) setData(prev => ({ ...prev, description: v }));
-                    else setManualDescription(v);
-                  }}
-                  className="font-bold uppercase"
+                  value={manualDescription}
+                  onChange={e => setManualDescription(e.target.value.toUpperCase())}
+                  placeholder="EX: BONECA BARBIE SEREIA MATTEL"
+                  className="h-11 font-bold uppercase border-blue-200 focus:ring-blue-500"
                 />
               </div>
-              <div className="space-y-1">
-                <Label className="text-[10px] font-bold text-gray-500 uppercase tracking-tight">SAP / EAN</Label>
+
+              <div className="space-y-1.5">
+                <Label className="text-[10px] font-bold text-gray-500 uppercase flex items-center gap-1">
+                  Cód. SAP <span className="text-muted-foreground font-normal">(ou EAN)</span>
+                </Label>
                 <Input
-                  value={isManualMode ? data.code || data.ean : manualCode || manualEan}
-                  onChange={e => {
-                    const v = e.target.value.replace(/\D/g, '');
-                    if (isManualMode) setData(prev => ({ ...prev, code: v }));
-                    else setManualCode(v);
-                  }}
-                  className="font-mono"
+                  value={manualCode}
+                  onChange={e => setManualCode(e.target.value.replace(/\D/g, ''))}
+                  placeholder="Código SAP"
+                  className="h-10 font-mono border-blue-200"
                 />
               </div>
-              <div className="space-y-1">
+
+              <div className="space-y-1.5">
+                <Label className="text-[10px] font-bold text-gray-500 uppercase flex items-center gap-1">
+                  EAN <span className="text-muted-foreground font-normal">(ou SAP)</span>
+                </Label>
+                <Input
+                  value={manualEan}
+                  onChange={e => setManualEan(e.target.value.replace(/\D/g, ''))}
+                  placeholder="Código de Barras"
+                  className="h-10 font-mono border-blue-200"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-[10px] font-bold text-gray-500 uppercase">Referência</Label>
+                <Input
+                  value={manualReference}
+                  onChange={e => setManualReference(e.target.value.toUpperCase())}
+                  placeholder="Opcional"
+                  className="h-10 border-blue-200"
+                />
+              </div>
+
+              <div className="space-y-1.5">
                 <Label className="text-[10px] font-bold text-gray-500 uppercase">Fornecedor</Label>
                 <Input
-                  value={isManualMode ? data.supplier : manualSupplier}
-                  onChange={e => {
-                    const v = e.target.value.toUpperCase();
-                    if (isManualMode) setData(prev => ({ ...prev, supplier: v }));
-                    else setManualSupplier(v);
-                  }}
-                  className="uppercase font-medium"
+                  value={manualSupplier}
+                  onChange={e => setManualSupplier(e.target.value.toUpperCase())}
+                  placeholder="Opcional"
+                  className="h-10 uppercase border-blue-200"
                 />
               </div>
             </div>
-
-            {!isManualMode && (
-              <div className="flex gap-2 mt-4 pt-4 border-t border-orange-200/50">
-                <button
-                  type="button"
-                  onClick={handleManualUse}
-                  className="flex-1 bg-white border border-gray-200 text-gray-700 py-2.5 rounded-lg text-sm font-bold active:scale-95 transition-transform"
-                >
-                  Usar Manualmente
-                </button>
-                <button
-                  type="button"
-                  disabled={(!manualCode && !manualEan) || !manualDescription || regStatus === 'saving'}
-                  onClick={handleRegister}
-                  className="flex-[1.5] bg-gray-900 text-white py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-50"
-                >
-                  {regStatus === 'saving' ? <Loader2 className="h-4 w-4 animate-spin" /> : <PlusCircle className="h-4 w-4" />}
-                  Salvar e Usar
-                </button>
-              </div>
-            )}
+            
+            <p className="text-[9px] text-blue-400 font-medium italic text-right">
+              * Campos obrigatórios preenchidos liberam o botão "Adicionar ao Lote"
+            </p>
           </div>
         ) : lookupStatus === 'found' ? (
           <div className="bg-green-50/50 border border-green-100 p-4 rounded-lg flex items-center justify-between">
@@ -416,9 +448,16 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
               <p className="text-[10px] text-green-600 font-mono">SAP: {data.code || '-'} | EAN: {data.ean || '-'}</p>
             </div>
             <button 
-              onClick={() => { setIsManualMode(true); setManualDescription(data.description); setManualCode(data.code || ''); setManualEan(data.ean || ''); setManualSupplier(data.supplier || ''); setManualReference(data.reference || ''); }}
+              onClick={() => { 
+                setIsManualMode(true); 
+                setManualDescription(data.description); 
+                setManualCode(data.code || ''); 
+                setManualEan(data.ean || ''); 
+                setManualSupplier(data.supplier || ''); 
+                setManualReference(data.reference || ''); 
+              }}
               className="ml-4 p-2 text-gray-400 hover:text-blue-600 hover:bg-white rounded-md transition-colors"
-              title="Editar"
+              title="Editar Manualmente"
             >
               <RotateCcw className="h-4 w-4" />
             </button>
