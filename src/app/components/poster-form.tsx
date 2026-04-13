@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { PosterData } from '@/app/lib/types';
 import { cn } from '@/lib/utils';
-import { Loader2, CheckCircle2, XCircle, Search, RotateCcw, PlusCircle, Info } from 'lucide-react';
+import { Loader2, CheckCircle2, XCircle, Search, RotateCcw, PlusCircle, Info, AlertTriangle } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 function centsToDisplay(cents: number): string {
   if (cents === 0) return '';
@@ -542,6 +543,76 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
            </div>
         </div>
       </fieldset>
+
+      {/* SEÇÃO 3: DETALHES DA AVARIA (Específico para o tipo Avaria) */}
+      {posterType === 'avaria' && (
+        <div className="bg-white border rounded-xl p-5 shadow-sm space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+           <div className="flex items-center gap-2 border-b pb-2">
+              <AlertTriangle className="h-4 w-4 text-amber-500" />
+              <Label className="font-bold text-gray-900 uppercase tracking-tight text-sm">
+                3. Detalhes da Avaria
+              </Label>
+           </div>
+           
+           <div className="space-y-4">
+              <div className="space-y-1.5">
+                <Label className="text-[10px] font-bold text-gray-500 uppercase">Motivo da Avaria</Label>
+                <Select 
+                  value={data.defectType} 
+                  onValueChange={(v) => setData(prev => ({ ...prev, defectType: v }))}
+                >
+                  <SelectTrigger className="h-11 bg-gray-50/50">
+                    <SelectValue placeholder="Selecione o motivo..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {defectOptions.map(opt => (
+                      <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                        {opt.label} {opt.discount ? `(${opt.discount}% OFF)` : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {data.defectType === 'outro' && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in fade-in zoom-in-95 duration-200">
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-bold text-gray-500 uppercase">Descrever Motivo</Label>
+                    <Input 
+                      value={data.customDefectReason || ''} 
+                      onChange={e => setData(prev => ({ ...prev, customDefectReason: e.target.value.toUpperCase() }))}
+                      placeholder="EX: VIDRO RACHADO"
+                      className="h-10 font-bold uppercase border-amber-200 focus:ring-amber-500"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-bold text-gray-500 uppercase">% Desconto</Label>
+                    <Input 
+                      type="number"
+                      value={data.customDefectDiscount || ''} 
+                      onChange={e => setData(prev => ({ ...prev, customDefectDiscount: parseInt(e.target.value) || 0 }))}
+                      placeholder="Ex: 15"
+                      className="h-10 border-amber-200 focus:ring-amber-500"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <Label className="text-[10px] font-bold text-gray-500 uppercase">Observação Complementar</Label>
+                <Input 
+                  value={data.defectNote || ''} 
+                  onChange={e => setData(prev => ({ ...prev, defectNote: e.target.value.toUpperCase() }))}
+                  placeholder="EX: VENDIDO NO ESTADO / SEM TROCA"
+                  className="h-10 font-medium uppercase border-gray-200"
+                />
+                <p className="text-[9px] text-muted-foreground italic leading-tight">
+                  Aparecerá logo abaixo do motivo no cartaz. Use para informações cruciais sobre o estado do item.
+                </p>
+              </div>
+           </div>
+        </div>
+      )}
     </div>
   );
 }

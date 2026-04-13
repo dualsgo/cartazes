@@ -61,6 +61,7 @@ const initialPosterData = (): PosterData => ({
   defectType: 'embalagem_danificada',
   customDefectReason: '',
   customDefectDiscount: 20,
+  defectNote: '',
   supplier: '',
   quantity: 1,
 });
