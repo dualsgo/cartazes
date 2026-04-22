@@ -28,4 +28,5 @@ export type PosterType =
   | 'aereo' 
   | 'avaria' 
   | 'etiqueta' 
+  | 'etiqueta-oficial'
   | 'totem';

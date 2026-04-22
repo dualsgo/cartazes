@@ -6,6 +6,7 @@ import { PosterPreview } from '@/app/components/poster-preview';
 import { PosterPreviewAereo } from '@/app/components/poster-preview-aereo';
 import { PosterPreviewDefeito } from '@/app/components/poster-preview-defeito';
 import { PosterPreviewEtiqueta } from '@/app/components/poster-preview-etiqueta';
+import { PosterPreviewEtiquetaOficial } from '@/app/components/poster-preview-etiqueta-oficial';
 import { PosterPreviewTotem } from '@/app/components/poster-preview-totem';
 import { DisclaimerModal } from '@/app/components/disclaimer-modal';
 import { AboutPanel } from '@/app/components/about-panel';
@@ -26,6 +27,7 @@ const PER_PAGE: Record<PosterType, number> = {
   aereo: 4,           // 4 por página (cada um ocupa 4 espaços de gôndola 2x2)
   avaria: 4,
   etiqueta: 16,
+  'etiqueta-oficial': 20,
   totem: 1,
 };
 
@@ -36,6 +38,7 @@ const SINGLE_DIMS: Record<PosterType, { w: number; h: number }> = {
   aereo:                { w: 760, h: 268 },  // proporcional a 190mm x 67mm (4px/mm)
   avaria:               { w: 491, h: 340 },
   etiqueta:             { w: 364, h: 135 },
+  'etiqueta-oficial':   { w: 420, h: 119 }, // 105mm x 29.7mm (4px/mm)
   totem:                { w: 794, h: 1123 }, // A4 a 96dpi (210×297mm em pixels de tela)
 };
 
@@ -46,6 +49,7 @@ const POSTER_ORIENTATION: Record<PosterType, 'portrait' | 'landscape'> = {
   aereo:                'portrait',
   avaria:               'landscape',
   etiqueta:             'portrait',
+  'etiqueta-oficial':   'portrait',
   totem:                'portrait',
 };
 
@@ -151,6 +155,7 @@ function SinglePosterPreview({
           {posterType === 'aereo'               && <PosterPreviewAereo {...data} />}
           {posterType === 'avaria'              && <PosterPreviewDefeito {...data} settings={settings} />}
           {posterType === 'etiqueta'            && <PosterPreviewEtiqueta {...data} />}
+          {posterType === 'etiqueta-oficial'    && <PosterPreviewEtiquetaOficial {...data} settings={settings} />}
           {posterType === 'totem'               && <PosterPreviewTotem {...data} settings={settings} />}
         </div>
       )}
@@ -275,6 +280,56 @@ function PageGrid({
                 height: '33.8mm', 
                 borderRight: isLeft ? '0.2mm dashed #ccc' : 'none',
                 borderBottom: !isBottom ? '0.2mm dashed #ccc' : 'none',
+                boxSizing: 'border-box'
+              }}
+            />
+          );
+        })}
+      </div>
+    );
+  }
+  if (posterType === 'etiqueta-oficial') {
+    return (
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: '105mm 105mm', 
+        gridTemplateRows: 'repeat(10, 29.7mm)',
+        width: '100%', 
+        height: '100%', 
+        boxSizing: 'border-box', 
+        backgroundColor: 'white',
+      }}>
+        {items.map((d: PosterData, i: number) => {
+          const isLeft = i % 2 === 0;
+          const isBottom = i >= 18;
+          return (
+            <div 
+              key={i} 
+              style={{ 
+                width: '105mm', 
+                height: '29.7mm', 
+                overflow: 'hidden',
+                borderRight: isLeft ? '0.1mm dashed #eee' : 'none',
+                borderBottom: !isBottom ? '0.1mm dashed #eee' : 'none',
+                boxSizing: 'border-box'
+              }}
+            >
+              <PosterPreviewEtiquetaOficial {...d} settings={settings} />
+            </div>
+          );
+        })}
+        {empties.map((_, i: number) => {
+          const idx = items.length + i;
+          const isLeft = idx % 2 === 0;
+          const isBottom = idx >= 18;
+          return (
+            <div 
+              key={`e${i}`} 
+              style={{ 
+                width: '105mm', 
+                height: '29.7mm', 
+                borderRight: isLeft ? '0.1mm dashed #eee' : 'none',
+                borderBottom: !isBottom ? '0.1mm dashed #eee' : 'none',
                 boxSizing: 'border-box'
               }}
             />
@@ -447,6 +502,7 @@ export default function Home() {
     { id: 'avaria',                label: 'Avarias'            },
     { id: 'aereo',                 label: 'Aéreo'              },
     { id: 'etiqueta',              label: 'Gôndola (com 16)'   },
+    { id: 'etiqueta-oficial',      label: 'Gôndola OFICIAL (20)' },
     { id: 'totem',                 label: 'Totem'              },
   ] as const;
 
