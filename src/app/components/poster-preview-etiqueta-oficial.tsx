@@ -38,70 +38,85 @@ export function PosterPreviewEtiquetaOficial({
   // Rodapé: 5px (14%)
 
   return (
-    <div className="w-full h-full bg-white text-black font-sans overflow-hidden relative flex flex-col box-border pt-[1.5mm] pb-[1mm] px-[2.5mm]">
+    <div className="w-full h-full bg-white text-black font-sans overflow-hidden relative flex box-border p-[2mm]">
       
-      {/* GRID DE DUAS COLUNAS: ESQUERDA (Comercial ≈ 78%) | DIREITA (Técnica ≈ 22%) */}
-      <div className="flex flex-1 min-h-0 w-full relative">
+      {/* LADO ESQUERDO: Área Comercial */}
+      <div className="flex-1 flex flex-col justify-between pr-2 h-full">
         
-        {/* COLUNA ESQUERDA: Comunicação Comercial */}
-        <div className="w-[78%] flex flex-col items-start pr-[2mm]">
-          
-          {/* 1. ZONA DE CABEÇALHO: Título do Produto */}
-          <h2 className="font-black text-[12px] leading-[1.1] uppercase tracking-[-0.01em] overflow-hidden line-clamp-2 text-left mb-1">
+        {/* 1. DESCRIÇÃO */}
+        <div className="flex-none">
+          <h2 className="font-bold text-[11px] leading-[1.1] uppercase tracking-tight overflow-hidden line-clamp-2 text-left mb-1">
             {description}
           </h2>
+        </div>
 
-          {/* 2. ZONA PRINCIPAL DE PREÇO */}
-          <div className="flex flex-col items-start leading-none mb-1.5">
-             <span className="text-[8.5px] font-bold tracking-tight mb-0.5">PREÇO À VISTA: R$</span>
-             <div className="flex items-baseline">
-                <span className="text-[36px] font-[950] leading-[0.8] tracking-[-0.05em]">
+        {/* 2. ÁREA DE PREÇO: Condicional entre Normal e Oferta */}
+        <div className="flex flex-col justify-center flex-1 py-1">
+          <div className="flex items-center w-full">
+             {isOffer && valDe > 0 ? (
+               <div className="flex items-baseline gap-2 mr-2 whitespace-nowrap">
+                  <div className="flex items-baseline gap-1 text-black">
+                     <span className="text-[9px] font-bold uppercase">De:</span>
+                     <span className="text-[16px] font-bold line-through decoration-[0.5mm]">R$ {formatCurrency(valDe)}</span>
+                  </div>
+                  <span className="text-[11px] font-bold uppercase tracking-tighter">Por R$</span>
+               </div>
+             ) : (
+               <span className="text-[10px] font-bold tracking-tighter uppercase mr-2 whitespace-nowrap">
+                  Preço à Vista R$
+               </span>
+             )}
+             
+             <div className="flex items-baseline leading-none">
+                <span className="text-[38px] font-bold leading-[0.7] tracking-[-0.03em]">
                   {porInteger}
                 </span>
-                <div className="flex items-baseline ml-0.5">
-                   <span className="text-[14px] font-[950] leading-none tracking-tight">,{porDecimal}</span>
-                   <span className="text-[6.5px] font-bold leading-none ml-0.8 uppercase">un</span>
+                <div className="flex flex-col items-start ml-0.5">
+                   <span className="text-[14px] font-bold leading-none">,{porDecimal}</span>
+                   <span className="text-[7px] font-bold leading-none uppercase mt-0.5">un</span>
                 </div>
              </div>
           </div>
+        </div>
 
-          {/* 3. ZONA DE CONDICÃO DE PAGAMENTO (PARCELAMENTO) */}
+        {/* 3. PREÇO PARCELADO */}
+        <div className="flex-none mb-1">
           {hasInstallments && (
-            <div className="border-[0.25mm] border-black rounded-[0.5mm] px-2 py-1 flex items-center justify-between gap-3 min-w-[45mm]">
-               {/* Valor da parcela (Dominante no box) */}
-               <span className="text-[17px] font-[950] leading-none tracking-tighter">R$ {formatCurrency(installmentValue)}</span>
-               
-               {/* Informações da parcela */}
-               <div className="flex flex-col items-center justify-center border-l-[0.1mm] border-black/20 pl-2">
-                  <span className="text-[11px] font-[950] leading-none">{maxInstallments}X</span>
-                  <span className="text-[5.5px] font-black leading-none uppercase tracking-tighter whitespace-nowrap">Sem Juros</span>
+            <div className="border-[0.4mm] border-black rounded-[2mm] px-3 py-1 flex flex-col justify-center min-h-[9mm] w-full">
+               <div className="flex items-center justify-center gap-4">
+                  <div className="flex flex-col items-center">
+                     <span className="text-[12px] font-bold leading-none tracking-tighter">{maxInstallments}X</span>
+                     <span className="text-[6px] font-bold leading-none uppercase mt-0.5">Sem Juros</span>
+                  </div>
+                  <div className="flex items-baseline gap-1">
+                     <span className="text-[9px] font-bold">R$</span>
+                     <span className="text-[16px] font-bold leading-none tracking-tighter">{formatCurrency(installmentValue)}</span>
+                  </div>
                </div>
             </div>
           )}
         </div>
 
-        {/* COLUNA DIREITA: Zona Técnica (Código de Barras) */}
-        <div className="w-[22%] flex flex-col items-end justify-center h-full pt-1 pb-2">
-           {ean && (
-             <div className="h-full flex flex-col items-center justify-center">
-                <div className="rotate-90 origin-center whitespace-nowrap flex flex-col items-center w-[25mm]">
-                   <BarcodeEAN value={ean} height="6.5mm" width="24mm" showText={false} />
-                   <span className="text-[5.5px] font-mono font-bold mt-1 text-black/80">{ean}</span>
-                </div>
-             </div>
-           )}
+        {/* 4. RODAPÉ */}
+        <div className="flex-none pt-1 flex flex-wrap gap-x-3 gap-y-0.5 items-baseline">
+           <span className="text-[5.5px] font-bold uppercase whitespace-nowrap">REF: {reference || 'N/A'}</span>
+           {code && <span className="text-[5.5px] font-bold whitespace-nowrap">SAP: {code}</span>}
+           {supplier && <span className="text-[5.5px] font-bold truncate max-w-[40mm] uppercase">FORN: {supplier}</span>}
         </div>
       </div>
 
-      {/* 5. ZONA DE RODAPÉ: Informação Secundária */}
-      <div className="mt-auto pt-0.5 border-t-[0.1mm] border-black/20 flex justify-between items-baseline opacity-60">
-        <span className="text-[5px] font-bold uppercase tracking-[0.1em]">
-           REF: {reference || 'N/A'}
-        </span>
-        <div className="flex gap-2 text-[5px] font-bold">
-           {code && <span>SAP: {code}</span>}
-           {supplier && <span className="truncate max-w-[35mm] uppercase">{supplier}</span>}
-        </div>
+      {/* LADO DIREITO: Código de Barras (Coluna Fixa com Padding Interno) */}
+      <div className="w-[15mm] flex-none flex flex-col items-center justify-center h-full">
+        {ean && (
+          <div className="rotate-90 origin-center whitespace-nowrap flex flex-col items-center w-[30mm]">
+             {/* NUMERAÇÃO NA BORDA */}
+             <div className="w-full flex justify-center mb-1">
+                <span className="text-[7.5px] font-mono font-bold text-black tracking-tighter">{ean}</span>
+             </div>
+             {/* BARRAS ABAIXO DA NUMERAÇÃO */}
+             <BarcodeEAN value={ean} height="12mm" width="28mm" showText={false} />
+          </div>
+        )}
       </div>
     </div>
   );

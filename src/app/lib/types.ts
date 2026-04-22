@@ -27,6 +27,5 @@ export type PosterType =
   | 'ofertas-imperdiveis' 
   | 'aereo' 
   | 'avaria' 
-  | 'etiqueta' 
   | 'etiqueta-oficial'
   | 'totem';

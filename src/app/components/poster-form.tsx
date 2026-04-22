@@ -59,7 +59,7 @@ type LookupStatus = 'idle' | 'loading' | 'found' | 'notfound';
 type PosterFormProps = {
   data: PosterData;
   setData: Dispatch<SetStateAction<PosterData>>;
-  posterType: 'reliquias' | 'ofertas-imperdiveis' | 'aereo' | 'avaria' | 'etiqueta' | 'totem';
+  posterType: 'reliquias' | 'ofertas-imperdiveis' | 'aereo' | 'avaria' | 'etiqueta-oficial' | 'totem';
   onLookupStatusChange?: (found: boolean) => void;
 };
 
@@ -282,7 +282,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
     posterType === 'reliquias' || 
     posterType === 'ofertas-imperdiveis' || 
     posterType === 'totem' || 
-    ((posterType === 'etiqueta' || posterType === 'aereo') && data.posterSubType === 'offer');
+    ((posterType === 'aereo' || posterType === 'etiqueta-oficial') && data.posterSubType === 'offer');
 
   const isEnabled = lookupStatus === 'found' || isManualMode;
 
@@ -476,7 +476,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
               2. Preços e Formato
            </Label>
 
-           {(posterType === 'aereo' || posterType === 'etiqueta') && (
+           {(posterType === 'aereo' || posterType === 'etiqueta-oficial') && (
               <div className="inline-flex bg-gray-100 p-1 rounded-lg w-full">
                 <button
                   type="button"
