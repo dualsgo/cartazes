@@ -77,14 +77,9 @@ export function PosterPreviewDefeito({
           </div>
 
           {/* ZONA 2: Descrição (flexível, fonte dinâmica) */}
-          <div className="flex-1 flex items-center justify-center min-h-0 overflow-hidden py-1">
-            <h2
-              className="font-headline font-black uppercase leading-[1] break-words text-center text-black"
-              style={{ fontSize: descFontSize(displayDescriptionLines.length) }}
-            >
-              {displayDescriptionLines.map((line, i) => (
-                <span key={i} className="block">{line}</span>
-              ))}
+          <div className="flex-1 flex items-center justify-center min-h-0 py-1">
+            <h2 className="font-headline font-black uppercase leading-[1.05] tracking-tight text-center text-black line-clamp-3 text-[1.3em]">
+              {description}
             </h2>
           </div>
 
