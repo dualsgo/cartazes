@@ -243,7 +243,7 @@ export function parseProductExcel(buffer: ArrayBuffer): any[] {
   const firstSheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[firstSheetName];
   
-  const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+  const data = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false }) as any[][];
   if (data.length < 1) return [];
 
   let currentSupplier = '';

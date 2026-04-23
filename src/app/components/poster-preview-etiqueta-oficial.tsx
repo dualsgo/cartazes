@@ -45,7 +45,7 @@ export function PosterPreviewEtiquetaOficial({
         
         {/* 1. DESCRIÇÃO */}
         <div className="flex-none">
-          <h2 className="font-bold text-[11px] leading-[1.1] uppercase tracking-tight overflow-hidden line-clamp-2 text-left mb-1">
+          <h2 className="font-bold text-[10px] leading-[1.1] uppercase tracking-tight overflow-hidden line-clamp-3 text-left mb-1">
             {description}
           </h2>
         </div>
