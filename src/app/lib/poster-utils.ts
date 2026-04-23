@@ -27,12 +27,27 @@ export function parsePrice(price: any): number {
   if (price === undefined || price === null || price === '') return 0;
   if (typeof price === 'number') return price;
   
-  const str = String(price).trim();
+  let str = String(price).trim().replace('R$', '').replace(/\s/g, '');
   if (!str) return 0;
   
-  // Converte "1.234,56" ou "34,56" ou "R$ 34,56" para number
-  const clean = str.replace('R$', '').replace(/\s/g, '').replace(/\./g, '').replace(',', '.');
-  return parseFloat(clean) || 0;
+  // Lógica inteligente de separadores:
+  if (str.includes(',')) {
+    // Se tem vírgula, seguimos o padrão brasileiro: 1.234,56 -> 1234.56
+    str = str.replace(/\./g, '').replace(',', '.');
+  } else {
+    // Se NÃO tem vírgula mas tem ponto:
+    // Pode ser decimal (10.00) ou milhar (1.000)
+    const parts = str.split('.');
+    if (parts.length === 2 && parts[1].length <= 2) {
+      // Se houver apenas um ponto e ele estiver nas últimas 1 ou 2 posições, é decimal (USD)
+      // Mantemos o ponto como está para o parseFloat
+    } else {
+      // Caso contrário (múltiplos pontos ou ponto em posição de milhar), removemos
+      str = str.replace(/\./g, '');
+    }
+  }
+  
+  return parseFloat(str) || 0;
 }
 
 export function formatCurrency(value: number): string {
