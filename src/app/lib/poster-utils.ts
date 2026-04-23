@@ -25,26 +25,27 @@ export function calculateInstallments(price: number, settings: PosterSettings) {
 
 export function parsePrice(price: any): number {
   if (price === undefined || price === null || price === '') return 0;
+  
+  // Se já for um número (comum no Excel), retorna direto sem converter para string
   if (typeof price === 'number') return price;
   
   let str = String(price).trim().replace('R$', '').replace(/\s/g, '');
   if (!str) return 0;
   
-  // Lógica inteligente de separadores:
+  // Se tem vírgula, ela manda (padrão Brasil: 1.234,56 ou 259,99)
   if (str.includes(',')) {
-    // Se tem vírgula, seguimos o padrão brasileiro: 1.234,56 -> 1234.56
-    str = str.replace(/\./g, '').replace(',', '.');
-  } else {
-    // Se NÃO tem vírgula mas tem ponto:
-    // Pode ser decimal (10.00) ou milhar (1.000)
+    return parseFloat(str.replace(/\./g, '').replace(',', '.')) || 0;
+  }
+  
+  // Se não tem vírgula mas tem ponto, verificamos se o ponto é decimal ou milhar
+  if (str.includes('.')) {
     const parts = str.split('.');
-    if (parts.length === 2 && parts[1].length <= 2) {
-      // Se houver apenas um ponto e ele estiver nas últimas 1 ou 2 posições, é decimal (USD)
-      // Mantemos o ponto como está para o parseFloat
-    } else {
-      // Caso contrário (múltiplos pontos ou ponto em posição de milhar), removemos
-      str = str.replace(/\./g, '');
+    // Se o ponto separa exatamente 2 casas no final, é centavo
+    if (parts.length === 2 && parts[1].length === 2) {
+      return parseFloat(str) || 0;
     }
+    // Caso contrário, é milhar, removemos o ponto
+    return parseFloat(str.replace(/\./g, '')) || 0;
   }
   
   return parseFloat(str) || 0;
@@ -118,17 +119,19 @@ export function truncateMultiLine(text: string, charsPerLine: number, maxLines: 
 function processProductRow(row: Record<string, any>, mapping: Record<string, number>, currentSupplier: string): any {
   const getVal = (key: string) => {
     const colKey = mapping[key];
-    if (colKey === undefined || colKey === -1) return '';
-    return row[colKey] !== undefined ? String(row[colKey]).trim() : '';
+    if (colKey === undefined || colKey === -1) return undefined;
+    return row[colKey];
   };
 
-  const mercadoria = getVal('mercadoria');
+  const mercadoriaRaw = getVal('mercadoria');
+  const mercadoria = mercadoriaRaw !== undefined ? String(mercadoriaRaw).trim() : '';
+  
   if (!mercadoria || mercadoria.toLowerCase().includes('mercadoria') || mercadoria.toLowerCase().includes('descrição')) return null;
 
-  const sap        = getVal('sap');
-  const ean        = getVal('ean');
-  const ref        = getVal('ref');
-  const supplier   = currentSupplier || getVal('supplier');
+  const sap        = String(getVal('sap') || '').trim();
+  const ean        = String(getVal('ean') || '').trim();
+  const ref        = String(getVal('ref') || '').trim();
+  const supplier   = currentSupplier || String(getVal('supplier') || '').trim();
   
   const txtAtual = getVal('precoAtual');
   const txtNovo  = getVal('novoPreco');
