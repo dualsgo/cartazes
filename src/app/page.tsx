@@ -691,7 +691,9 @@ export default function Home() {
                                   <span className="text-[10px] font-mono text-muted-foreground w-5 shrink-0 text-right">
                                     {globalIdxInFiltered + 1}.
                                   </span>
-                                  <span className="text-xs font-medium flex-1 truncate">{item.description}</span>
+                                  <span className="text-xs font-medium flex-1 line-clamp-2 leading-tight" title={item.description}>
+                                    {item.description}
+                                  </span>
                                   {item.priceFor && (
                                     <span className={cn(
                                       "text-[9px] px-1 rounded font-bold uppercase",
