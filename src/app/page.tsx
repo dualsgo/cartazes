@@ -13,7 +13,8 @@ import { AboutPanel } from '@/app/components/about-panel';
 import { DatabasePanel } from '@/app/components/database-panel';
 import { SettingsDialog } from '@/app/components/settings-dialog';
 import type { PosterData, PosterSettings, PosterType } from '@/app/lib/types';
-import { Printer, Plus, Trash2, FileStack, PackageOpen, Info, Database } from 'lucide-react';
+import { parseProductCSV } from '@/app/lib/poster-utils';
+import { Printer, Plus, Trash2, FileStack, PackageOpen, Info, Database, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
@@ -345,6 +346,8 @@ export default function Home() {
     minInstallmentAmount: 30,
   });
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // Load settings
   useEffect(() => {
     const saved = localStorage.getItem('poster-settings');
@@ -413,6 +416,25 @@ export default function Home() {
 
   const handleRemoveFromQueue = (index: number) => {
     setQueue((prev: PosterData[]) => prev.filter((_: PosterData, i: number) => i !== index));
+  };
+
+  const handleImportCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result as string;
+      const imported = parseProductCSV(content);
+      if (imported.length > 0) {
+        setQueue(prev => [...prev, ...imported]);
+        alert(`${imported.length} itens importados com sucesso!`);
+      } else {
+        alert('Nenhum item encontrado no CSV. Verifique se o formato está correto.');
+      }
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+    reader.readAsText(file, 'ISO-8859-1'); // Comum em CSVs do Excel Brasil
   };
 
   /* Print content: one div per page, each with page-break */
@@ -513,6 +535,21 @@ export default function Home() {
                 <span className="hidden sm:inline">Sobre</span>
               </button>
               <SettingsDialog settings={settings} onSave={saveSettings} />
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleImportCSV}
+                accept=".csv"
+                className="hidden"
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all border border-border/50 hover:border-border"
+                title="Importar lote via CSV"
+              >
+                <Upload className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Importar Lote</span>
+              </button>
               <Button
                 onClick={() => window.print()}
                 disabled={queue.length === 0}
