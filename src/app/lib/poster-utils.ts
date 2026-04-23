@@ -192,15 +192,15 @@ function createMapping(headers: string[]): Record<string, number> {
     return idx !== -1 ? idx : defaultIdx;
   };
   
-  // Mapeamento baseado na descrição do usuário:
+  // Mapeamento baseado na descrição do usuário e imagem (lidando com encoding corrompido)
   // A=0 (SAP), B=1 (Mercadoria), C=2 (Referência), E=4 (Atual), F=5 (Novo), G=6 (Promo)
   return {
-    sap:        findIdx(['sap', 'interno', 'código', 'codigo'], 0),
+    sap:        findIdx(['sap', 'interno', 'código', 'codigo', 'cod.'], 0),
     mercadoria: findIdx(['mercadoria', 'descrição', 'descricao', 'produto', 'nome'], 1),
     ref:        findIdx(['referencia', 'referência', 'ref', 'fornecedor'], 2),
-    precoAtual: findIdx(['atual'], 4),
+    precoAtual: findIdx(['atual', 'preÃ§o'], 4),
     novoPreco:  findIdx(['novo'], 5),
-    promocao:   findIdx(['promoção', 'promocao', 'promo'], 6),
+    promocao:   findIdx(['promo', 'Ã§Ã£o', 'promoção'], 6),
     ean:        findIdx(['ean', 'barras'], -1),
     supplier:   findIdx(['fornecedor', 'forn'], -1),
   };
