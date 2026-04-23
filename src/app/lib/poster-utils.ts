@@ -100,7 +100,7 @@ export function truncateMultiLine(text: string, charsPerLine: number, maxLines: 
 /**
  * Lógica comum de processamento de uma linha de dados (seja vinda de CSV ou Excel)
  */
-function processProductRow(row: Record<string, any>, mapping: Record<string, number | string>): any {
+function processProductRow(row: Record<string, any>, mapping: Record<string, number>, currentSupplier: string): any {
   const getVal = (key: string) => {
     const colKey = mapping[key];
     if (colKey === undefined || colKey === -1) return '';
@@ -108,12 +108,12 @@ function processProductRow(row: Record<string, any>, mapping: Record<string, num
   };
 
   const mercadoria = getVal('mercadoria');
-  if (!mercadoria) return null;
+  if (!mercadoria || mercadoria.toLowerCase().includes('mercadoria') || mercadoria.toLowerCase().includes('descrição')) return null;
 
   const sap        = getVal('sap');
   const ean        = getVal('ean');
   const ref        = getVal('ref');
-  const supplier   = getVal('supplier');
+  const supplier   = currentSupplier || getVal('supplier');
   
   const txtAtual = getVal('precoAtual');
   const txtNovo  = getVal('novoPreco');
@@ -128,27 +128,38 @@ function processProductRow(row: Record<string, any>, mapping: Record<string, num
     code: sap,
     ean: ean,
     reference: ref,
-    supplier: supplier,
+    supplier: supplier.replace('FORNECEDOR:', '').trim().toUpperCase(),
     quantity: 1,
     paymentOption: 'installment',
   };
 
-  // Lógica de Preço:
+  /**
+   * Lógica do Usuário:
+   * 1. SE TIVERMOS E, F E G VALE G (Promoção)
+   * 2. SE TIVERMOS E e F, VALE F (Novo)
+   * 3. SENÃO VALE E (Atual)
+   */
   if (valPromo > 0) {
+    // É Promoção (G)
     poster.posterSubType = 'offer';
-    poster.priceFrom = (valNovo > 0 && valNovo > valPromo) ? formatCurrency(valNovo) : formatCurrency(valAtual);
     poster.priceFor = formatCurrency(valPromo);
+    // O "De" será o Novo (F) se existir e for maior, senão o Atual (E)
+    poster.priceFrom = (valNovo > valPromo) ? formatCurrency(valNovo) : formatCurrency(valAtual);
   } else if (valNovo > 0) {
-    if (valNovo < valAtual) {
+    // É Novo Preço (F)
+    if (valNovo < valAtual && valAtual > 0) {
+      // Se baixou, é oferta
       poster.posterSubType = 'offer';
-      poster.priceFrom = formatCurrency(valAtual);
       poster.priceFor = formatCurrency(valNovo);
+      poster.priceFrom = formatCurrency(valAtual);
     } else {
+      // Se manteve ou subiu, é normal
       poster.posterSubType = 'normal';
       poster.priceFor = formatCurrency(valNovo);
       poster.priceFrom = '';
     }
   } else {
+    // É Preço Atual (E)
     poster.posterSubType = 'normal';
     poster.priceFor = formatCurrency(valAtual);
     poster.priceFrom = '';
@@ -158,20 +169,25 @@ function processProductRow(row: Record<string, any>, mapping: Record<string, num
 }
 
 /**
- * Cria um mapeamento de colunas baseado nos headers encontrados
+ * Cria um mapeamento de colunas baseado nos headers encontrados ou índices fixos
  */
 function createMapping(headers: string[]): Record<string, number> {
-  const findIdx = (terms: string[]) => headers.findIndex(h => terms.some(t => h.toLowerCase().includes(t)));
+  const findIdx = (terms: string[], defaultIdx: number) => {
+    const idx = headers.findIndex(h => terms.some(t => h.toLowerCase().includes(t)));
+    return idx !== -1 ? idx : defaultIdx;
+  };
   
+  // Mapeamento baseado na descrição do usuário:
+  // A=0 (SAP), B=1 (Mercadoria), C=2 (Referência), E=4 (Atual), F=5 (Novo), G=6 (Promo)
   return {
-    sap:        findIdx(['sap', 'interno', 'código', 'codigo']),
-    mercadoria: findIdx(['mercadoria', 'descrição', 'descricao', 'produto', 'nome']),
-    supplier:   findIdx(['fornecedor', 'forn']),
-    ref:        findIdx(['referencia', 'referência', 'ref', 'cod. fornecedor']),
-    precoAtual: findIdx(['atual']),
-    novoPreco:  findIdx(['novo']),
-    promocao:   findIdx(['promoção', 'promocao', 'promo']),
-    ean:        findIdx(['ean', 'barras']),
+    sap:        findIdx(['sap', 'interno', 'código', 'codigo'], 0),
+    mercadoria: findIdx(['mercadoria', 'descrição', 'descricao', 'produto', 'nome'], 1),
+    ref:        findIdx(['referencia', 'referência', 'ref', 'fornecedor'], 2),
+    precoAtual: findIdx(['atual'], 4),
+    novoPreco:  findIdx(['novo'], 5),
+    promocao:   findIdx(['promoção', 'promocao', 'promo'], 6),
+    ean:        findIdx(['ean', 'barras'], -1),
+    supplier:   findIdx(['fornecedor', 'forn'], -1),
   };
 }
 
@@ -192,11 +208,10 @@ export function parseProductCSV(content: string): any[] {
     const cols = lines[i].split(separator).map(c => c.trim());
     if (cols.length < 2) continue;
     
-    // Converte array de colunas em objeto usando os headers como chaves
     const rowObj: Record<number, string> = {};
     cols.forEach((val, idx) => { rowObj[idx] = val; });
     
-    const poster = processProductRow(rowObj, mapping);
+    const poster = processProductRow(rowObj, mapping, '');
     if (poster) results.push(poster);
   }
   return results;
@@ -210,27 +225,46 @@ export function parseProductExcel(buffer: ArrayBuffer): any[] {
   const firstSheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[firstSheetName];
   
-  // Converte para JSON (array de arrays para facilitar a detecção de headers)
   const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
-  if (data.length < 2) return [];
+  if (data.length < 1) return [];
 
-  // Assume que a primeira linha com conteúdo útil são os headers
-  const headers = data[0].map(h => String(h || '').trim());
-  const mapping = createMapping(headers);
-  
+  let currentSupplier = '';
+  let mapping = createMapping([]); // Default mapping
   const results: any[] = [];
-  for (let i = 1; i < data.length; i++) {
+
+  for (let i = 0; i < data.length; i++) {
     const cols = data[i];
-    if (!cols || cols.length < 1) continue;
+    if (!cols || cols.length === 0) continue;
 
-    const rowObj: Record<number, any> = {};
-    cols.forEach((val, idx) => { rowObj[idx] = val; });
+    const firstCol = String(cols[0] || '').trim();
 
-    const poster = processProductRow(rowObj, mapping);
-    if (poster) results.push(poster);
+    // 1. Detectar linha de Fornecedor (Mesclada A-G)
+    // Geralmente contém a palavra "FORNECEDOR" e as outras colunas estão vazias na linha
+    if (firstCol.toUpperCase().includes('FORNECEDOR') && (!cols[1] && !cols[2])) {
+      currentSupplier = firstCol;
+      continue;
+    }
+
+    // 2. Detectar se é uma linha de header (para atualizar o mapping se necessário)
+    if (firstCol.toLowerCase().includes('sap') || firstCol.toLowerCase().includes('código') || firstCol.toLowerCase().includes('interno')) {
+      const headers = cols.map(h => String(h || '').trim());
+      mapping = createMapping(headers);
+      continue;
+    }
+
+    // 3. Processar como produto
+    // Se a primeira coluna for um número ou tiver cara de código
+    if (firstCol && firstCol.length >= 3) {
+      const rowObj: Record<number, any> = {};
+      cols.forEach((val, idx) => { rowObj[idx] = val; });
+
+      const poster = processProductRow(rowObj, mapping, currentSupplier);
+      if (poster) results.push(poster);
+    }
   }
 
   return results;
 }
+
 
 
