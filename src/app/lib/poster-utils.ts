@@ -250,7 +250,15 @@ export function parseProductExcel(buffer: ArrayBuffer): any[] {
       const parser = new DOMParser();
       const doc = parser.parseFromString(text, 'text/html');
       const rows = Array.from(doc.querySelectorAll('tr'));
-      data = rows.map(tr => Array.from(tr.querySelectorAll('th, td')).map(td => td.textContent || ''));
+      data = rows.map(tr => Array.from(tr.querySelectorAll('th, td')).map(td => {
+        // ERPs geralmente escondem o texto completo no atributo x:str
+        // e deixam o texto truncado (ex: "JW DINO") no conteúdo visual (textContent).
+        // Já para os preços, o x:num costuma ter os centavos distorcidos (3999), 
+        // então pegamos o textContent ("39,99") ignorando o x:num.
+        const xStr = td.getAttribute('x:str');
+        if (xStr) return xStr.trim();
+        return (td.textContent || '').trim();
+      }));
     }
   } catch (e) {
     // Ignora erro de decoder
