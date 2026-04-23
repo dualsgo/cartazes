@@ -239,11 +239,31 @@ export function parseProductCSV(content: string): any[] {
  * Analisa um arquivo Excel (XLS/XLSX)
  */
 export function parseProductExcel(buffer: ArrayBuffer): any[] {
-  const workbook = XLSX.read(buffer, { type: 'array' });
-  const firstSheetName = workbook.SheetNames[0];
-  const worksheet = workbook.Sheets[firstSheetName];
+  let data: any[][] = [];
+
+  // Muitos sistemas exportam relatórios em HTML com extensão .xls.
+  // O SheetJS converte "259,99" para "25999" (pois entende a vírgula como milhar no padrão americano).
+  // Para evitar isso, interceptamos arquivos HTML e lemos os textos originais.
+  try {
+    const text = new TextDecoder("windows-1252").decode(buffer);
+    if (text.toLowerCase().includes('<html') || text.toLowerCase().includes('<table')) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(text, 'text/html');
+      const rows = Array.from(doc.querySelectorAll('tr'));
+      data = rows.map(tr => Array.from(tr.querySelectorAll('th, td')).map(td => td.textContent || ''));
+    }
+  } catch (e) {
+    // Ignora erro de decoder
+  }
+
+  // Se não for HTML (ou falhar), usa o SheetJS normalmente
+  if (data.length === 0) {
+    const workbook = XLSX.read(buffer, { type: 'array' });
+    const firstSheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[firstSheetName];
+    data = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false }) as any[][];
+  }
   
-  const data = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false }) as any[][];
   if (data.length < 1) return [];
 
   let currentSupplier = '';
@@ -257,13 +277,12 @@ export function parseProductExcel(buffer: ArrayBuffer): any[] {
     const firstCol = String(cols[0] || '').trim();
 
     // 1. Detectar linha de Fornecedor (Mesclada A-G)
-    // Geralmente contém a palavra "FORNECEDOR" e as outras colunas estão vazias na linha
     if (firstCol.toUpperCase().includes('FORNECEDOR') && (!cols[1] && !cols[2])) {
       currentSupplier = firstCol;
       continue;
     }
 
-    // 2. Detectar se é uma linha de header (para atualizar o mapping se necessário)
+    // 2. Detectar se é uma linha de header
     if (firstCol.toLowerCase().includes('sap') || firstCol.toLowerCase().includes('código') || firstCol.toLowerCase().includes('interno')) {
       const headers = cols.map(h => String(h || '').trim());
       mapping = createMapping(headers);
@@ -271,7 +290,6 @@ export function parseProductExcel(buffer: ArrayBuffer): any[] {
     }
 
     // 3. Processar como produto
-    // Se a primeira coluna for um número ou tiver cara de código
     if (firstCol && firstCol.length >= 3) {
       const rowObj: Record<number, any> = {};
       cols.forEach((val, idx) => { rowObj[idx] = val; });
