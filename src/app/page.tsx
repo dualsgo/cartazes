@@ -13,7 +13,7 @@ import { AboutPanel } from '@/app/components/about-panel';
 import { DatabasePanel } from '@/app/components/database-panel';
 import { SettingsDialog } from '@/app/components/settings-dialog';
 import type { PosterData, PosterSettings, PosterType } from '@/app/lib/types';
-import { parseProductCSV } from '@/app/lib/poster-utils';
+import { parseProductCSV, parseProductExcel } from '@/app/lib/poster-utils';
 import { Printer, Plus, Trash2, FileStack, PackageOpen, Info, Database, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -418,23 +418,38 @@ export default function Home() {
     setQueue((prev: PosterData[]) => prev.filter((_: PosterData, i: number) => i !== index));
   };
 
-  const handleImportCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const isExcel = file.name.endsWith('.xls') || file.name.endsWith('.xlsx');
     const reader = new FileReader();
+
     reader.onload = (event) => {
-      const content = event.target?.result as string;
-      const imported = parseProductCSV(content);
+      let imported: any[] = [];
+      
+      if (isExcel) {
+        const buffer = event.target?.result as ArrayBuffer;
+        imported = parseProductExcel(buffer);
+      } else {
+        const content = event.target?.result as string;
+        imported = parseProductCSV(content);
+      }
+
       if (imported.length > 0) {
         setQueue(prev => [...prev, ...imported]);
         alert(`${imported.length} itens importados com sucesso!`);
       } else {
-        alert('Nenhum item encontrado no CSV. Verifique se o formato está correto.');
+        alert('Nenhum item encontrado no arquivo. Verifique se as colunas (SAP, Mercadoria, Preços) estão presentes.');
       }
       if (fileInputRef.current) fileInputRef.current.value = '';
     };
-    reader.readAsText(file, 'ISO-8859-1'); // Comum em CSVs do Excel Brasil
+
+    if (isExcel) {
+      reader.readAsArrayBuffer(file);
+    } else {
+      reader.readAsText(file, 'ISO-8859-1'); // Comum em CSVs do Excel Brasil
+    }
   };
 
   /* Print content: one div per page, each with page-break */
@@ -538,8 +553,8 @@ export default function Home() {
               <input
                 type="file"
                 ref={fileInputRef}
-                onChange={handleImportCSV}
-                accept=".csv"
+                onChange={handleImportFile}
+                accept=".csv, .xls, .xlsx"
                 className="hidden"
               />
               <button

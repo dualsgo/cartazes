@@ -1,3 +1,4 @@
+import * as XLSX from 'xlsx';
 import type { PosterSettings } from './types';
 
 export function calculateInstallments(price: number, settings: PosterSettings) {
@@ -22,10 +23,16 @@ export function calculateInstallments(price: number, settings: PosterSettings) {
   return { maxInstallments, installmentValue };
 }
 
-export function parsePrice(price: string): number {
-  if (!price) return 0;
-  // Converte "1.234,56" ou "34,56" para number
-  return parseFloat(price.replace(/\./g, '').replace(',', '.')) || 0;
+export function parsePrice(price: any): number {
+  if (price === undefined || price === null || price === '') return 0;
+  if (typeof price === 'number') return price;
+  
+  const str = String(price).trim();
+  if (!str) return 0;
+  
+  // Converte "1.234,56" ou "34,56" ou "R$ 34,56" para number
+  const clean = str.replace('R$', '').replace(/\s/g, '').replace(/\./g, '').replace(',', '.');
+  return parseFloat(clean) || 0;
 }
 
 export function formatCurrency(value: number): string {
@@ -91,93 +98,139 @@ export function truncateMultiLine(text: string, charsPerLine: number, maxLines: 
 }
 
 /**
- * Analisa um arquivo CSV de relatório diário e retorna uma lista de cartazes.
- * Lógica de Preço:
- * 1. Promoção > 0 -> É OFERTA (vale promoção)
- * 2. Promoção == 0 e Novo Preço existe -> Se Novo < Atual, é OFERTA. Senão, é NORMAL (vale Novo).
- * 3. Apenas Preço Atual -> NORMAL (vale Atual).
+ * Lógica comum de processamento de uma linha de dados (seja vinda de CSV ou Excel)
+ */
+function processProductRow(row: Record<string, any>, mapping: Record<string, number | string>): any {
+  const getVal = (key: string) => {
+    const colKey = mapping[key];
+    if (colKey === undefined || colKey === -1) return '';
+    return row[colKey] !== undefined ? String(row[colKey]).trim() : '';
+  };
+
+  const mercadoria = getVal('mercadoria');
+  if (!mercadoria) return null;
+
+  const sap        = getVal('sap');
+  const ean        = getVal('ean');
+  const ref        = getVal('ref');
+  const supplier   = getVal('supplier');
+  
+  const txtAtual = getVal('precoAtual');
+  const txtNovo  = getVal('novoPreco');
+  const txtPromo = getVal('promocao');
+
+  const valAtual = parsePrice(txtAtual);
+  const valNovo  = parsePrice(txtNovo);
+  const valPromo = parsePrice(txtPromo);
+
+  let poster: any = {
+    description: mercadoria.toUpperCase(),
+    code: sap,
+    ean: ean,
+    reference: ref,
+    supplier: supplier,
+    quantity: 1,
+    paymentOption: 'installment',
+  };
+
+  // Lógica de Preço:
+  if (valPromo > 0) {
+    poster.posterSubType = 'offer';
+    poster.priceFrom = (valNovo > 0 && valNovo > valPromo) ? formatCurrency(valNovo) : formatCurrency(valAtual);
+    poster.priceFor = formatCurrency(valPromo);
+  } else if (valNovo > 0) {
+    if (valNovo < valAtual) {
+      poster.posterSubType = 'offer';
+      poster.priceFrom = formatCurrency(valAtual);
+      poster.priceFor = formatCurrency(valNovo);
+    } else {
+      poster.posterSubType = 'normal';
+      poster.priceFor = formatCurrency(valNovo);
+      poster.priceFrom = '';
+    }
+  } else {
+    poster.posterSubType = 'normal';
+    poster.priceFor = formatCurrency(valAtual);
+    poster.priceFrom = '';
+  }
+
+  return poster;
+}
+
+/**
+ * Cria um mapeamento de colunas baseado nos headers encontrados
+ */
+function createMapping(headers: string[]): Record<string, number> {
+  const findIdx = (terms: string[]) => headers.findIndex(h => terms.some(t => h.toLowerCase().includes(t)));
+  
+  return {
+    sap:        findIdx(['sap', 'interno', 'código', 'codigo']),
+    mercadoria: findIdx(['mercadoria', 'descrição', 'descricao', 'produto', 'nome']),
+    supplier:   findIdx(['fornecedor', 'forn']),
+    ref:        findIdx(['referencia', 'referência', 'ref', 'cod. fornecedor']),
+    precoAtual: findIdx(['atual']),
+    novoPreco:  findIdx(['novo']),
+    promocao:   findIdx(['promoção', 'promocao', 'promo']),
+    ean:        findIdx(['ean', 'barras']),
+  };
+}
+
+/**
+ * Analisa um arquivo CSV
  */
 export function parseProductCSV(content: string): any[] {
   const lines = content.split(/\r?\n/).filter(line => line.trim().length > 0);
   if (lines.length < 2) return [];
 
-  // Detecta separador (prioriza ponto e vírgula comum no Brasil)
   const firstLine = lines[0];
   const separator = firstLine.includes(';') ? ';' : ',';
-
-  const headers = firstLine.split(separator).map(h => h.trim().toLowerCase());
+  const headers = firstLine.split(separator).map(h => h.trim());
+  const mapping = createMapping(headers);
   
-  // Mapeamento flexível de colunas
-  const findIdx = (terms: string[]) => headers.findIndex(h => terms.some(t => h.includes(t)));
-  
-  const idxSap        = findIdx(['sap', 'interno', 'código', 'codigo']);
-  const idxMercadoria = findIdx(['mercadoria', 'descrição', 'descricao', 'produto', 'nome']);
-  const idxFornecedor = findIdx(['fornecedor', 'forn']);
-  const idxRef        = findIdx(['referencia', 'referência', 'ref', 'cod. fornecedor']);
-  const idxPrecoAtual = findIdx(['atual']);
-  const idxNovoPreco  = findIdx(['novo']);
-  const idxPromocao   = findIdx(['promoção', 'promocao', 'promo']);
-  const idxEan        = findIdx(['ean', 'barras']);
-
   const results: any[] = [];
-
   for (let i = 1; i < lines.length; i++) {
     const cols = lines[i].split(separator).map(c => c.trim());
     if (cols.length < 2) continue;
-
-    const mercadoria = cols[idxMercadoria] || '';
-    const sap        = cols[idxSap] || '';
-    const ean        = idxEan !== -1 ? cols[idxEan] : '';
-    const ref        = cols[idxRef] || '';
-    const supplier   = cols[idxFornecedor] || '';
     
-    const txtAtual = (cols[idxPrecoAtual] || '0').replace('R$', '').trim();
-    const txtNovo  = (cols[idxNovoPreco] || '0').replace('R$', '').trim();
-    const txtPromo = (cols[idxPromocao] || '0').replace('R$', '').trim();
+    // Converte array de colunas em objeto usando os headers como chaves
+    const rowObj: Record<number, string> = {};
+    cols.forEach((val, idx) => { rowObj[idx] = val; });
+    
+    const poster = processProductRow(rowObj, mapping);
+    if (poster) results.push(poster);
+  }
+  return results;
+}
 
-    const valAtual = parsePrice(txtAtual);
-    const valNovo  = parsePrice(txtNovo);
-    const valPromo = parsePrice(txtPromo);
+/**
+ * Analisa um arquivo Excel (XLS/XLSX)
+ */
+export function parseProductExcel(buffer: ArrayBuffer): any[] {
+  const workbook = XLSX.read(buffer, { type: 'array' });
+  const firstSheetName = workbook.SheetNames[0];
+  const worksheet = workbook.Sheets[firstSheetName];
+  
+  // Converte para JSON (array de arrays para facilitar a detecção de headers)
+  const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+  if (data.length < 2) return [];
 
-    let poster: any = {
-      description: mercadoria.toUpperCase(),
-      code: sap,
-      ean: ean,
-      reference: ref,
-      supplier: supplier,
-      quantity: 1,
-      paymentOption: 'installment',
-    };
+  // Assume que a primeira linha com conteúdo útil são os headers
+  const headers = data[0].map(h => String(h || '').trim());
+  const mapping = createMapping(headers);
+  
+  const results: any[] = [];
+  for (let i = 1; i < data.length; i++) {
+    const cols = data[i];
+    if (!cols || cols.length < 1) continue;
 
-    if (valPromo > 0) {
-      // Prioridade 1: Promoção
-      poster.posterSubType = 'offer';
-      // Se Novo Preço for o "De" e Promo o "Por"
-      poster.priceFrom = txtNovo !== '0' && valNovo > valPromo ? txtNovo : txtAtual;
-      poster.priceFor = txtPromo;
-    } else if (valNovo > 0) {
-      // Prioridade 2: Novo Preço
-      if (valNovo < valAtual) {
-        // Se baixou o preço, tratamos como oferta
-        poster.posterSubType = 'offer';
-        poster.priceFrom = txtAtual;
-        poster.priceFor = txtNovo;
-      } else {
-        // Se aumentou ou manteve, é normal
-        poster.posterSubType = 'normal';
-        poster.priceFor = txtNovo;
-        poster.priceFrom = '';
-      }
-    } else {
-      // Fallback: Preço Atual
-      poster.posterSubType = 'normal';
-      poster.priceFor = txtAtual;
-      poster.priceFrom = '';
-    }
+    const rowObj: Record<number, any> = {};
+    cols.forEach((val, idx) => { rowObj[idx] = val; });
 
-    results.push(poster);
+    const poster = processProductRow(rowObj, mapping);
+    if (poster) results.push(poster);
   }
 
   return results;
 }
+
 
