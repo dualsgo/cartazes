@@ -37,7 +37,7 @@ const SINGLE_DIMS: Record<PosterType, { w: number; h: number }> = {
   'ofertas-imperdiveis':{ w: 491, h: 340 },
   aereo:                { w: 760, h: 268 },  // proporcional a 190mm x 67mm (4px/mm)
   avaria:               { w: 491, h: 340 },
-  'etiqueta-oficial':   { w: 364, h: 135 }, // 91mm x 33.8mm (4px/mm)
+  'etiqueta-oficial':   { w: 364, h: 136 }, // 91mm x 34.0mm (4px/mm)
   totem:                { w: 794, h: 1123 }, // A4 a 96dpi (210×297mm em pixels de tela)
 };
 
@@ -231,10 +231,10 @@ function PageGrid({
       <div style={{ 
         display: 'grid', 
         gridTemplateColumns: '91mm 91mm', 
-        gridTemplateRows: 'repeat(8, 33.8mm)',
+        gridTemplateRows: 'repeat(8, 34.0mm)',
         columnGap: '0', 
         paddingTop: '12.5mm', 
-        paddingBottom: '14.1mm', 
+        paddingBottom: '12.5mm', 
         paddingLeft: '14mm', 
         paddingRight: '14mm', 
         width: '100%', 
@@ -251,7 +251,7 @@ function PageGrid({
               key={i} 
               style={{ 
                 width: '91mm', 
-                height: '33.8mm', 
+                height: '34.0mm', 
                 overflow: 'hidden',
                 borderRight: isLeft ? '0.1mm dashed #eee' : 'none',
                 borderBottom: !isBottom ? '0.1mm dashed #eee' : 'none',
@@ -271,7 +271,7 @@ function PageGrid({
               key={`e${i}`} 
               style={{ 
                 width: '91mm', 
-                height: '33.8mm', 
+                height: '34.0mm', 
                 borderRight: isLeft ? '0.1mm dashed #eee' : 'none',
                 borderBottom: !isBottom ? '0.1mm dashed #eee' : 'none',
                 boxSizing: 'border-box'

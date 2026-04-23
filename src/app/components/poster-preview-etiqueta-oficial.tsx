@@ -38,7 +38,7 @@ export function PosterPreviewEtiquetaOficial({
   // Rodapé: 5px (14%)
 
   return (
-    <div className="w-full h-full bg-white text-black font-sans overflow-hidden relative flex box-border p-[2mm]">
+    <div className="w-full h-full bg-white text-black font-sans overflow-hidden relative flex box-border p-[2.1mm]">
       
       {/* LADO ESQUERDO: Área Comercial */}
       <div className="flex-1 flex flex-col justify-between pr-2 h-full">
