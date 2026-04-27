@@ -1,6 +1,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { BarcodeSAP } from './barcode-sap';
+import { BarcodeEAN } from './barcode-ean';
 import type { PosterData } from '@/app/lib/types';
 import { parsePrice, formatCurrency, calculateInstallments, truncateDescription } from '@/app/lib/poster-utils';
 
@@ -30,27 +31,27 @@ export function PosterPreviewEtiqueta({
   
   const hasInstallments = paymentOption === 'installment' && maxInstallments > 1;
 
-  // Ajuste proporcional das fontes
-  let priceFontSize = '44px';
+  // Ajuste proporcional das fontes (Reduzido em 20% para caber no novo layout fixo)
+  let priceFontSize = '42px';
   let decimalFontSize = '18px';
-  let currencyFontSize = '12px';
-  let installmentFontSize = '12px';
-  let offerPriceFontSize = '46px';
+  let currencyFontSize = '10px';
+  let installmentFontSize = '10px';
+  let offerPriceFontSize = '44px';
   
   if (porInteger.length >= 6) {
-    priceFontSize = '30px';
-    decimalFontSize = '12px';
-    currencyFontSize = '10px';
-    installmentFontSize = '10px';
-    offerPriceFontSize = '32px';
+    priceFontSize = '28px';
+    decimalFontSize = '11px';
+    currencyFontSize = '8px';
+    installmentFontSize = '8px';
+    offerPriceFontSize = '30px';
   } else if (porInteger.length === 5) {
-    priceFontSize = '36px';
+    priceFontSize = '34px';
     decimalFontSize = '14px';
-    currencyFontSize = '11px';
-    installmentFontSize = '11px';
-    offerPriceFontSize = '38px';
+    currencyFontSize = '9px';
+    installmentFontSize = '9px';
+    offerPriceFontSize = '36px';
   } else if (porInteger.length === 4) {
-    offerPriceFontSize = '42px';
+    offerPriceFontSize = '40px';
   }
 
   return (    <div className="w-full h-full bg-white text-black font-body overflow-hidden relative flex flex-col justify-center box-border px-[1mm] py-[1.5mm]">
@@ -69,73 +70,67 @@ export function PosterPreviewEtiqueta({
         <div className={cn("flex-1 px-2 flex flex-col h-full justify-between overflow-hidden pr-[19mm]", isOffer ? "pl-2" : "pl-4")}>
           
           {/* TOPO: Descrição */}
-          <h2 className={cn("font-headline font-bold text-[14px] leading-[0.9] uppercase overflow-hidden w-full max-h-[1.9em] shrink-0", !isOffer && "text-center text-black")}>
+          <h2 className={cn("font-headline font-bold text-[14px] leading-[0.9] uppercase overflow-hidden w-full max-h-[1.9em] shrink-0 pb-1", !isOffer && "text-center text-black")}>
             {displayDescription}
           </h2>
 
           {/* MEIO: Container de Preços */}
-          <div className={cn("flex-1 flex min-h-0 items-center", isOffer ? "flex-row" : "flex-col justify-center")}>
+          <div className={cn("flex-1 flex min-h-0 items-center", isOffer ? "flex-row justify-start gap-1" : "flex-col justify-center")}>
             
-            {/* LADO ESQUERDO (Apenas Oferta): DE e Rótulo POR */}
+            {/* SEÇÃO DE (Apenas Oferta) */}
             {isOffer && (
-              <div className="flex flex-col shrink-0 mr-1 min-w-[32mm] justify-center h-full">
-                <div className={cn("transition-opacity flex flex-col", hasDiscount ? 'opacity-100' : 'opacity-0')}>
-                  <div className="text-[15px] font-bold leading-none whitespace-nowrap">
-                    DE: <span className="line-through">R$ {formatCurrency(valDe)}</span>
-                  </div>
-                </div>
-                <div className="mt-2.5 flex items-baseline gap-1">
-                  <span className="font-headline font-black uppercase tracking-tighter text-[11px] leading-none">POR:</span>
-                  <span className="font-headline font-black text-[14px] leading-none">R$</span>
-                </div>
+              <div className={cn("transition-opacity flex items-center shrink-0", hasDiscount ? 'opacity-100' : 'opacity-0')}>
+                <span className="font-headline font-black uppercase tracking-tighter text-[10px] leading-none mr-1">DE:</span>
+                <span className="font-headline font-black leading-[0.75] tracking-[-0.05em] line-through decoration-[1mm] inline-block origin-left scale-x-90 whitespace-nowrap" style={{ fontSize: `calc(${offerPriceFontSize} * 0.8)` }}>
+                  R$ {valDe.toLocaleString('pt-BR', { useGrouping: false, minimumFractionDigits: 2, maximumFractionDigits: 2 }).slice(0, 7)}
+                </span>
               </div>
             )}
 
-            {/* LADO DIREITO: Preço Principal (POR) e Parcelamento */}
-            <div className={cn("flex flex-col min-w-0 pr-1", isOffer ? "flex-1 justify-center items-end" : "items-center")}>
-              
+            {/* SEÇÃO POR */}
+            <div className={cn("flex min-w-0 items-center", isOffer ? "flex-row justify-start" : "flex-col items-center")}>
+              {isOffer && <span className="font-headline font-black uppercase tracking-tighter text-[10px] leading-none shrink-0 mr-1">POR:</span>}
               <div className="flex items-end">
                 {!isOffer && <span className="font-headline font-black self-start mt-1 mr-0.5 text-[17px]">R$</span>}
 
-                {/* Centro: Inteiro */}
-                <span className="font-headline font-black leading-[0.75] tracking-tighter" style={{ fontSize: isOffer ? offerPriceFontSize : priceFontSize }}>
-                  {porInteger}
+                {/* Centro: Inteiro e Decimais (Mesmo Tamanho e Comprimido) */}
+                <span className="font-headline font-black leading-[0.75] tracking-[-0.05em] inline-block origin-left scale-x-90" style={{ fontSize: isOffer ? offerPriceFontSize : priceFontSize }}>
+                  R$ {valPor.toLocaleString('pt-BR', { useGrouping: false, minimumFractionDigits: 2, maximumFractionDigits: 2 }).slice(0, 7)}
                 </span>
 
-                {/* Lado Direito do Preço: Decimal e un. à vista */}
-                <div className="flex flex-col items-start ml-0.5 shrink-0 pb-1 text-black">
-                  <span className="font-headline font-black leading-none" style={{ fontSize: isOffer ? '17px' : decimalFontSize }}>
-                    ,{porDecimal}
-                  </span>
-                  {isOffer && (
+                {/* Info un. à vista */}
+                {isOffer && (
+                  <div className="flex flex-col items-start ml-1 shrink-0 pb-1 text-black">
                     <span className="font-bold whitespace-nowrap leading-none mt-0.5" style={{ fontSize: '7.5px' }}>
                       un. à vista
                     </span>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
-
-              {/* Parcelamento posicionado abaixo do preço POR */}
-              {isOffer && hasInstallments && (
-                 <div className="bg-black text-white px-2 py-[2px] rounded-full flex items-center justify-center border border-black mt-1">
-                    <span className="font-headline font-bold leading-none whitespace-nowrap text-[10px] tracking-tight">
-                      ou {maxInstallments}x de R$ {formatCurrency(installmentValue)}
-                    </span>
-                 </div>
-              )}
             </div>
           </div>
 
+          {/* ZONA DE PARCELAMENTO (ESPAÇO RESERVADO) */}
+          <div className="shrink-0 w-full flex flex-col items-center justify-center min-h-[7mm] mb-1">
+             {hasInstallments ? (
+                <div className={cn(
+                  "px-3 py-[2.5px] rounded-full flex items-center justify-center border",
+                  isOffer ? "bg-black text-white border-black" : "bg-white text-black border-black/20"
+                )}>
+                  <span className="font-headline font-bold leading-none whitespace-nowrap text-[10px] tracking-tight">
+                    ou {maxInstallments}x de R$ {formatCurrency(installmentValue)}
+                  </span>
+                </div>
+             ) : (
+                <div className="h-[7mm]" /> /* Espaço reservado vazio */
+             )}
+          </div>
+
           {/* RODAPÉ: Fornecedor e Info Complementar */}
-          <div className="w-full flex flex-col items-center shrink-0">
+          <div className="w-full flex flex-col items-center shrink-0 pt-1">
              {!isOffer && (
                <div className="flex items-center gap-2 mb-0.5 shrink-0">
                   <span className="font-bold whitespace-nowrap text-black text-[11px]">un. à vista</span>
-                  {hasInstallments && (
-                     <span className="font-headline font-bold leading-tight text-right whitespace-nowrap text-black text-[11px]">
-                       ou {maxInstallments}x R$ {formatCurrency(installmentValue)}
-                     </span>
-                  )}
                </div>
              )}
              {supplier && (
@@ -146,8 +141,19 @@ export function PosterPreviewEtiqueta({
           </div>
         </div>
 
-        {/* CÓDIGO DE BARRAS VERTICAL (SAP) - Posição compactada à direita */}
-        {code && (
+        {/* CÓDIGO DE BARRAS VERTICAL (EAN ou SAP) - Posição compactada à direita */}
+        {ean && ean.length >= 12 ? (
+          <div className="absolute right-[9.5mm] top-0 bottom-0 w-[9mm] flex items-center justify-center">
+             <div className="rotate-90 origin-center whitespace-nowrap">
+                <BarcodeEAN 
+                  value={ean} 
+                  height="5.5mm" 
+                  width="24mm" 
+                  showText={false} 
+                />
+             </div>
+          </div>
+        ) : code ? (
           <div className="absolute right-[9.5mm] top-0 bottom-0 w-[9mm] flex items-center justify-center">
              <BarcodeSAP 
                value={code} 
@@ -156,7 +162,7 @@ export function PosterPreviewEtiqueta({
                width="5.5mm" 
              />
           </div>
-        )}
+        ) : null}
 
         {/* Blocos Verticais de Códigos - Posição compactada à direita extremo */}
         <div className="absolute right-[0.5mm] top-0 bottom-0 flex flex-row-reverse items-center gap-0 text-[6.5pt] text-black font-mono leading-none font-bold">

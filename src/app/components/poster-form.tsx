@@ -43,7 +43,7 @@ function useCurrencyInput(initial: string, maxCents?: number) {
       setCents(prev => {
         const next = prev * 10 + parseInt(e.key, 10);
         const capped = maxCents !== undefined && next > maxCents ? maxCents : next;
-        return capped > 9999999 ? prev : capped;
+        return capped > 999999 ? prev : capped;
       });
     }
   };
