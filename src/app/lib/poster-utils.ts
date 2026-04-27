@@ -48,14 +48,19 @@ export function parsePrice(price: any): number {
     return parseFloat(str.replace(/\./g, '')) || 0;
   }
   
-  return parseFloat(str) || 0;
+  const val = parseFloat(str) || 0;
+  // Limite global de 9999,99 para todos os modelos
+  return Math.min(val, 9999.99);
 }
 
 export function formatCurrency(value: number): string {
-  return value.toLocaleString('pt-br', {
+  // Limite de segurança para exibição
+  const safeValue = Math.min(value, 9999.99);
+  return safeValue.toLocaleString('pt-br', {
+    useGrouping: false,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  });
+  }).slice(0, 7);
 }
 
 /**

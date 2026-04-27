@@ -82,7 +82,7 @@ export function PosterPreviewEtiqueta({
               <div className={cn("transition-opacity flex items-center shrink-0", hasDiscount ? 'opacity-100' : 'opacity-0')}>
                 <span className="font-headline font-black uppercase tracking-tighter text-[10px] leading-none mr-1">DE:</span>
                 <span className="font-headline font-black leading-[0.75] tracking-[-0.05em] line-through decoration-[1mm] inline-block origin-left scale-x-90 whitespace-nowrap" style={{ fontSize: `calc(${offerPriceFontSize} * 0.8)` }}>
-                  R$ {valDe.toLocaleString('pt-BR', { useGrouping: false, minimumFractionDigits: 2, maximumFractionDigits: 2 }).slice(0, 7)}
+                  R$ {formatCurrency(valDe)}
                 </span>
               </div>
             )}
@@ -95,7 +95,7 @@ export function PosterPreviewEtiqueta({
 
                 {/* Centro: Inteiro e Decimais (Mesmo Tamanho e Comprimido) */}
                 <span className="font-headline font-black leading-[0.75] tracking-[-0.05em] inline-block origin-left scale-x-90" style={{ fontSize: isOffer ? offerPriceFontSize : priceFontSize }}>
-                  R$ {valPor.toLocaleString('pt-BR', { useGrouping: false, minimumFractionDigits: 2, maximumFractionDigits: 2 }).slice(0, 7)}
+                  R$ {formatCurrency(valPor)}
                 </span>
 
                 {/* Info un. à vista */}
