@@ -127,7 +127,7 @@ export function PosterPreviewEtiquetaOficial({
         <div className="shrink-0 pt-1 flex flex-nowrap gap-x-2 items-baseline mt-auto overflow-hidden h-[4mm]">
            <span className="text-[7px] font-bold uppercase truncate max-w-[28mm]">REF: {reference || 'N/A'}</span>
            {code && <span className="text-[7px] font-bold truncate max-w-[18mm]">SAP: {code}</span>}
-           {supplier && <span className="text-[7px] font-bold truncate max-w-[40mm] uppercase">FORN: {supplier}</span>}
+           {supplier && <span className="text-[7px] font-bold truncate max-w-[55mm] uppercase">FORN: {supplier}</span>}
         </div>
       </div>
 

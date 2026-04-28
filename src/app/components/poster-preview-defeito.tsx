@@ -14,10 +14,8 @@ const defectOptions = [
   { value: 'outro',                label: 'Outro (descrever)',     discount: null },
 ];
 
-/** Tamanho dinâmico da fonte da descrição */
 function descFontSize(linesCount: number): string {
-  if (linesCount === 1) return '1.85em';
-  return '1.55em';
+  return '1.35em';
 }
 
 export function PosterPreviewDefeito({
@@ -37,7 +35,7 @@ export function PosterPreviewDefeito({
   const valDe = parsePrice(priceFrom);
   const valPor = parsePrice(priceFor);
 
-  const displayDescriptionLines = truncateMultiLine(description, 13, 2);
+  const displayDescriptionLines = truncateMultiLine(description, 20, 2);
 
   const selectedDefect = defectOptions.find(opt => opt.value === defectType);
   
@@ -54,49 +52,47 @@ export function PosterPreviewDefeito({
   const { maxInstallments, installmentValue } = calculateInstallments(valPor, settings);
   const showInstallment  = paymentOption === 'installment' && maxInstallments > 1;
   const installmentText  = showInstallment ? (
-    <div className="font-headline text-center font-bold text-[1.2em] leading-tight h-[1.2em] mt-1 pt-[2px]">
-      ou em até {maxInstallments}x de R$ {formatCurrency(installmentValue)}
+    <div className="font-headline text-center font-bold text-[0.7em] leading-tight mt-3 opacity-90 flex flex-col items-center uppercase">
+      <span>ou parcelado em até</span>
+      <span className="text-[1.15em]">{maxInstallments}x sem juros de R$ {formatCurrency(installmentValue)}</span>
     </div>
   ) : (
-    <div className="h-[1.2em] mt-1 pt-[2px]"></div>
+    <div className="h-[2.4em] mt-3"></div>
   );
   
-  let priceFontSize = '4rem';
-  if (porInteger.length >= 6) priceFontSize = '2.6rem';
-  else if (porInteger.length === 5) priceFontSize = '3.2rem';
+  let priceFontSize = '3.0rem';
+  if (porInteger.length >= 6) priceFontSize = '1.8rem';
+  else if (porInteger.length === 5) priceFontSize = '2.2rem';
+  else if (porInteger.length === 4) priceFontSize = '2.6rem';
 
   return (
     <div className="w-full h-full overflow-hidden bg-white text-black font-body relative">
       <div className="flex h-full w-full">
-        {/* ── Left Column ── */}
-        <div className="w-1/2 p-[0.35cm] flex flex-col overflow-hidden">
-
+        {/* ── Coluna Esquerda ── */}
+        <div className="w-1/2 p-[0.35cm] pb-[1cm] flex flex-col overflow-hidden">
           {/* ZONA 1: Header (fixo) */}
           <div className="shrink-0">
             <AvariaHeader />
           </div>
 
-          {/* ZONA 2: Descrição (flexível, fonte dinâmica) */}
-          <div className="flex-[1.5] flex items-center justify-center min-h-0 py-1">
-            <h2 className="font-headline font-black uppercase leading-[1.05] tracking-tight text-center text-black line-clamp-3 text-[1.3em]">
-              {description}
+          {/* ZONA 2: Descrição (fonte dinâmica) */}
+          <div className="flex-1 flex items-center justify-center min-h-0">
+            <h2 
+              className="font-headline font-black uppercase leading-[1.05] tracking-tight text-center text-black line-clamp-3"
+              style={{ fontSize: descFontSize(displayDescriptionLines.length) }}
+            >
+              {displayDescriptionLines.join('\n')}
             </h2>
           </div>
 
-          {/* ZONA 3: Preço DE (centralizado no espaço restante) */}
+          {/* ZONA 3: Preço DE */}
           <div className="flex-1 flex flex-col items-center justify-center min-h-0">
-            <div className={cn('transition-opacity text-center text-[2em] font-headline text-black', valDe > 0 ? 'opacity-100' : 'opacity-0')}>
-              <span className="block text-[0.7em] mb-[-0.2em]">DE:</span>
-              <span className="font-bold line-through decoration-[0.4mm]">R$ {formatCurrency(valDe)}</span>
-            </div>
-          </div>
-
-          {/* ZONA 4: Rodapé códigos (tamanho fixo na base) - Limitado para não quebrar layout */}
-          <div className="shrink-0 pt-2 border-t border-black/10 overflow-hidden">
-            <div className="text-[0.65em] flex flex-nowrap gap-x-2 text-black font-semibold justify-center">
-              {reference && <span className="truncate max-w-[40%]">Ref.: <b className="font-bold">{reference}</b></span>}
-              {code      && <span className="truncate max-w-[30%]">SAP: <b className="font-bold">{code}</b></span>}
-              {ean       && <span className="truncate max-w-[30%]">EAN: <b className="font-bold">{ean}</b></span>}
+            <div className={cn('transition-opacity text-center text-[1.8em] font-headline text-black', valDe > 0 ? 'opacity-100' : 'opacity-0')}>
+              <span className="block text-[0.6em] mb-1 font-medium">DE:</span>
+              <div className="relative inline-block">
+                <span className="font-medium">R$ {formatCurrency(valDe)}</span>
+                <div className="absolute inset-x-0 top-[50%] h-[0.4mm] bg-black -rotate-[12deg] pointer-events-none" />
+              </div>
             </div>
           </div>
         </div>
@@ -132,31 +128,42 @@ export function PosterPreviewDefeito({
             )}
           </div>
           
-          <div className="flex flex-col items-center justify-center text-[1.3em] leading-none text-black w-full min-w-0 px-1 flex-1 pt-1">
-            <span className="font-headline text-[0.8em] font-black w-full text-center shrink-0 mb-[-0.2em] z-10">
-              POR:
-            </span>
-            <div className="flex items-end max-w-full overflow-hidden shrink-0">
-              <div className="flex items-baseline shrink-0 tracking-tighter">
-                <span className="font-headline text-[1.25em] mr-1">R$</span>
-                <span className="font-headline font-black leading-none" style={{ fontSize: priceFontSize }}>
-                  {porInteger},{porDecimal}
+          {/* ZONA 2: Preço POR (ocupa espaço central) */}
+          <div className="flex-1 flex flex-col items-center justify-center text-[1.3em] leading-none text-black w-full min-w-0 px-0">
+            <span className="font-headline text-[0.75em] font-medium w-full text-center shrink-0 mb-1 z-10">POR:</span>
+            <div className="flex items-center justify-center w-full shrink-0">
+              <div className="flex items-baseline shrink-0 tracking-tighter w-full justify-center relative">
+                <span className="font-headline font-medium leading-none whitespace-nowrap" style={{ fontSize: priceFontSize }}>
+                  R$ {porInteger},{porDecimal}
                 </span>
+                {valPor > 0 && (
+                  <div className="absolute right-[5%] bottom-[-0.75em] font-bold text-black">
+                    <span className="text-[0.45em] uppercase leading-none">un. à vista</span>
+                  </div>
+                )}
               </div>
             </div>
-             {valPor > 0 && (
-              <div className="font-bold flex items-baseline space-x-1">
-                <span className="text-[0.9em]">un.</span>
-              </div>
-            )}
+          </div>
+
+          {/* ZONA 3: Parcelamento (Alinhado com o preço DE da esquerda) */}
+          <div className="flex-1 flex flex-col items-center justify-center min-h-0">
             {installmentText}
           </div>
 
 
         </div>
       </div>
-      <div className="absolute bottom-[2px] left-0 right-0 px-2 flex flex-col items-center gap-0.5 z-10">
-        <p className="text-[0.55em] text-black font-bold text-center leading-tight">
+      {/* RODAPÉ INTEGRADO FULL WIDTH (Ponta a Ponta) */}
+      <div className="absolute bottom-[0.1cm] left-0 right-0 flex flex-col items-center px-[0.35cm] opacity-100 z-20">
+        {/* Identificadores Técnicos */}
+        <div className="text-[0.45em] flex flex-nowrap gap-x-6 text-black font-bold uppercase mb-1">
+           {reference && <span className="truncate max-w-[30%]">Ref.: <b className="font-bold">{reference}</b></span>}
+           {code      && <span className="truncate max-w-[25%]">SAP: <b className="font-bold">{code}</b></span>}
+           {ean       && <span className="truncate max-w-[40%]">EAN: <b className="font-bold">{ean}</b></span>}
+        </div>
+        
+        {/* Frase Legal */}
+        <p className="text-[0.52em] text-black font-bold text-center leading-tight border-t border-black/10 pt-1 w-full uppercase">
           Item de ponta de estoque, vendido no estado. Não possui direito a troca.
         </p>
       </div>

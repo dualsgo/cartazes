@@ -113,7 +113,9 @@ export function truncateMultiLine(text: string, charsPerLine: number, maxLines: 
       }
     }
   }
-  
+  if (currentLine && lines.length < maxLines) {
+    lines.push(currentLine);
+  }
   
   return lines;
 }

@@ -7,8 +7,7 @@ import { parsePrice, formatCurrency, calculateInstallments, truncateMultiLine } 
 
 /** Tamanho dinâmico da fonte da descrição baseado no número de linhas */
 function descFontSize(linesCount: number): string {
-  if (linesCount === 1) return '1.85em';
-  return '1.55em';
+  return '1.35em';
 }
 
 export function PosterPreview({
@@ -18,6 +17,7 @@ export function PosterPreview({
   code,
   ean,
   reference,
+  supplier,
   paymentOption,
   offerValidityStart,
   offerValidity,
@@ -27,7 +27,7 @@ export function PosterPreview({
   const valDe  = parsePrice(priceFrom);
   const valPor = parsePrice(priceFor);
 
-  const displayDescriptionLines = truncateMultiLine(description, 13, 2);
+  const displayDescriptionLines = truncateMultiLine(description, 20, 2);
 
   const hasDiscount = valDe > 0 && valPor > 0 && valDe > valPor;
   const discount    = hasDiscount ? Math.round(((valDe - valPor) / valDe) * 100) : 0;
@@ -36,14 +36,16 @@ export function PosterPreview({
 
   const { maxInstallments, installmentValue } = calculateInstallments(valPor, settings);
   const installmentText  = paymentOption === 'installment' && maxInstallments > 1 ? (
-    <div className="font-headline text-center font-bold text-[1.2em] leading-tight mt-1">
-      Parcelamento em até {maxInstallments}x de R$ {formatCurrency(installmentValue)}
+    <div className="font-headline text-center font-bold text-[0.8em] leading-tight mt-3 opacity-90 flex flex-col items-center uppercase">
+      <span>ou parcelado em até</span>
+      <span className="text-[1.15em]">{maxInstallments}x sem juros de R$ {formatCurrency(installmentValue)}</span>
     </div>
   ) : null;
 
-  let priceFontSize = '4rem';
-  if (porInteger.length >= 6) priceFontSize = '2.6rem';
-  else if (porInteger.length === 5) priceFontSize = '3.2rem';
+  let priceFontSize = '2.8rem';
+  if (porInteger.length >= 6) priceFontSize = '1.6rem';
+  else if (porInteger.length === 5) priceFontSize = '2.0rem';
+  else if (porInteger.length === 4) priceFontSize = '2.4rem';
 
   return (
     <div className="w-full h-full overflow-hidden bg-white text-black font-body relative">
@@ -51,7 +53,7 @@ export function PosterPreview({
       <div className="flex h-full w-full">
 
         {/* ── Coluna Esquerda ── */}
-        <div className="w-1/2 p-[0.35cm] flex flex-col overflow-hidden">
+        <div className="w-1/2 p-[0.35cm] pb-[1cm] flex flex-col overflow-hidden">
 
           {/* ZONA 1: Header (tamanho fixo) */}
           <div className="shrink-0">
@@ -61,29 +63,29 @@ export function PosterPreview({
             />
           </div>
 
-          {/* ZONA 2: Descrição (ocupa o espaço disponível, fonte dinâmica) */}
-          <div className="flex-[1.5] flex items-center justify-center min-h-0 py-1">
-            <h2 className="font-headline font-black uppercase leading-[1.05] tracking-tight text-center text-black line-clamp-3 text-[1.3em]">
-              {description}
+          {/* ZONA 2: Descrição (fonte dinâmica) */}
+          <div className="flex-1 flex items-center justify-center min-h-0">
+            <h2 
+              className="font-headline font-black uppercase leading-[1.05] tracking-tight text-center text-black line-clamp-3"
+              style={{ fontSize: descFontSize(displayDescriptionLines.length) }}
+            >
+              {displayDescriptionLines.join('\n')}
             </h2>
           </div>
-
-          {/* ZONA 3: Preço DE (centralizado no espaço restante) */}
+  
+          {/* ZONA 3: Preço DE */}
           <div className="flex-1 flex flex-col items-center justify-center min-h-0">
-            <div className={`transition-opacity text-center text-[2.2em] font-headline text-black ${hasDiscount ? 'opacity-100' : 'opacity-0'}`}>
-              <span className="block text-[0.7em] mb-[-0.2em]">DE:</span>
-              <span className="font-bold line-through decoration-[0.4mm]">R$ {formatCurrency(valDe)}</span>
+            <div className={`transition-opacity text-center text-[1.8em] font-headline text-black ${hasDiscount ? 'opacity-100' : 'opacity-0'}`}>
+              <span className="block text-[0.6em] mb-1 font-medium">DE:</span>
+              <div className="relative inline-block">
+                <span className="font-medium">R$ {formatCurrency(valDe)}</span>
+                <div className="absolute inset-x-0 top-[50%] h-[0.4mm] bg-black -rotate-[12deg] pointer-events-none" />
+              </div>
             </div>
           </div>
 
-          {/* ZONA 4: Rodapé códigos (tamanho fixo na base) - Limitado para não quebrar layout */}
-          <div className="shrink-0 pt-2 overflow-hidden">
-            <div className="text-[0.72em] flex flex-nowrap gap-x-2 text-black font-semibold justify-center">
-              {reference && <span className="truncate max-w-[40%]">Ref.: <b className="font-bold">{reference}</b></span>}
-              {code      && <span className="truncate max-w-[30%]">SAP: <b className="font-bold">{code}</b></span>}
-              {ean       && <span className="truncate max-w-[30%]">EAN: <b className="font-bold">{ean}</b></span>}
-            </div>
-          </div>
+          {/* ZONA 4: Espaço reservado para manter o alinhamento da coluna */}
+          <div className="h-4" />
         </div>
 
         {/* ── Coluna Direita ── */}
@@ -97,22 +99,25 @@ export function PosterPreview({
             </div>
           </div>
 
-          {/* ZONA 2: Preço POR (ocupa espaço disponível) */}
-          <div className="flex-1 flex flex-col items-center justify-center text-[1.3em] leading-none text-black w-full min-w-0 px-1 min-h-0 overflow-hidden">
-            <span className="font-headline text-[0.8em] font-black w-full text-center shrink-0 mb-[-0.2em] z-10">POR:</span>
-            <div className="flex items-end max-w-full overflow-hidden shrink-0">
-              <div className="flex items-baseline shrink-0 tracking-tighter">
-                <span className="font-headline text-[1.25em] mr-1">R$</span>
-                <span className="font-headline font-black leading-none" style={{ fontSize: priceFontSize }}>
-                  {porInteger},{porDecimal}
+          {/* ZONA 2: Preço POR (ocupa espaço central) */}
+          <div className="flex-1 flex flex-col items-center justify-center text-[1.3em] leading-none text-black w-full min-w-0 px-0">
+            <span className="font-headline text-[0.75em] font-medium w-full text-center shrink-0 mb-1 z-10">POR:</span>
+            <div className="flex items-center justify-center w-full shrink-0">
+              <div className="flex items-baseline shrink-0 tracking-tighter w-full justify-center relative">
+                <span className="font-headline font-medium leading-none whitespace-nowrap" style={{ fontSize: priceFontSize }}>
+                  R$ {porInteger},{porDecimal}
                 </span>
+                {valPor > 0 && (
+                  <div className="absolute right-[5%] bottom-[-0.75em] font-bold text-black">
+                    <span className="text-[0.45em] uppercase leading-none">un. à vista</span>
+                  </div>
+                )}
               </div>
             </div>
-            {valPor > 0 && (
-              <div className="font-bold flex items-baseline space-x-1">
-                <span className="text-[0.9em]">un.</span>
-              </div>
-            )}
+          </div>
+
+          {/* ZONA 3: Parcelamento (Alinhado com o preço DE da esquerda) */}
+          <div className="flex-1 flex flex-col items-center justify-center min-h-0">
             {installmentText}
           </div>
 
@@ -131,6 +136,16 @@ export function PosterPreview({
           </div>
         </div>
 
+      </div>
+
+      {/* RODAPÉ FULL WIDTH (Ponta a Ponta) - Fonte mínima e em preto sólido */}
+      <div className="absolute bottom-[0.35cm] left-0 right-0 flex justify-center overflow-hidden px-[0.35cm] opacity-100">
+        <div className="text-[0.45em] flex flex-nowrap gap-x-6 text-black font-bold uppercase">
+           {reference && <span className="truncate max-w-[30%]">Ref.: <b className="font-bold">{reference}</b></span>}
+           {code      && <span className="truncate max-w-[25%]">SAP: <b className="font-bold">{code}</b></span>}
+           {ean       && <span className="truncate max-w-[25%]">EAN: <b className="font-bold">{ean}</b></span>}
+           {supplier  && <span className="truncate max-w-[40%]">Forn.: <b className="font-bold">{supplier}</b></span>}
+        </div>
       </div>
     </div>
   );
