@@ -85,7 +85,7 @@ export function PosterPreviewAereo({
                   <span className="font-headline font-medium leading-none tracking-tighter inline-block origin-left scale-x-70" style={{ fontSize: `calc(${priceFontSize} * 0.85)` }}>
                     {porInt},{porDec}
                   </span>
-                  <span className="font-bold text-[10pt] uppercase leading-none ml-2 mb-2">un. à vista</span>
+                  <span className="font-bold text-[5.5pt] uppercase leading-none ml-2 mb-2">un. à vista</span>
                 </div>
               </div>
             </div>
