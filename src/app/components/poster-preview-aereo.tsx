@@ -1,7 +1,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { parsePrice, formatCurrency, calculateInstallments, truncateDescription } from '@/app/lib/poster-utils';
-import type { PosterData } from '@/app/lib/types';
+import type { PosterData, PosterSettings } from '@/app/lib/types';
 
 export function PosterPreviewAereo({
   description,
@@ -13,7 +13,8 @@ export function PosterPreviewAereo({
   supplier,
   paymentOption,
   posterSubType,
-}: PosterData) {
+  settings,
+}: PosterData & { settings: PosterSettings }) {
   const valDe  = parsePrice(priceFrom);
   const valPor = parsePrice(priceFor);
 
@@ -22,28 +23,20 @@ export function PosterPreviewAereo({
 
   const [porInt, porDec] = formatCurrency(valPor).split(',');
 
-  const { maxInstallments, installmentValue } = calculateInstallments(valPor, { maxInstallments: 6, minInstallmentAmount: 30 });
+  const { maxInstallments, installmentValue } = calculateInstallments(valPor, settings);
   const showInstallment  = paymentOption === 'installment' && maxInstallments > 1;
 
-  // Aplica o limite de caracteres na descrição
+  // Aplica o limite de caracteres na descrição (aprox 2 linhas)
   const displayDescription = truncateDescription(description, 35);
 
-  // Lógica de fonte dinâmica para o Aéreo
-  let priceFontSize = '82px';
-  let deFontSize = '24px';
-
-  if (porInt.length >= 6) {
-    priceFontSize = '56px';
-    deFontSize = '20px';
-  } else if (porInt.length === 5) {
-    priceFontSize = '64px';
-    deFontSize = '22px';
-  } else if (porInt.length === 4) {
-    priceFontSize = '74px';
-  }
+  // Lógica de fonte dinâmica para o Aéreo (Aumentada e Comprimida)
+  let priceFontSize = '96px';
+  if (porInt.length >= 6) priceFontSize = '64px';
+  else if (porInt.length === 5) priceFontSize = '76px';
+  else if (porInt.length === 4) priceFontSize = '88px';
 
   return (
-    <div className="w-full h-full bg-white text-black font-body overflow-hidden relative flex flex-col justify-between box-border px-[6mm] py-[2.5mm]">
+    <div className="w-full h-full bg-white text-black font-body overflow-hidden relative flex flex-col justify-between box-border px-[12mm] py-[2.5mm]">
       
       {/* Faixa vertical de OFERTA integrada à direita */}
       {isOffer && (
@@ -62,46 +55,70 @@ export function PosterPreviewAereo({
       </div>
 
       {/* 2. MEIO: ÁREA DE PREÇOS */}
-      <div className={cn("flex-1 flex flex-col items-center justify-center relative min-h-0", isOffer && "pr-[14mm]")}>
+      <div className={cn("flex-1 flex flex-col items-center justify-center relative min-h-0 w-full", isOffer && "pr-[14mm]")}>
         
-        {/* Preço DE flutuando à esquerda */}
-        {isOffer && hasDiscount && (
-          <div className="absolute left-0 top-1 transition-opacity flex flex-col">
-            <span className="font-black text-[9pt] uppercase leading-none opacity-80">DE:</span>
-            <span className="font-bold leading-none line-through" style={{ fontSize: deFontSize }}>
-              R$ {formatCurrency(valDe)}
-            </span>
-          </div>
-        )}
+        {isOffer && hasDiscount ? (
+          <div className="flex flex-row items-center justify-center w-full gap-x-6">
+            {/* SEÇÃO DE */}
+            <div className="flex flex-col items-center">
+               <div className="flex items-center gap-2">
+                  <div className="flex flex-col items-start shrink-0">
+                     <span className="font-headline font-medium text-[14pt] leading-none uppercase">De:</span>
+                     <span className="font-headline font-medium text-[14pt] leading-none mt-1">R$</span>
+                  </div>
+                  <span className="font-headline font-medium leading-none tracking-tighter line-through decoration-[1.5mm] opacity-70 inline-block origin-left scale-x-70" style={{ fontSize: `calc(${priceFontSize} * 0.7)` }}>
+                    {formatCurrency(valDe)}
+                  </span>
+               </div>
+            </div>
 
-        {/* Preço POR e Parcelamento Empilhados */}
-        <div className="flex flex-col items-center justify-center">
-          <div className="flex items-center gap-3">
-            <span className="font-headline font-black text-[18pt] leading-none mb-[-4mm]">POR:</span>
-            <div className="flex items-end">
-              <span className="font-headline font-black text-[18pt] mr-1 pb-1">R$</span>
-              <span className="font-headline font-black leading-[0.75] tracking-tighter" style={{ fontSize: priceFontSize }}>{porInt}</span>
-              <div className="flex flex-col items-start ml-1 pb-1">
-                <span className="font-headline font-black text-[30pt] leading-none">,{porDec}</span>
-                <span className="font-bold text-[10pt] uppercase leading-none mt-1">un. à vista</span>
+            {/* SEÇÃO POR */}
+            <div className="flex flex-col items-center">
+              <div className="flex items-center gap-2">
+                <div className="flex flex-col items-start shrink-0">
+                   <span className="font-headline font-medium text-[14pt] leading-none uppercase">Por:</span>
+                   <span className="font-headline font-medium text-[14pt] leading-none mt-1">R$</span>
+                </div>
+                <div className="flex items-baseline">
+                  <span className="font-headline font-medium leading-none tracking-tighter inline-block origin-left scale-x-70" style={{ fontSize: `calc(${priceFontSize} * 0.85)` }}>
+                    {porInt},{porDec}
+                  </span>
+                  <span className="font-bold text-[10pt] uppercase leading-none ml-2 mb-2">un. à vista</span>
+                </div>
               </div>
             </div>
           </div>
+        ) : (
+          /* Preço ÚNICO (Sem Oferta) */
+          <div className="flex flex-col items-center justify-center w-full">
+            <div className="flex items-center gap-6">
+              <div className="flex flex-col items-start shrink-0">
+                 <span className="font-headline font-medium text-[20pt] leading-none uppercase">Por:</span>
+                 <span className="font-headline font-medium text-[20pt] leading-none mt-1">R$</span>
+              </div>
+              <div className="flex items-baseline">
+                <span className="font-headline font-medium leading-none tracking-tighter inline-block origin-left scale-x-70" style={{ fontSize: priceFontSize }}>
+                  {porInt},{porDec}
+                </span>
+                <span className="font-bold text-[11pt] uppercase leading-none ml-2 mb-2">un. à vista</span>
+              </div>
+            </div>
+          </div>
+        )}
 
-          {/* Parcelamento estilo CAPSULA (Pill) */}
-          {showInstallment && (
-             <div className="mt-2 border-[0.5mm] border-black rounded-full px-5 py-1 flex items-center gap-2">
-                <span className="font-headline font-bold text-[13pt] leading-none">ou em até</span>
-                <span className="font-headline font-black text-[17pt] leading-none">{maxInstallments}x</span>
-                <span className="font-headline font-bold text-[13pt] leading-none">de</span>
-                <span className="font-headline font-black text-[22pt] leading-none">R$ {formatCurrency(installmentValue)}</span>
-             </div>
-          )}
-        </div>
+        {/* Parcelamento estilo CAPSULA (Pill) - Abaixo dos preços */}
+        {showInstallment && (
+           <div className="mt-4 border-[0.6mm] border-black rounded-[3mm] px-4 py-1.5 flex items-center justify-center gap-x-2 w-full">
+              <span className="font-headline font-medium text-[14pt] leading-none uppercase">ou em até</span>
+              <span className="font-headline font-medium text-[14pt] leading-none uppercase">{maxInstallments}x sem juros</span>
+              <span className="font-headline font-medium text-[14pt] leading-none uppercase">de</span>
+              <span className="font-headline font-medium text-[14pt] leading-none uppercase">R$ {formatCurrency(installmentValue)}</span>
+           </div>
+        )}
       </div>
 
       {/* 3. BASE: METADADOS E FORNECEDOR EM LINHA ÚNICA */}
-      <div className={cn("w-full flex items-center justify-center gap-x-4 flex-wrap text-[7.5pt] font-mono font-bold uppercase opacity-80", isOffer && "pr-[14mm]")}>
+      <div className={cn("w-full flex items-center justify-center gap-x-6 flex-wrap text-[10pt] font-mono font-bold uppercase opacity-90", isOffer && "pr-[14mm]")}>
           {code && <span>SAP: {code}</span>}
           {ean && <span>EAN: {ean}</span>}
           {reference && <span>REF: {reference}</span>}

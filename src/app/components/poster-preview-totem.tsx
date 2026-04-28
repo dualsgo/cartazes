@@ -1,6 +1,7 @@
 import type { PosterData, PosterSettings } from '@/app/lib/types';
 import { Card } from '@/components/ui/card';
 import { OfertasHeader } from './ofertas-header';
+import { cn } from '@/lib/utils';
 import { parsePrice, formatCurrency, calculateInstallments, truncateMultiLine } from '@/app/lib/poster-utils';
 
 export function PosterPreviewTotem({
@@ -61,52 +62,49 @@ export function PosterPreviewTotem({
       </div>
 
       {/* MEIO: DE / DESCONTO */}
-      <div className="flex flex-col items-center w-full shrink-0 my-4 z-10">
-        <div className={`transition-opacity text-center text-[3.5em] font-headline text-black mb-4 ${valDe > 0 ? 'opacity-100' : 'opacity-0'}`}>
-          <span className="block leading-none">DE:</span>
-          <span className="font-bold line-through leading-none">
+      <div className="flex flex-col items-center w-full shrink-0 my-2 z-10">
+        <div className={cn("transition-opacity text-center font-headline text-black mb-6", valDe > 0 ? 'opacity-100' : 'opacity-0')}>
+          <span className="block text-[3em] leading-none mb-1">DE:</span>
+          <span className="text-[5.5em] font-bold line-through decoration-[2mm] leading-none">
             R$ {formatCurrency(valDe)}
           </span>
         </div>
 
-        <div className={`bg-black text-white text-center font-headline font-black transition-opacity flex flex-col items-center justify-center print:color-adjust-exact px-4 py-2 w-[85%] rounded-sm ${discount > 0 ? 'opacity-100' : 'opacity-0'}`}>
+        <div className={cn("bg-black text-white text-center font-headline font-black transition-opacity flex flex-col items-center justify-center print:color-adjust-exact px-6 py-4 w-[90%] rounded-md shadow-lg", discount > 0 ? 'opacity-100' : 'opacity-0')}>
           <div className="flex flex-col justify-center items-center w-full">
-             <span className="text-[2.2em] leading-tight uppercase tracking-wide">DESCONTO DE</span>
-             <span className="text-[6.5em] leading-[0.9]">{discount}%</span>
+             <span className="text-[2.5em] leading-tight uppercase tracking-wider">DESCONTO DE</span>
+             <span className="text-[7.5em] leading-[0.85]">{discount}%</span>
           </div>
         </div>
       </div>
 
       {/* BASE: POR + Parcelamento + Validade */}
-      <div className="flex flex-col items-center justify-start w-full flex-1 mt-8">
-        <div className="flex items-end justify-center w-full">
-          <span className="font-headline text-[3.5em] font-black mr-4 self-start mt-8 shrink-0">
-            POR
+      <div className="flex flex-col items-center justify-start w-full flex-1 mt-6">
+        <div className="flex flex-col items-center w-full">
+          <span className="font-headline text-[4em] font-black leading-none uppercase mb-2">
+            POR:
           </span>
-          <div className="flex items-baseline">
-            <span className="font-headline text-[5em] mr-1">R$</span>
-            <span className="font-headline font-black leading-[0.8] tracking-tighter" style={{ fontSize: priceFontSize }}>
-              {porInteger}
-            </span>
-            <span className="font-headline text-[5.5em] font-black">
-              ,{porDecimal}
-            </span>
+          <div className="flex items-baseline justify-center w-full">
+            <div className="flex items-baseline">
+              <span className="font-headline text-[6em] font-black mr-2">R$</span>
+              <span className="font-headline font-black leading-[0.8] tracking-tighter inline-block origin-center scale-x-90" style={{ fontSize: priceFontSize }}>
+                {porInteger},{porDecimal}
+              </span>
+            </div>
+            <span className="text-[1.8em] font-bold uppercase opacity-80 ml-4 shrink-0 whitespace-nowrap">un. à vista</span>
           </div>
         </div>
 
-        <div className="font-bold flex items-baseline space-x-1 mt-2">
-          <span className="text-[2.5em]">un. à vista</span>
-        </div>
-
         {hasInstallments ? (
-          <div className="font-headline text-center font-bold text-[4em] leading-tight mt-4">
-            ou {maxInstallments}x de R$ {formatCurrency(installmentValue)}
+          <div className="font-headline text-center font-bold text-[2.6em] leading-[1.1] mt-8 uppercase">
+            <div>ou parcelado em</div>
+            <div>até {maxInstallments}x sem juros de R$ {formatCurrency(installmentValue)}</div>
           </div>
         ) : (
           <div className="mt-4" style={{ height: '4.8em' }}></div>
         )}
 
-        <div className="text-[1.2em] text-center w-full shrink-0 leading-tight text-black font-semibold mt-6 pt-4 border-t border-black">
+        <div className="text-[1.2em] text-center w-full shrink-0 leading-tight text-black font-semibold mt-auto pt-6">
           {(offerValidityStart || offerValidity) ? (
             <span>
               Oferta válida{' '}

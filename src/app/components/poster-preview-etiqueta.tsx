@@ -15,7 +15,8 @@ export function PosterPreviewEtiqueta({
   paymentOption,
   posterSubType,
   supplier,
-}: PosterData) {
+  settings,
+}: PosterData & { settings: PosterSettings }) {
   const valDe = parsePrice(priceFrom);
   const valPor = parsePrice(priceFor);
 
@@ -27,7 +28,7 @@ export function PosterPreviewEtiqueta({
 
   const [porInteger, porDecimal] = formatCurrency(valPor).split(',');
 
-  const { maxInstallments, installmentValue } = calculateInstallments(valPor, { maxInstallments: 6, minInstallmentAmount: 30 });
+  const { maxInstallments, installmentValue } = calculateInstallments(valPor, settings);
   
   const hasInstallments = paymentOption === 'installment' && maxInstallments > 1;
 

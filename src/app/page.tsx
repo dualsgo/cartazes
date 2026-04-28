@@ -151,7 +151,7 @@ function SinglePosterPreview({
         >
           {posterType === 'reliquias'           && <PosterPreview {...data} isImperdiveis={false} settings={settings} />}
           {posterType === 'ofertas-imperdiveis' && <PosterPreview {...data} isImperdiveis={true}  settings={settings} />}
-          {posterType === 'aereo'               && <PosterPreviewAereo {...data} />}
+          {posterType === 'aereo'               && <PosterPreviewAereo {...data} settings={settings} />}
           {posterType === 'avaria'              && <PosterPreviewDefeito {...data} settings={settings} />}
           {posterType === 'etiqueta-oficial'    && <PosterPreviewEtiquetaOficial {...data} settings={settings} />}
           {posterType === 'totem'               && <PosterPreviewTotem {...data} settings={settings} />}
@@ -205,7 +205,7 @@ function PageGrid({
                 boxSizing: 'border-box'
               }}
             >
-              <PosterPreviewAereo {...d} />
+              <PosterPreviewAereo {...d} settings={settings} />
             </div>
           );
         })}
@@ -343,7 +343,7 @@ export default function Home() {
   const [queueFilter, setQueueFilter] = useState<'all' | 'offer' | 'normal'>('all');
   const [settings, setSettings] = useState<PosterSettings>({
     maxInstallments: 6,
-    minInstallmentAmount: 30,
+    minInstallmentAmount: 29.99,
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);

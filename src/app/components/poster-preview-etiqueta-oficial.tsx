@@ -62,7 +62,7 @@ export function PosterPreviewEtiquetaOficial({
                          <span className="text-[11px] font-bold uppercase">De:</span>
                          <span className="text-[11px] font-bold leading-none mt-1">R$</span>
                       </div>
-                      <span className="text-[32px] font-normal tracking-tighter inline-block origin-left scale-x-75 whitespace-nowrap leading-none relative">
+                      <span className="text-[32px] font-bold tracking-tighter inline-block origin-left scale-x-75 whitespace-nowrap leading-none relative">
                          {formatCurrency(valDe)}
                          {/* Barra inclinada preta sólida para impressoras monocromáticas */}
                          <div className="absolute inset-x-0 top-[45%] h-[1.5mm] bg-black -rotate-[15deg] pointer-events-none" />
@@ -84,15 +84,16 @@ export function PosterPreviewEtiquetaOficial({
                    </div>
                 </div>
              ) : (
-                 <div className="flex items-start w-full gap-4 justify-start">
-                    <div className="flex flex-col mt-0.5 shrink-0">
-                       <span className="text-[15px] font-bold uppercase leading-none tracking-tight">Preço à Vista:</span>
-                       <span className="text-[15px] font-bold leading-none mt-1">R$</span>
+                 <div className="flex items-start w-full gap-3 justify-start overflow-hidden">
+                    <div className="flex flex-col mt-2 shrink-0">
+                       <span className="text-[12px] font-bold uppercase leading-none tracking-tight">Preço à Vista:</span>
+                       <span className="text-[12px] font-bold leading-none mt-1">R$</span>
                     </div>
-                    <div className="flex items-baseline leading-none flex-nowrap overflow-visible">
-                       <span className="text-[42px] font-bold tracking-tighter inline-block origin-left scale-x-85">{porInteger}</span>
-                       <span className="text-[42px] font-bold tracking-tighter inline-block origin-left scale-x-85 ml-[-3mm]">,{porDecimal}</span>
-                       <span className="text-[8px] font-bold uppercase ml-[-2mm] self-end mb-1 shrink-0">un.</span>
+                    <div className="flex items-baseline leading-none flex-nowrap">
+                       <span className="text-[46px] font-bold tracking-tighter inline-block origin-left scale-x-80">{porInteger}</span>
+                       <span className="text-[36px] font-bold ml-0.5 mr-[-0.5mm]">,</span>
+                       <span className="text-[46px] font-bold tracking-tighter inline-block origin-left scale-x-80">{porDecimal}</span>
+                       <span className="text-[9px] font-bold uppercase ml-1.5 self-end mb-1 shrink-0">un.</span>
                     </div>
                  </div>
              )}
