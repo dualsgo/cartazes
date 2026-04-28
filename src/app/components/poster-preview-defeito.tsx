@@ -87,16 +87,16 @@ export function PosterPreviewDefeito({
           <div className="flex-1 flex flex-col items-center justify-center min-h-0">
             <div className={cn('transition-opacity text-center text-[2em] font-headline text-black', valDe > 0 ? 'opacity-100' : 'opacity-0')}>
               <span className="block text-[0.7em] mb-[-0.2em]">DE:</span>
-              <span className="font-bold line-through decoration-[0.8mm]">R$ {formatCurrency(valDe)}</span>
+              <span className="font-bold line-through decoration-[0.4mm]">R$ {formatCurrency(valDe)}</span>
             </div>
           </div>
 
-          {/* ZONA 4: Rodapé códigos (tamanho fixo na base) */}
-          <div className="shrink-0 pt-2 border-t border-black/10">
-            <div className="text-[0.65em] flex flex-wrap gap-x-2 gap-y-0 text-black font-semibold justify-center">
-              {reference && <span>Ref.: <b className="font-bold">{reference}</b></span>}
-              {code      && <span>SAP: <b className="font-bold">{code}</b></span>}
-              {ean       && <span>EAN: <b className="font-bold">{ean}</b></span>}
+          {/* ZONA 4: Rodapé códigos (tamanho fixo na base) - Limitado para não quebrar layout */}
+          <div className="shrink-0 pt-2 border-t border-black/10 overflow-hidden">
+            <div className="text-[0.65em] flex flex-nowrap gap-x-2 text-black font-semibold justify-center">
+              {reference && <span className="truncate max-w-[40%]">Ref.: <b className="font-bold">{reference}</b></span>}
+              {code      && <span className="truncate max-w-[30%]">SAP: <b className="font-bold">{code}</b></span>}
+              {ean       && <span className="truncate max-w-[30%]">EAN: <b className="font-bold">{ean}</b></span>}
             </div>
           </div>
         </div>
@@ -146,7 +146,7 @@ export function PosterPreviewDefeito({
             </div>
              {valPor > 0 && (
               <div className="font-bold flex items-baseline space-x-1">
-                <span className="text-[0.9em]">un. à vista</span>
+                <span className="text-[0.9em]">un.</span>
               </div>
             )}
             {installmentText}

@@ -20,8 +20,8 @@ export function PosterPreviewEtiqueta({
   const valDe = parsePrice(priceFrom);
   const valPor = parsePrice(priceFor);
 
-  // Redução proporcional de caracteres para caber na nova largura com margem
-  const displayDescription = truncateDescription(description, 22);
+  // Limite de 30 caracteres conforme solicitado pelo usuário
+  const displayDescription = truncateDescription(description, 30);
 
   const isOffer = posterSubType === 'offer';
   const hasDiscount = valDe > 0 && valPor > 0 && valDe > valPor;
@@ -82,7 +82,7 @@ export function PosterPreviewEtiqueta({
             {isOffer && (
               <div className={cn("transition-opacity flex items-center shrink-0", hasDiscount ? 'opacity-100' : 'opacity-0')}>
                 <span className="font-headline font-black uppercase tracking-tighter text-[10px] leading-none mr-1">DE:</span>
-                <span className="font-headline font-black leading-[0.75] tracking-[-0.05em] line-through decoration-[1mm] inline-block origin-left scale-x-90 whitespace-nowrap" style={{ fontSize: `calc(${offerPriceFontSize} * 0.8)` }}>
+                <span className="font-headline font-black leading-[0.75] tracking-[-0.05em] line-through decoration-[0.5mm] inline-block origin-left scale-x-90 whitespace-nowrap" style={{ fontSize: `calc(${offerPriceFontSize} * 0.8)` }}>
                   R$ {formatCurrency(valDe)}
                 </span>
               </div>
@@ -99,11 +99,11 @@ export function PosterPreviewEtiqueta({
                   R$ {formatCurrency(valPor)}
                 </span>
 
-                {/* Info un. à vista */}
+                {/* Info un. - Aproximado do centavo */}
                 {isOffer && (
-                  <div className="flex flex-col items-start ml-1 shrink-0 pb-1 text-black">
+                  <div className="flex flex-col items-start ml-[-2mm] shrink-0 pb-1 text-black">
                     <span className="font-bold whitespace-nowrap leading-none mt-0.5" style={{ fontSize: '7.5px' }}>
-                      un. à vista
+                      un.
                     </span>
                   </div>
                 )}
@@ -119,7 +119,7 @@ export function PosterPreviewEtiqueta({
                   isOffer ? "bg-black text-white border-black" : "bg-white text-black border-black/20"
                 )}>
                   <span className="font-headline font-bold leading-none whitespace-nowrap text-[10px] tracking-tight">
-                    ou {maxInstallments}x de R$ {formatCurrency(installmentValue)}
+                    Parcelamento em até {maxInstallments}x de R$ {formatCurrency(installmentValue)}
                   </span>
                 </div>
              ) : (
@@ -131,7 +131,7 @@ export function PosterPreviewEtiqueta({
           <div className="w-full flex flex-col items-center shrink-0 pt-1">
              {!isOffer && (
                <div className="flex items-center gap-2 mb-0.5 shrink-0">
-                  <span className="font-bold whitespace-nowrap text-black text-[11px]">un. à vista</span>
+                  <span className="font-bold whitespace-nowrap text-black text-[7.5px]">un.</span>
                </div>
              )}
              {supplier && (
@@ -168,14 +168,14 @@ export function PosterPreviewEtiqueta({
         {/* Blocos Verticais de Códigos - Posição compactada à direita extremo */}
         <div className="absolute right-[0.5mm] top-0 bottom-0 flex flex-row-reverse items-center gap-0 text-[6.5pt] text-black font-mono leading-none font-bold">
           {/* Coluna: SAP e REF */}
-          <div className="flex flex-col justify-center items-center h-full w-[4mm]">
-              <div className="rotate-90 whitespace-nowrap whitespace-pre">
+          <div className="flex flex-col justify-center items-center h-full w-[4mm] overflow-hidden">
+              <div className="rotate-90 whitespace-nowrap truncate max-w-[28mm]">
                 {code ? `SAP: ${code}` : ''} {reference ? ` | ${reference}` : ''}
               </div>
           </div>
           {/* Coluna: EAN */}
-          <div className="flex flex-col justify-center items-center h-full w-[3.5mm]">
-              <div className="rotate-90 whitespace-nowrap">
+          <div className="flex flex-col justify-center items-center h-full w-[3.5mm] overflow-hidden">
+              <div className="rotate-90 whitespace-nowrap truncate max-w-[28mm]">
                 {ean ? `EAN: ${ean}` : ''}
               </div>
           </div>

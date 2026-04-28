@@ -66,8 +66,10 @@ export function PosterPreviewAereo({
                      <span className="font-headline font-medium text-[14pt] leading-none uppercase">De:</span>
                      <span className="font-headline font-medium text-[14pt] leading-none mt-1">R$</span>
                   </div>
-                  <span className="font-headline font-medium leading-none tracking-tighter line-through decoration-[1.5mm] opacity-70 inline-block origin-left scale-x-70" style={{ fontSize: `calc(${priceFontSize} * 0.7)` }}>
+                  <span className="font-headline font-medium leading-none tracking-tighter inline-block origin-left scale-x-70 relative" style={{ fontSize: `calc(${priceFontSize} * 0.7)` }}>
                     {formatCurrency(valDe)}
+                    {/* Barra inclinada preta sólida - Espessura reduzida */}
+                    <div className="absolute inset-x-0 top-[45%] h-[0.75mm] bg-black -rotate-[12deg] pointer-events-none" />
                   </span>
                </div>
             </div>
@@ -106,23 +108,23 @@ export function PosterPreviewAereo({
           </div>
         )}
 
-        {/* Parcelamento estilo CAPSULA (Pill) - Abaixo dos preços */}
+        {/* Parcelamento estilo CAPSULA (Pill) - Ajustado para linha única com fontes menores */}
         {showInstallment && (
-           <div className="mt-4 border-[0.6mm] border-black rounded-[3mm] px-4 py-1.5 flex items-center justify-center gap-x-2 w-full">
-              <span className="font-headline font-medium text-[14pt] leading-none uppercase">ou em até</span>
-              <span className="font-headline font-medium text-[14pt] leading-none uppercase">{maxInstallments}x sem juros</span>
-              <span className="font-headline font-medium text-[14pt] leading-none uppercase">de</span>
-              <span className="font-headline font-medium text-[14pt] leading-none uppercase">R$ {formatCurrency(installmentValue)}</span>
+           <div className="mt-4 border-[0.6mm] border-black rounded-[3mm] px-4 py-1.5 flex items-center justify-center gap-x-1.5 w-full whitespace-nowrap overflow-hidden">
+              <span className="font-headline font-medium text-[10pt] uppercase">ou parcelado em até</span>
+              <span className="font-headline font-black text-[13pt] uppercase">{maxInstallments}x sem juros</span>
+              <span className="font-headline font-medium text-[10pt] uppercase">de</span>
+              <span className="font-headline font-black text-[16pt] uppercase">R$ {formatCurrency(installmentValue)}</span>
            </div>
         )}
       </div>
 
-      {/* 3. BASE: METADADOS E FORNECEDOR EM LINHA ÚNICA */}
-      <div className={cn("w-full flex items-center justify-center gap-x-6 flex-wrap text-[10pt] font-mono font-bold uppercase opacity-90", isOffer && "pr-[14mm]")}>
-          {code && <span>SAP: {code}</span>}
-          {ean && <span>EAN: {ean}</span>}
-          {reference && <span>REF: {reference}</span>}
-          {supplier && <span className="text-black font-black whitespace-nowrap overflow-hidden text-ellipsis max-w-[40%]">| FORN: {supplier}</span>}
+      {/* 3. BASE: METADADOS E FORNECEDOR EM LINHA ÚNICA - Limitado para não quebrar layout */}
+      <div className={cn("w-full flex items-center justify-center gap-x-4 flex-nowrap text-[10pt] font-mono font-bold uppercase opacity-90 overflow-hidden", isOffer && "pr-[14mm]")}>
+          {code && <span className="truncate max-w-[15%]">SAP: {code}</span>}
+          {ean && <span className="truncate max-w-[25%]">EAN: {ean}</span>}
+          {reference && <span className="truncate max-w-[25%]">REF: {reference}</span>}
+          {supplier && <span className="text-black font-black whitespace-nowrap overflow-hidden text-ellipsis max-w-[35%]">| FORN: {supplier}</span>}
       </div>
     </div>
   );

@@ -54,10 +54,10 @@ export function PosterPreviewTotem({
           ))}
         </h2>
 
-        <div className="text-[1.2em] flex flex-wrap justify-center gap-x-4 gap-y-1 text-black font-semibold text-center w-full">
-          {reference && <span>Ref.: <b className="font-bold">{reference}</b></span>}
-          {code && <span>SAP: <b className="font-bold">{code}</b></span>}
-          {ean && <span>EAN: <b className="font-bold">{ean}</b></span>}
+        <div className="text-[1.2em] flex flex-nowrap justify-center gap-x-4 text-black font-semibold text-center w-full overflow-hidden">
+          {reference && <span className="truncate max-w-[40%]">Ref.: <b className="font-bold">{reference}</b></span>}
+          {code && <span className="truncate max-w-[30%]">SAP: <b className="font-bold">{code}</b></span>}
+          {ean && <span className="truncate max-w-[30%]">EAN: <b className="font-bold">{ean}</b></span>}
         </div>
       </div>
 
@@ -65,7 +65,7 @@ export function PosterPreviewTotem({
       <div className="flex flex-col items-center w-full shrink-0 my-2 z-10">
         <div className={cn("transition-opacity text-center font-headline text-black mb-6", valDe > 0 ? 'opacity-100' : 'opacity-0')}>
           <span className="block text-[3em] leading-none mb-1">DE:</span>
-          <span className="text-[5.5em] font-bold line-through decoration-[2mm] leading-none">
+          <span className="text-[5.5em] font-bold line-through decoration-[1mm] leading-none">
             R$ {formatCurrency(valDe)}
           </span>
         </div>
@@ -91,7 +91,7 @@ export function PosterPreviewTotem({
                 {porInteger},{porDecimal}
               </span>
             </div>
-            <span className="text-[1.8em] font-bold uppercase opacity-80 ml-4 shrink-0 whitespace-nowrap">un. à vista</span>
+            <span className="text-[1.8em] font-bold uppercase opacity-80 ml-1 shrink-0 whitespace-nowrap">un.</span>
           </div>
         </div>
 

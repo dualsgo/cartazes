@@ -37,7 +37,7 @@ export function PosterPreview({
   const { maxInstallments, installmentValue } = calculateInstallments(valPor, settings);
   const installmentText  = paymentOption === 'installment' && maxInstallments > 1 ? (
     <div className="font-headline text-center font-bold text-[1.2em] leading-tight mt-1">
-      ou em até {maxInstallments}x de R$ {formatCurrency(installmentValue)}
+      Parcelamento em até {maxInstallments}x de R$ {formatCurrency(installmentValue)}
     </div>
   ) : null;
 
@@ -72,16 +72,16 @@ export function PosterPreview({
           <div className="flex-1 flex flex-col items-center justify-center min-h-0">
             <div className={`transition-opacity text-center text-[2.2em] font-headline text-black ${hasDiscount ? 'opacity-100' : 'opacity-0'}`}>
               <span className="block text-[0.7em] mb-[-0.2em]">DE:</span>
-              <span className="font-bold line-through decoration-[0.8mm]">R$ {formatCurrency(valDe)}</span>
+              <span className="font-bold line-through decoration-[0.4mm]">R$ {formatCurrency(valDe)}</span>
             </div>
           </div>
 
-          {/* ZONA 4: Rodapé códigos (tamanho fixo na base) */}
-          <div className="shrink-0 pt-2">
-            <div className="text-[0.72em] flex flex-wrap gap-x-2 gap-y-0 text-black font-semibold justify-center">
-              {reference && <span>Ref.: <b className="font-bold">{reference}</b></span>}
-              {code      && <span>SAP: <b className="font-bold">{code}</b></span>}
-              {ean       && <span>EAN: <b className="font-bold">{ean}</b></span>}
+          {/* ZONA 4: Rodapé códigos (tamanho fixo na base) - Limitado para não quebrar layout */}
+          <div className="shrink-0 pt-2 overflow-hidden">
+            <div className="text-[0.72em] flex flex-nowrap gap-x-2 text-black font-semibold justify-center">
+              {reference && <span className="truncate max-w-[40%]">Ref.: <b className="font-bold">{reference}</b></span>}
+              {code      && <span className="truncate max-w-[30%]">SAP: <b className="font-bold">{code}</b></span>}
+              {ean       && <span className="truncate max-w-[30%]">EAN: <b className="font-bold">{ean}</b></span>}
             </div>
           </div>
         </div>
@@ -110,7 +110,7 @@ export function PosterPreview({
             </div>
             {valPor > 0 && (
               <div className="font-bold flex items-baseline space-x-1">
-                <span className="text-[0.9em]">un. à vista</span>
+                <span className="text-[0.9em]">un.</span>
               </div>
             )}
             {installmentText}

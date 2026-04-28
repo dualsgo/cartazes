@@ -25,6 +25,8 @@ export function PosterPreviewEtiquetaOficial({
   const isOffer = posterSubType === 'offer';
   const hasDiscount = valDe > 0 && valPor > 0 && valDe > valPor;
 
+  const displayDescription = truncateDescription(description, 30);
+
   const [porInteger, porDecimal] = formatCurrency(valPor).split(',');
 
   const { maxInstallments, installmentValue } = calculateInstallments(valPor, settings);
@@ -46,13 +48,13 @@ export function PosterPreviewEtiquetaOficial({
         
         {/* 1. DESCRIÇÃO */}
         <div className="shrink-0">
-          <h2 className="font-bold text-[15px] leading-[1.1] uppercase tracking-tight overflow-hidden line-clamp-3 text-left">
-            {description}
+          <h2 className="font-bold text-[15px] leading-[1.1] uppercase tracking-tight overflow-hidden line-clamp-2 text-left">
+            {displayDescription}
           </h2>
         </div>
 
-        {/* 2. ÁREA DE PREÇO: Ajustada para ocupar apenas o espaço restante */}
-        <div className="flex flex-col justify-center flex-1 py-1 overflow-hidden min-h-0 min-w-0">
+        {/* 2. ÁREA DE PREÇO: Ajustada para ocupar apenas o espaço restante, com respiro para equidistância */}
+        <div className="flex flex-col justify-center flex-1 py-2 overflow-hidden min-h-0 min-w-0">
           <div className="flex items-center w-full justify-start">
               {isOffer && valDe > 0 ? (
                 <div className="flex items-start w-full justify-start gap-2">
@@ -64,8 +66,8 @@ export function PosterPreviewEtiquetaOficial({
                       </div>
                       <span className="text-[32px] font-bold tracking-tighter inline-block origin-left scale-x-75 whitespace-nowrap leading-none relative">
                          {formatCurrency(valDe)}
-                         {/* Barra inclinada preta sólida para impressoras monocromáticas */}
-                         <div className="absolute inset-x-0 top-[45%] h-[1.5mm] bg-black -rotate-[15deg] pointer-events-none" />
+                         {/* Barra inclinada preta sólida para impressoras monocromáticas - Espessura reduzida pela metade */}
+                         <div className="absolute inset-x-0 top-[45%] h-[0.75mm] bg-black -rotate-[15deg] pointer-events-none" />
                       </span>
                    </div>
 
@@ -79,7 +81,7 @@ export function PosterPreviewEtiquetaOficial({
                          <span className="text-[36px] font-bold tracking-tighter inline-block origin-left scale-x-75 whitespace-nowrap leading-none">
                             {formatCurrency(valPor)}
                          </span>
-                         <span className="text-[8px] font-bold uppercase ml-[-2mm] self-end mb-1">un.</span>
+                         <span className="text-[8px] font-bold uppercase ml-[-6mm] self-end mb-1">un.</span>
                       </div>
                    </div>
                 </div>
@@ -89,12 +91,12 @@ export function PosterPreviewEtiquetaOficial({
                        <span className="text-[12px] font-bold uppercase leading-none tracking-tight">Preço à Vista:</span>
                        <span className="text-[12px] font-bold leading-none mt-1">R$</span>
                     </div>
-                    <div className="flex items-baseline leading-none flex-nowrap">
-                       <span className="text-[46px] font-bold tracking-tighter inline-block origin-left scale-x-80">{porInteger}</span>
-                       <span className="text-[36px] font-bold ml-0.5 mr-[-0.5mm]">,</span>
-                       <span className="text-[46px] font-bold tracking-tighter inline-block origin-left scale-x-80">{porDecimal}</span>
-                       <span className="text-[9px] font-bold uppercase ml-1.5 self-end mb-1 shrink-0">un.</span>
-                    </div>
+                  <div className="flex items-baseline leading-none flex-nowrap">
+                     <span className="text-[42px] font-bold tracking-tighter inline-block origin-left scale-x-80">{porInteger}</span>
+                     <span className="text-[32px] font-bold ml-0.5 mr-[-0.5mm]">,</span>
+                     <span className="text-[42px] font-bold tracking-tighter inline-block origin-left scale-x-80">{porDecimal}</span>
+                     <span className="text-[9px] font-bold uppercase ml-1.5 self-end mb-1 shrink-0">un.</span>
+                  </div>
                  </div>
              )}
           </div>
@@ -105,7 +107,8 @@ export function PosterPreviewEtiquetaOficial({
           {hasInstallments ? (
             <div className="border-[0.2mm] border-black rounded-[3mm] px-1 py-0.5 flex flex-col justify-center min-h-[4mm] w-full">
                <div className="flex items-center justify-center gap-2">
-                  <div className="flex flex-col items-center">
+                  <span className="text-[6.5px] font-bold uppercase leading-none max-w-[15mm] text-right">Parcelamento em até</span>
+                  <div className="flex flex-col items-center border-l border-black/20 pl-2">
                      <span className="text-[14px] font-bold leading-none tracking-tighter">{maxInstallments}X</span>
                      <span className="text-[7px] font-bold leading-none uppercase mt-0.5">Sem Juros</span>
                   </div>
@@ -120,11 +123,11 @@ export function PosterPreviewEtiquetaOficial({
           )}
         </div>
 
-        {/* 4. RODAPÉ */}
-        <div className="shrink-0 pt-1 flex flex-wrap gap-x-3 gap-y-0.5 items-baseline mt-auto">
-           <span className="text-[7px] font-bold uppercase whitespace-nowrap">REF: {reference || 'N/A'}</span>
-           {code && <span className="text-[7px] font-bold whitespace-nowrap">SAP: {code}</span>}
-           {supplier && <span className="text-[7px] font-bold truncate max-w-[45mm] uppercase">FORN: {supplier}</span>}
+        {/* 4. RODAPÉ - Limitado a linha única para não quebrar layout */}
+        <div className="shrink-0 pt-1 flex flex-nowrap gap-x-2 items-baseline mt-auto overflow-hidden h-[4mm]">
+           <span className="text-[7px] font-bold uppercase truncate max-w-[28mm]">REF: {reference || 'N/A'}</span>
+           {code && <span className="text-[7px] font-bold truncate max-w-[18mm]">SAP: {code}</span>}
+           {supplier && <span className="text-[7px] font-bold truncate max-w-[40mm] uppercase">FORN: {supplier}</span>}
         </div>
       </div>
 
