@@ -67,14 +67,13 @@ export function BarcodeEAN({
 
   for (let i = 0; i < pattern.length; i++) {
     if (pattern[i] === '1') {
-      const isGuard = i < 3 || (i > 44 && i < 50) || i > 91;
       elements.push(
         <rect
           key={i}
           x={`${i * barWidth}%`}
           y={0}
           width={`${barWidth}%`}
-          height={isGuard ? '100%' : '90%'}
+          height="100%"
           fill="black"
         />
       );

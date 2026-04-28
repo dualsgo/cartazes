@@ -158,31 +158,37 @@ function processProductRow(row: Record<string, any>, mapping: Record<string, num
 
   /**
    * Lógica do Usuário:
-   * 1. SE TIVERMOS E, F E G VALE G (Promoção)
-   * 2. SE TIVERMOS E e F, VALE F (Novo)
-   * 3. SENÃO VALE E (Atual)
+   * 1. SE TIVERMOS PROMOÇÃO (J), VALE J (Oferta)
+   * 2. SE NÃO TIVERMOS PROMOÇÃO, VALE NOVO PREÇO (I)
+   * 3. SE NOVO PREÇO < PREÇO ANTERIOR (H) MAS J É ZERO, É REDUÇÃO SEM OFERTA
    */
   if (valPromo > 0) {
-    // É Promoção (G)
+    // É Promoção (J)
     poster.posterSubType = 'offer';
     poster.priceFor = formatCurrency(valPromo);
-    // O "De" será o Novo (F) se existir e for maior, senão o Atual (E)
+    // O "De" será o Novo (I) se existir e for maior, senão o Anterior (H)
     poster.priceFrom = (valNovo > valPromo) ? formatCurrency(valNovo) : formatCurrency(valAtual);
   } else if (valNovo > 0) {
-    // É Novo Preço (F)
+    // É Novo Preço (I)
+    // Se baixou em relação ao anterior (H) mas não tem valor em J:
+    // O usuário disse: "pode ser redução mas sem oferta nesse caso J estara zerado mas I sera menor que H"
     if (valNovo < valAtual && valAtual > 0) {
-      // Se baixou, é oferta
-      poster.posterSubType = 'offer';
+      // Se baixou, PODERIA ser oferta, mas o usuário indicou que nesse caso (J=0) 
+      // pode ser apenas uma redução de preço normal.
+      // Vou assumir que se baixou, ainda mostramos como oferta para destacar, 
+      // A MENOS que o sistema queira tratar como preço normal.
+      // Mas o pedido diz "usaremos valor de I se J estiver zerado".
+      poster.posterSubType = 'normal'; 
       poster.priceFor = formatCurrency(valNovo);
-      poster.priceFrom = formatCurrency(valAtual);
+      poster.priceFrom = '';
     } else {
-      // Se manteve ou subiu, é normal
+      // Se manteve ou subiu (aumento), é normal
       poster.posterSubType = 'normal';
       poster.priceFor = formatCurrency(valNovo);
       poster.priceFrom = '';
     }
   } else {
-    // É Preço Atual (E)
+    // É Preço Atual/Anterior (H)
     poster.posterSubType = 'normal';
     poster.priceFor = formatCurrency(valAtual);
     poster.priceFrom = '';
@@ -201,15 +207,15 @@ function createMapping(headers: string[]): Record<string, number> {
   };
   
   // Mapeamento baseado na descrição do usuário e imagem (lidando com encoding corrompido)
-  // A=0 (SAP), B=1 (Mercadoria), C=2 (Referência), E=4 (Atual), F=5 (Novo), G=6 (Promo)
+  // Relatório Circular: C=2 (SAP), D=3 (EAN), E=4 (Ref), F=5 (Desc), H=7 (Ant), I=8 (Novo), J=9 (Promo)
   return {
-    sap:        findIdx(['sap', 'interno', 'código', 'codigo', 'cod.'], 0),
-    mercadoria: findIdx(['mercadoria', 'descrição', 'descricao', 'produto', 'nome'], 1),
-    ref:        findIdx(['referencia', 'referência', 'ref', 'fornecedor'], 2),
-    precoAtual: findIdx(['atual', 'preÃ§o'], 4),
-    novoPreco:  findIdx(['novo'], 5),
-    promocao:   findIdx(['promo', 'Ã§Ã£o', 'promoção'], 6),
-    ean:        findIdx(['ean', 'barras'], -1),
+    sap:        findIdx(['sap', 'interno', 'código', 'codigo', 'cod.'], 2),
+    ean:        findIdx(['ean', 'barras'], 3),
+    mercadoria: findIdx(['mercadoria', 'descrição', 'descricao', 'produto', 'nome'], 5),
+    ref:        findIdx(['referencia', 'referência', 'ref', 'fornecedor'], 4),
+    precoAtual: findIdx(['anterior', 'atual', 'preÃ§o'], 7),
+    novoPreco:  findIdx(['novo'], 8),
+    promocao:   findIdx(['promo', 'Ã§Ã£o', 'promoção'], 9),
     supplier:   findIdx(['fornecedor', 'forn'], -1),
   };
 }
@@ -295,8 +301,13 @@ export function parseProductExcel(buffer: ArrayBuffer): any[] {
       continue;
     }
 
-    // 2. Detectar se é uma linha de header
-    if (firstCol.toLowerCase().includes('sap') || firstCol.toLowerCase().includes('código') || firstCol.toLowerCase().includes('interno')) {
+    // 2. Detectar se é uma linha de header (procura palavras-chave em qualquer coluna)
+    const isHeader = cols.some(c => {
+      const s = String(c || '').toLowerCase();
+      return s.includes('sap') || s.includes('código') || s.includes('interno') || s.includes('mercadoria') || s.includes('ean');
+    });
+
+    if (isHeader) {
       const headers = cols.map(h => String(h || '').trim());
       mapping = createMapping(headers);
       continue;
@@ -313,6 +324,60 @@ export function parseProductExcel(buffer: ArrayBuffer): any[] {
   }
 
   return results;
+}
+
+/**
+ * Analisa um arquivo Excel (XLS/XLSX) especificamente para o BANCO DE DADOS
+ */
+export function parseDatabaseImportExcel(buffer: ArrayBuffer): any[] {
+  let data: any[][] = [];
+
+  try {
+    const text = new TextDecoder("windows-1252").decode(buffer);
+    if (text.toLowerCase().includes('<html') || text.toLowerCase().includes('<table')) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(text, 'text/html');
+      const rows = Array.from(doc.querySelectorAll('tr'));
+      data = rows.map(tr => Array.from(tr.querySelectorAll('th, td')).map(td => {
+        const xStr = td.getAttribute('x:str');
+        if (xStr) return xStr.trim();
+        return (td.textContent || '').trim();
+      }));
+    }
+  } catch (e) {}
+
+  if (data.length === 0) {
+    const workbook = XLSX.read(buffer, { type: 'array' });
+    const firstSheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[firstSheetName];
+    data = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false }) as any[][];
+  }
+  
+  if (data.length < 1) return [];
+
+  const items: any[] = [];
+  
+  // O usuário informou:
+  // Col C (2) para codigo SAP
+  // Col D (3) para o EAN
+  // Col E (4) para referencia
+  // Col F (5) para descrição
+  for (let i = 0; i < data.length; i++) {
+    const row = data[i];
+    if (!row || row.length < 6) continue;
+
+    const description = String(row[5] || '').trim();
+    if (!description || description.toLowerCase().includes('mercadoria') || description.toLowerCase().includes('descrição')) continue;
+
+    items.push({
+      code: String(row[2] || '').trim(),
+      ean: String(row[3] || '').trim(),
+      reference: String(row[4] || '').trim(),
+      description: description.toUpperCase(),
+    });
+  }
+
+  return items;
 }
 
 

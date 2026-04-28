@@ -223,3 +223,51 @@ export async function DELETE(request: NextRequest) {
         return NextResponse.json({ error: 'Erro interno ao remover produto.' }, { status: 500 });
     }
 }
+
+export async function PUT(request: NextRequest) {
+    try {
+        const body = await request.json() as { items: any[] };
+        if (!body.items || !Array.isArray(body.items)) {
+            return NextResponse.json({ error: 'Campo "items" (array) é obrigatório.' }, { status: 400 });
+        }
+
+        const produtos = loadProdutos();
+        let updatedCount = 0;
+
+        for (const item of body.items) {
+            const { description, code, ean, reference, supplier } = item;
+            if (!description || (!code && !ean)) continue;
+
+            const descClean = String(description).trim().toUpperCase();
+            const codeClean = code ? String(code).trim() : undefined;
+            const eanClean  = ean  ? String(ean).trim()  : undefined;
+            const refClean  = reference ? String(reference).trim() : '';
+            const suppClean = supplier ? String(supplier).trim().toUpperCase() : undefined;
+
+            const entry: ProdutoEntry = {
+                description: descClean,
+                reference: refClean,
+                ...(codeClean ? { code: codeClean } : {}),
+                ...(eanClean  ? { ean:  eanClean  } : {}),
+                ...(suppClean ? { supplier: suppClean } : {}),
+            };
+
+            // Define a chave principal (prioridade para SAP se existir, senão EAN)
+            const primaryKey = codeClean || eanClean!;
+            produtos[primaryKey] = entry;
+
+            // Cria aliases
+            if (codeClean && codeClean !== primaryKey) produtos[codeClean] = { ...entry };
+            if (eanClean  && eanClean  !== primaryKey) produtos[eanClean]  = { ...entry };
+
+            updatedCount++;
+        }
+
+        saveProdutos(produtos);
+        console.log(`[api/produto] Importação em lote concluída: ${updatedCount} itens processados.`);
+        return NextResponse.json({ success: true, count: updatedCount });
+    } catch (err) {
+        console.error('[api/produto] Erro na importação em lote:', err);
+        return NextResponse.json({ error: 'Erro interno na importação em lote.' }, { status: 500 });
+    }
+}

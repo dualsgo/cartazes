@@ -1,4 +1,4 @@
-export function AvariaHeader({ textSize = 26 }: { textSize?: number }) {
+export function AvariaHeader({ textSize = 30 }: { textSize?: number }) {
   return (
     <svg
       viewBox="0 0 320 100"

@@ -46,7 +46,7 @@ export function PosterPreviewEtiquetaOficial({
         
         {/* 1. DESCRIÇÃO */}
         <div className="shrink-0">
-          <h2 className="font-bold text-[10px] leading-[1.1] uppercase tracking-tight overflow-hidden line-clamp-3 text-left">
+          <h2 className="font-bold text-[15px] leading-[1.1] uppercase tracking-tight overflow-hidden line-clamp-3 text-left">
             {description}
           </h2>
         </div>
@@ -55,45 +55,62 @@ export function PosterPreviewEtiquetaOficial({
         <div className="flex flex-col justify-center flex-1 py-1 overflow-hidden min-h-0 min-w-0">
           <div className="flex items-center w-full justify-start">
               {isOffer && valDe > 0 ? (
-                <div className="flex items-center w-full justify-start gap-1.5">
+                <div className="flex items-start w-full justify-start gap-2">
                    {/* SEÇÃO DE: */}
-                   <div className="flex items-center shrink-0">
-                      <span className="text-[9px] font-bold uppercase mr-1">De:</span>
-                      <span className="text-[21px] font-bold tracking-[-0.04em] line-through decoration-[0.8mm] inline-block origin-left scale-x-90 whitespace-nowrap">
-                         R$ {formatCurrency(valDe)}
+                   <div className="flex items-start gap-1">
+                      <div className="flex flex-col items-start leading-none mt-1.5 shrink-0">
+                         <span className="text-[11px] font-bold uppercase">De:</span>
+                         <span className="text-[11px] font-bold leading-none mt-1">R$</span>
+                      </div>
+                      <span className="text-[32px] font-normal tracking-tighter inline-block origin-left scale-x-75 whitespace-nowrap leading-none relative">
+                         {formatCurrency(valDe)}
+                         {/* Barra inclinada preta sólida para impressoras monocromáticas */}
+                         <div className="absolute inset-x-0 top-[45%] h-[1.5mm] bg-black -rotate-[15deg] pointer-events-none" />
                       </span>
                    </div>
+
                    {/* SEÇÃO POR: */}
-                   <div className="flex items-center shrink-0">
-                      <span className="text-[9px] font-bold uppercase mr-1">Por:</span>
-                      <span className="text-[27px] font-bold tracking-[-0.04em] inline-block origin-left scale-x-90 whitespace-nowrap">
-                         R$ {formatCurrency(valPor)}
-                      </span>
+                   <div className="flex items-start gap-1">
+                      <div className="flex flex-col items-start leading-none mt-1.5 shrink-0">
+                         <span className="text-[11px] font-bold uppercase">Por:</span>
+                         <span className="text-[11px] font-bold leading-none mt-1">R$</span>
+                      </div>
+                      <div className="flex items-baseline leading-none">
+                         <span className="text-[36px] font-bold tracking-tighter inline-block origin-left scale-x-75 whitespace-nowrap leading-none">
+                            {formatCurrency(valPor)}
+                         </span>
+                         <span className="text-[8px] font-bold uppercase ml-[-2mm] self-end mb-1">un.</span>
+                      </div>
                    </div>
                 </div>
              ) : (
-                <div className="flex items-center w-full gap-2 justify-start">
-                   <span className="text-[11px] font-bold uppercase leading-none tracking-tight shrink-0">Preço à Vista:</span>
-                   <span className="text-[36px] font-bold tracking-[-0.04em] inline-block origin-left scale-x-90 whitespace-nowrap">
-                      R$ {formatCurrency(valPor)}
-                   </span>
-                </div>
+                 <div className="flex items-start w-full gap-4 justify-start">
+                    <div className="flex flex-col mt-0.5 shrink-0">
+                       <span className="text-[15px] font-bold uppercase leading-none tracking-tight">Preço à Vista:</span>
+                       <span className="text-[15px] font-bold leading-none mt-1">R$</span>
+                    </div>
+                    <div className="flex items-baseline leading-none flex-nowrap overflow-visible">
+                       <span className="text-[42px] font-bold tracking-tighter inline-block origin-left scale-x-85">{porInteger}</span>
+                       <span className="text-[42px] font-bold tracking-tighter inline-block origin-left scale-x-85 ml-[-3mm]">,{porDecimal}</span>
+                       <span className="text-[8px] font-bold uppercase ml-[-2mm] self-end mb-1 shrink-0">un.</span>
+                    </div>
+                 </div>
              )}
           </div>
         </div>
 
         {/* 3. PREÇO PARCELADO (ESPAÇO RESERVADO) */}
-        <div className="shrink-0 mb-1 min-h-[10mm] flex flex-col justify-center">
+        <div className="shrink-0 mb-1 min-h-[1mm] flex flex-col justify-center">
           {hasInstallments ? (
-            <div className="border-[0.4mm] border-black rounded-[2mm] px-3 py-1 flex flex-col justify-center min-h-[9mm] w-full">
-               <div className="flex items-center justify-center gap-4">
+            <div className="border-[0.2mm] border-black rounded-[3mm] px-1 py-0.5 flex flex-col justify-center min-h-[4mm] w-full">
+               <div className="flex items-center justify-center gap-2">
                   <div className="flex flex-col items-center">
-                     <span className="text-[12px] font-bold leading-none tracking-tighter">{maxInstallments}X</span>
-                     <span className="text-[6px] font-bold leading-none uppercase mt-0.5">Sem Juros</span>
+                     <span className="text-[14px] font-bold leading-none tracking-tighter">{maxInstallments}X</span>
+                     <span className="text-[7px] font-bold leading-none uppercase mt-0.5">Sem Juros</span>
                   </div>
                   <div className="flex items-baseline gap-1">
-                     <span className="text-[9px] font-bold">R$</span>
-                     <span className="text-[16px] font-bold leading-none tracking-tighter">{formatCurrency(installmentValue)}</span>
+                     <span className="text-[16px] font-bold">R$</span>
+                     <span className="text-[20px] font-bold leading-none tracking-tighter">{formatCurrency(installmentValue)}</span>
                   </div>
                </div>
             </div>
@@ -104,22 +121,22 @@ export function PosterPreviewEtiquetaOficial({
 
         {/* 4. RODAPÉ */}
         <div className="shrink-0 pt-1 flex flex-wrap gap-x-3 gap-y-0.5 items-baseline mt-auto">
-           <span className="text-[5.5px] font-bold uppercase whitespace-nowrap">REF: {reference || 'N/A'}</span>
-           {code && <span className="text-[5.5px] font-bold whitespace-nowrap">SAP: {code}</span>}
-           {supplier && <span className="text-[5.5px] font-bold truncate max-w-[40mm] uppercase">FORN: {supplier}</span>}
+           <span className="text-[7px] font-bold uppercase whitespace-nowrap">REF: {reference || 'N/A'}</span>
+           {code && <span className="text-[7px] font-bold whitespace-nowrap">SAP: {code}</span>}
+           {supplier && <span className="text-[7px] font-bold truncate max-w-[45mm] uppercase">FORN: {supplier}</span>}
         </div>
       </div>
 
       {/* LADO DIREITO: Código de Barras (Coluna Fixa com Padding Interno) */}
-      <div className="w-[15mm] flex-none flex flex-col items-center justify-center h-full">
+      <div className="w-[15%] flex-none flex flex-col items-center justify-center h-full">
         {ean && ean.length >= 12 ? (
-          <div className="rotate-90 origin-center whitespace-nowrap flex flex-col items-center w-[30mm]">
+          <div className="rotate-90 origin-center whitespace-nowrap flex flex-col items-center w-[25mm]">
              {/* NUMERAÇÃO NA BORDA */}
              <div className="w-full flex justify-center mb-1">
-                <span className="text-[7.5px] font-mono font-bold text-black tracking-tighter">{ean}</span>
+                <span className="text-[10px] font-mono  text-black tracking-tighter">{ean}</span>
              </div>
              {/* BARRAS ABAIXO DA NUMERAÇÃO */}
-             <BarcodeEAN value={ean} height="12mm" width="28mm" showText={false} />
+             <BarcodeEAN value={ean} height="10mm" width="25mm" showText={false} />
           </div>
         ) : code ? (
           <div className="rotate-90 origin-center whitespace-nowrap flex flex-col items-center w-[30mm]">
@@ -128,7 +145,7 @@ export function PosterPreviewEtiquetaOficial({
                 <span className="text-[7.5px] font-mono font-bold text-black tracking-tighter">{code}</span>
              </div>
              {/* BARRAS SAP */}
-             <BarcodeSAP value={code} height="12mm" width="28mm" />
+             <BarcodeSAP value={code} height="10mm" width="25mm" />
           </div>
         ) : null}
       </div>

@@ -143,23 +143,23 @@ export function PosterPreviewEtiqueta({
 
         {/* CÓDIGO DE BARRAS VERTICAL (EAN ou SAP) - Posição compactada à direita */}
         {ean && ean.length >= 12 ? (
-          <div className="absolute right-[9.5mm] top-0 bottom-0 w-[9mm] flex items-center justify-center">
+          <div className="absolute right-[1mm] top-0 bottom-0 w-[18.2mm] flex items-center justify-center">
              <div className="rotate-90 origin-center whitespace-nowrap">
                 <BarcodeEAN 
                   value={ean} 
-                  height="5.5mm" 
-                  width="24mm" 
+                  height="12mm" 
+                  width="28mm" 
                   showText={false} 
                 />
              </div>
           </div>
         ) : code ? (
-          <div className="absolute right-[9.5mm] top-0 bottom-0 w-[9mm] flex items-center justify-center">
+          <div className="absolute right-[1mm] top-0 bottom-0 w-[18.2mm] flex items-center justify-center">
              <BarcodeSAP 
                value={code} 
                orientation="vertical"
-               height="24mm" 
-               width="5.5mm" 
+               height="28mm" 
+               width="12mm" 
              />
           </div>
         ) : null}

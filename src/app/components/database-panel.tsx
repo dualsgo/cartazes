@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { Database, X, Search, Pencil, Trash2, Plus, Check, XCircle, Loader2, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react';
+import { Database, X, Search, Pencil, Trash2, Plus, Check, XCircle, Loader2, ChevronLeft, ChevronRight, AlertTriangle, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
+import { parseDatabaseImportExcel } from '@/app/lib/poster-utils';
 
 type ProdutoItem = {
   key: string;
@@ -50,6 +51,12 @@ export function DatabasePanel({ open, onClose }: { open: boolean; onClose: () =>
   // Exclusão
   const [deleteKey, setDeleteKey]   = useState<string | null>(null);
   const [deleteStatus, setDeleteStatus] = useState<'idle' | 'deleting'>('idle');
+
+  // Importação em Lote
+  const [isImporting, setIsImporting] = useState(false);
+  const [importStatus, setImportStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [importCount, setImportCount] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -175,6 +182,45 @@ export function DatabasePanel({ open, onClose }: { open: boolean; onClose: () =>
     }
   };
 
+  /* ── Importação em Lote ── */
+  const handleBatchImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImportStatus('loading');
+    try {
+      const buffer = await file.arrayBuffer();
+      const items = parseDatabaseImportExcel(buffer);
+      
+      if (items.length === 0) {
+        setImportStatus('error');
+        setTimeout(() => setImportStatus('idle'), 3000);
+        return;
+      }
+
+      const res = await fetch('/api/produto', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items }),
+      });
+
+      if (!res.ok) throw new Error('Falha no upload');
+
+      const json = await res.json();
+      setImportCount(json.count || items.length);
+      setImportStatus('success');
+      fetchList(1, '');
+      setPage(1);
+      setTimeout(() => setImportStatus('idle'), 4000);
+    } catch (err) {
+      console.error(err);
+      setImportStatus('error');
+      setTimeout(() => setImportStatus('idle'), 3000);
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
   const totalPages = data ? Math.max(1, Math.ceil(data.total / (data.limit || 50))) : 1;
 
   if (!open) return null;
@@ -202,6 +248,32 @@ export function DatabasePanel({ open, onClose }: { open: boolean; onClose: () =>
             )}
           </div>
           <div className="flex items-center gap-2">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleBatchImport}
+              accept=".xls,.xlsx"
+              className="hidden"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={importStatus === 'loading'}
+              className={cn(
+                'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all border',
+                importStatus === 'success' ? 'bg-green-500/10 text-green-600 border-green-200' :
+                importStatus === 'error'   ? 'bg-red-500/10 text-red-600 border-red-200' :
+                'bg-muted hover:bg-primary/10 hover:text-primary border-border'
+              )}
+            >
+              {importStatus === 'loading' ? <Loader2 className="h-4 w-4 animate-spin" /> :
+               importStatus === 'success' ? <Check className="h-4 w-4" /> :
+               importStatus === 'error'   ? <XCircle className="h-4 w-4" /> :
+               <Upload className="h-4 w-4" />}
+              {importStatus === 'loading' ? 'Importando...' :
+               importStatus === 'success' ? `${importCount} Itens!` :
+               importStatus === 'error'   ? 'Erro' :
+               'Importar Lote'}
+            </button>
             <button
               onClick={() => { setAddOpen(v => !v); setEditKey(null); setDeleteKey(null); }}
               className={cn(
