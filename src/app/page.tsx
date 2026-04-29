@@ -257,10 +257,10 @@ function PageGrid({
       <div style={{ 
         display: 'grid', 
         gridTemplateColumns: '182mm', 
-        gridTemplateRows: 'repeat(4, 72mm)', 
+        gridTemplateRows: 'repeat(4, 73.5mm)', 
         gap: '0', 
-        paddingTop: '1.7mm', 
-        paddingBottom: '1.2mm', 
+        paddingTop: '1.5mm', 
+        paddingBottom: '1.5mm', 
         paddingLeft: '14mm', 
         paddingRight: '14mm', 
         width: '100%', 
@@ -276,13 +276,18 @@ function PageGrid({
               key={i} 
               style={{ 
                 width: '182mm', 
-                height: '72mm', 
+                height: '73.5mm', 
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 overflow: 'hidden',
-                borderBottom: !isBottom ? '0.3mm dashed #ccc' : 'none',
+                borderBottom: !isBottom ? '0.1mm dashed #ccc' : 'none',
                 boxSizing: 'border-box'
               }}
             >
-              <PosterPreviewAereo {...d} settings={settings} />
+              <div style={{ width: '182mm', height: '72mm' }}>
+                <PosterPreviewAereo {...d} settings={settings} />
+              </div>
             </div>
           );
         })}
@@ -294,11 +299,16 @@ function PageGrid({
               key={`e${i}`} 
               style={{ 
                 width: '182mm', 
-                height: '67.6mm',
-                borderBottom: !isBottom ? '0.3mm dashed #ccc' : 'none',
+                height: '73.5mm',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderBottom: !isBottom ? '0.1mm dashed #ccc' : 'none',
                 boxSizing: 'border-box'
               }}
-            />
+            >
+              <div style={{ width: '182mm', height: '72mm', backgroundColor: '#f9f9f9', border: '0.1mm dashed #ddd' }} />
+            </div>
           );
         })}
       </div>
