@@ -27,106 +27,116 @@ export function PosterPreviewAereo({
   const showInstallment  = paymentOption === 'installment' && maxInstallments > 1;
 
   // Aplica o limite de caracteres na descrição (aprox 2 linhas)
-  const displayDescription = truncateDescription(description, 35);
+  const displayDescription = truncateDescription(description, 34);
 
   // Lógica de fonte dinâmica para o Aéreo (Aumentada e Comprimida)
-  let priceFontSize = '91px';
-  if (porInt.length >= 6) priceFontSize = '61px';
-  else if (porInt.length === 5) priceFontSize = '72px';
-  else if (porInt.length === 4) priceFontSize = '84px';
+  let priceFontSize = '78px';
+  if (porInt.length === 4) {
+    priceFontSize = '72px';
+  } else if (porInt.length === 3) {
+    priceFontSize = '78px';
+  }
+
+  const discount = hasDiscount ? Math.round(((valDe - valPor) / valDe) * 100) : 0;
 
   return (
-    <div className="w-full h-full bg-white text-black font-body overflow-hidden relative flex flex-col justify-between box-border px-[12mm] py-[4mm]">
-      
-      {/* Faixa vertical de OFERTA integrada à direita */}
-      {isOffer && (
-        <div className="absolute right-[4mm] top-[4mm] bottom-[4mm] w-[12mm] bg-black text-white flex flex-col items-center justify-center rounded-md z-10">
-          <span className="font-headline font-black text-[22pt] leading-none uppercase tracking-[4px]" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-            OFERTA
-          </span>
-        </div>
-      )}
-
-      {/* 1. TOPO: DESCRIÇÃO */}
-      <div className={cn("w-full h-[18mm] flex items-center justify-center shrink-0", isOffer && "pr-[14mm]")}>
-        <h2 className="font-headline font-black text-[24pt] leading-[1] uppercase text-center overflow-hidden max-h-[2.2em]">
-          {displayDescription}
-        </h2>
-      </div>
-
-      {/* 2. MEIO: ÁREA DE PREÇOS */}
-      <div className={cn("flex-1 flex flex-col items-center justify-center relative min-h-0 w-full", isOffer && "pr-[14mm]")}>
+    <div className="w-full h-full bg-white text-black font-body overflow-hidden relative flex flex-row box-border">
+      {/* ── CONTEÚDO PRINCIPAL (COMPRIMIDO À ESQUERDA) ── */}
+      <div className="flex-1 flex flex-col justify-between py-[4mm] px-[8mm] overflow-hidden relative">
         
-        {isOffer && hasDiscount ? (
-          <div className="flex flex-row items-center justify-center w-full gap-x-6">
-            {/* SEÇÃO DE */}
-            <div className="flex flex-col items-center">
-               <div className="flex items-center gap-2">
-                  <div className="flex flex-col items-start shrink-0">
-                     <span className="font-headline font-medium text-[14pt] leading-none uppercase">De:</span>
-                     <span className="font-headline font-medium text-[14pt] leading-none mt-1">R$</span>
-                  </div>
-                  <span className="font-headline font-medium leading-none tracking-tighter inline-block origin-left scale-x-70 relative" style={{ fontSize: `calc(${priceFontSize} * 0.7)` }}>
-                    {formatCurrency(valDe)}
-                    {/* Barra inclinada preta sólida - Espessura reduzida */}
-                    <div className="absolute inset-x-0 top-[45%] h-[0.75mm] bg-black -rotate-[12deg] pointer-events-none" />
-                  </span>
-               </div>
-            </div>
+        {/* 1. TOPO: DESCRIÇÃO */}
+        <div className="w-full h-[18mm] flex items-center justify-center shrink-0">
+          <h2 className="font-headline font-medium text-[17pt] leading-[1.1] uppercase text-center overflow-hidden max-h-[2.2em]">
+            {displayDescription}
+          </h2>
+        </div>
 
-            {/* SEÇÃO POR */}
-            <div className="flex flex-col items-center">
-              <div className="flex items-center gap-2">
-                <div className="flex flex-col items-start shrink-0">
-                   <span className="font-headline font-medium text-[14pt] leading-none uppercase">Por:</span>
-                   <span className="font-headline font-medium text-[14pt] leading-none mt-1">R$</span>
+        {/* 2. MEIO: ÁREA DE PREÇOS */}
+        <div className="flex-1 flex flex-col items-center justify-center relative min-h-0 w-full">
+          
+          {isOffer && hasDiscount ? (
+            <div className="flex flex-row items-center justify-center w-full gap-x-10 relative">
+              {/* SEÇÃO DE */}
+              <div className="flex flex-row items-center gap-x-2">
+                <span className="font-headline font-medium text-[9.5pt] leading-none uppercase">De:</span>
+                
+                <div className="flex items-start">
+                  <span className="font-headline font-medium text-[9.5pt] leading-none mt-[1.5mm] mr-1">R$</span>
+                  <span className="font-headline font-medium leading-none tracking-tighter inline-block origin-left scale-x-70 relative" style={{ fontSize: `calc(${priceFontSize} * 0.5)` }}>
+                    {formatCurrency(valDe)}
+                    <div className="absolute inset-x-0 top-[45%] h-[0.5mm] bg-black -rotate-[12deg] pointer-events-none" />
+                  </span>
                 </div>
-                <div className="flex items-baseline">
-                  <span className="font-headline font-medium leading-none tracking-tighter inline-block origin-left scale-x-70" style={{ fontSize: `calc(${priceFontSize} * 0.85)` }}>
+              </div>
+
+              {/* SEÇÃO POR - Com Por: perto do preço e R$ expoente */}
+              <div className="flex flex-row items-center gap-x-2">
+                <span className="font-headline font-medium text-[9.5pt] leading-none uppercase">Por:</span>
+                
+                <div className="flex items-start">
+                  <span className="font-headline font-medium text-[12pt] leading-none mt-[1.5mm] mr-1">R$</span>
+                  <div className="flex items-end">
+                    <span className="font-headline font-medium leading-none tracking-tighter inline-block origin-left scale-x-70" style={{ fontSize: `calc(${priceFontSize} * 0.9)` }}>
+                      {porInt},{porDec}
+                    </span>
+                    <span className="font-bold text-[5pt] uppercase leading-none ml-1 mb-[1.5mm]">un. à vista</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* Preço ÚNICO (Sem Oferta) */
+            <div className="flex flex-col items-center justify-center w-full relative">
+              {/* Rótulo Por: reduzido e deslocado para a esquerda perto da borda */}
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 flex flex-col items-start">
+                 <span className="font-headline font-medium text-[18pt] leading-none uppercase">Por:</span>
+              </div>
+
+              <div className="flex items-start">
+                {/* R$ como expoente no topo ajustado */}
+                <span className="font-headline font-medium text-[24pt] leading-none mt-[3mm] mr-2">R$</span>
+                <div className="flex items-end">
+                  <span className="font-headline font-medium leading-none tracking-tighter inline-block origin-left scale-x-70" style={{ fontSize: priceFontSize }}>
                     {porInt},{porDec}
                   </span>
-                  <span className="font-bold text-[5.5pt] uppercase leading-none ml-2 mb-2">un. à vista</span>
+                  {/* un. à vista reduzido e mais baixo */}
+                  <span className="font-bold text-[10pt] uppercase leading-none ml-2 mb-[4mm]">un. à vista</span>
                 </div>
               </div>
             </div>
-          </div>
-        ) : (
-          /* Preço ÚNICO (Sem Oferta) */
-          <div className="flex flex-col items-center justify-center w-full">
-            <div className="flex items-center gap-6">
-              <div className="flex flex-col items-start shrink-0">
-                 <span className="font-headline font-medium text-[20pt] leading-none uppercase">Por:</span>
-                 <span className="font-headline font-medium text-[20pt] leading-none mt-1">R$</span>
-              </div>
-              <div className="flex items-baseline">
-                <span className="font-headline font-medium leading-none tracking-tighter inline-block origin-left scale-x-70" style={{ fontSize: priceFontSize }}>
-                  {porInt},{porDec}
-                </span>
-                <span className="font-bold text-[11pt] uppercase leading-none ml-2 mb-2">un. à vista</span>
-              </div>
-            </div>
-          </div>
-        )}
+          )}
 
-        {/* Parcelamento estilo CAPSULA (Pill) - Ajustado para linha única com fontes menores */}
-        {showInstallment && (
-           <div className="mt-4 border-[0.6mm] border-black rounded-[3mm] px-4 py-1.5 flex items-center justify-center gap-x-1.5 w-full whitespace-nowrap overflow-hidden">
-              <span className="font-headline font-medium text-[12pt] uppercase">ou parcelado em até</span>
-              <span className="font-headline font-medium text-[16pt] uppercase">{maxInstallments}x sem juros</span>
-              <span className="font-headline font-medium text-[12pt] uppercase">de</span>
-              <span className="font-headline font-medium text-[20pt] uppercase">R$ {formatCurrency(installmentValue)}</span>
-           </div>
-        )}
+          {/* Parcelamento estilo CAPSULA (Pill) - Ajustado para linha única com fontes menores */}
+          {showInstallment && (
+             <div className="mt-4 border-[0.4mm] border-black rounded-[3mm] px-3 py-1 flex items-center justify-center gap-x-1.5 w-full whitespace-nowrap overflow-hidden">
+                <span className="font-headline font-medium text-[10pt] uppercase">ou parcelado em até</span>
+                <span className="font-headline font-medium text-[14pt] uppercase">{maxInstallments}x sem juros</span>
+                <span className="font-headline font-medium text-[10pt] uppercase">de</span>
+                <span className="font-headline font-medium text-[17pt] uppercase">R$ {formatCurrency(installmentValue)}</span>
+             </div>
+          )}
+        </div>
+
+        {/* 3. BASE: METADADOS E FORNECEDOR EM LINHA ÚNICA */}
+        <div className="w-full pt-1 flex items-center justify-center gap-x-4 flex-nowrap text-[8.5pt] font-headline font-bold uppercase overflow-hidden whitespace-nowrap">
+            <span className="truncate max-w-[25%]">{supplier || 'N/A'}</span>
+            <span className="opacity-30">|</span>
+            <span className="shrink-0">SAP: {code || 'N/A'}</span>
+            <span className="shrink-0">EAN: {ean || 'N/A'}</span>
+            <span className="shrink-0">REF: {reference || 'N/A'}</span>
+        </div>
       </div>
 
-      {/* 3. BASE: METADADOS E FORNECEDOR EM LINHA ÚNICA - Limitado para não quebrar layout */}
-      <div className={cn("w-full flex items-center justify-center gap-x-3 flex-nowrap text-[9pt] font-mono font-bold uppercase opacity-100 overflow-hidden", isOffer && "pr-[14mm]")}>
-          <span className="truncate max-w-[30%]">{supplier || 'N/A'}</span>
-          <span className="opacity-30">|</span>
-          <span className="shrink-0">SAP: {code || 'N/A'}</span>
-          <span className="shrink-0">EAN: {ean || 'N/A'}</span>
-          <span className="shrink-0">REF: {reference || 'N/A'}</span>
-      </div>
+      {/* ── QUADRADO DE DESCONTO (À DIREITA) ── */}
+      {isOffer && hasDiscount && (
+        <div className="w-[28mm] h-full bg-black text-white flex items-center justify-center shrink-0 z-10 border-l border-white/20">
+          <div className="-rotate-90 whitespace-nowrap">
+            <span className="font-headline font-medium text-[44pt] leading-none tracking-tighter">
+              {discount}% OFF
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

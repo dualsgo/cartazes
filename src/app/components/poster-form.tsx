@@ -42,8 +42,12 @@ function useCurrencyInput(initial: string, maxCents?: number) {
       e.preventDefault();
       setCents(prev => {
         const next = prev * 10 + parseInt(e.key, 10);
+        // Bloqueia se ultrapassar 6 dígitos totais (9999,99)
+        if (next > 999999) return prev;
+        
+        // Aplica o limite relativo (ex: Preço "Por" não pode ser maior que "De")
         const capped = maxCents !== undefined && next > maxCents ? maxCents : next;
-        return capped > 999999 ? prev : capped;
+        return capped;
       });
     }
   };

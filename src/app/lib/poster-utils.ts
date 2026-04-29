@@ -49,12 +49,12 @@ export function parsePrice(price: any): number {
   }
   
   const val = parseFloat(str) || 0;
-  // Limite global de 9999,99 para todos os modelos
+  // Limite global de 9999,99 (6 dígitos totais) para todos os modelos
   return Math.min(val, 9999.99);
 }
 
 export function formatCurrency(value: number): string {
-  // Limite de segurança para exibição
+  // Limite de segurança para exibição (6 dígitos totais)
   const safeValue = Math.min(value, 9999.99);
   return safeValue.toLocaleString('pt-br', {
     useGrouping: false,
@@ -135,7 +135,7 @@ function processProductRow(row: Record<string, any>, mapping: Record<string, num
   
   if (!mercadoria || mercadoria.toLowerCase().includes('mercadoria') || mercadoria.toLowerCase().includes('descrição')) return null;
 
-  const sap        = String(getVal('sap') || '').trim();
+  const sap        = String(getVal('sap') || '').trim().slice(0, 6);
   const ean        = String(getVal('ean') || '').trim();
   const ref        = String(getVal('ref') || '').trim();
   const supplier   = currentSupplier || String(getVal('supplier') || '').trim();

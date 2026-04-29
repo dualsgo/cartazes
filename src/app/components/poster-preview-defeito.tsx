@@ -163,7 +163,7 @@ export function PosterPreviewDefeito({
         </div>
         
         {/* Frase Legal */}
-        <p className="text-[0.52em] text-black font-bold text-center leading-tight border-t border-black/10 pt-1 w-full uppercase">
+        <p className="text-[0.52em] text-black font-bold text-center leading-tight pt-1 w-full uppercase">
           Item de ponta de estoque, vendido no estado. Não possui direito a troca.
         </p>
       </div>

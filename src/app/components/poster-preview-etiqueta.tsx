@@ -39,20 +39,14 @@ export function PosterPreviewEtiqueta({
   let installmentFontSize = '10px';
   let offerPriceFontSize = '44px';
   
-  if (porInteger.length >= 6) {
-    priceFontSize = '28px';
-    decimalFontSize = '11px';
-    currencyFontSize = '8px';
-    installmentFontSize = '8px';
-    offerPriceFontSize = '30px';
-  } else if (porInteger.length === 5) {
+  if (porInteger.length === 4) {
     priceFontSize = '34px';
     decimalFontSize = '14px';
     currencyFontSize = '9px';
     installmentFontSize = '9px';
-    offerPriceFontSize = '36px';
-  } else if (porInteger.length === 4) {
-    offerPriceFontSize = '40px';
+    offerPriceFontSize = '38px';
+  } else if (porInteger.length === 3) {
+    offerPriceFontSize = '42px';
   }
 
   return (    <div className="w-full h-full bg-white text-black font-body overflow-hidden relative flex flex-col justify-center box-border px-[1mm] py-[1.5mm]">

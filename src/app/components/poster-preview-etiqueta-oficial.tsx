@@ -33,13 +33,21 @@ export function PosterPreviewEtiquetaOficial({
   const { maxInstallments, installmentValue } = calculateInstallments(valPor, settings);
   const hasInstallments = paymentOption === 'installment' && maxInstallments > 1;
 
-  // REGRAS DE HIERARQUIA E PROPORÇÃO (Baseado em Preço 100% = 36px)
-  // Preço: 36px (100%)
-  // Parcelamento: 18px (50%)
-  // "X vezes": 12px (33%)
-  // "Sem juros": 6px (16%)
-  // Título: 12px (33%)
-  // Rodapé: 5px (14%)
+  // Lógica de escala para preços longos (até 6 dígitos)
+  let mainPriceSize = isOffer ? '36px' : '42px';
+  let dePriceSize = '25px';
+  
+  if (porInteger.length === 4) {
+    mainPriceSize = isOffer ? '30px' : '34px';
+  } else if (porInteger.length === 3) {
+    mainPriceSize = isOffer ? '34px' : '38px';
+  }
+
+  if (deInteger.length >= 6) {
+    dePriceSize = '18px';
+  } else if (deInteger.length === 5) {
+    dePriceSize = '21px';
+  }
 
   return (
     <div className="w-full h-full bg-white text-black font-sans overflow-hidden relative flex box-border p-[2.1mm]">
@@ -66,7 +74,7 @@ export function PosterPreviewEtiquetaOficial({
                          <span className="text-[9px] font-bold leading-none mt-0.5">R$</span>
                       </div>
                        <div className="flex items-baseline leading-none relative origin-left scale-x-[0.85]">
-                        <span className="text-[25px] font-bold tracking-tighter whitespace-nowrap leading-none">
+                        <span className="font-bold tracking-tighter whitespace-nowrap leading-none" style={{ fontSize: dePriceSize }}>
                             {deInteger},{deDecimal}
                         </span>
                         {/* Barra inclinada */}
@@ -81,9 +89,9 @@ export function PosterPreviewEtiquetaOficial({
                          <span className="text-[9px] font-bold leading-none mt-0.5">R$</span>
                       </div>
                       <div className="flex items-baseline leading-none flex-nowrap origin-left scale-x-[0.85]">
-                         <span className="text-[36px] font-bold tracking-tighter leading-none">{porInteger}</span>
-                         <span className="text-[25px] font-bold ml-0.5">,</span>
-                         <span className="text-[36px] font-bold tracking-tighter leading-none">{porDecimal}</span>
+                         <span className="font-bold tracking-tighter leading-none" style={{ fontSize: mainPriceSize }}>{porInteger}</span>
+                         <span className="font-bold ml-0.5" style={{ fontSize: `calc(${mainPriceSize} * 0.7)` }}>,</span>
+                         <span className="font-bold tracking-tighter leading-none" style={{ fontSize: mainPriceSize }}>{porDecimal}</span>
                          <span className="text-[9px] font-bold uppercase ml-1 self-end mb-1 shrink-0">un.</span>
                       </div>
                    </div>
@@ -95,9 +103,9 @@ export function PosterPreviewEtiquetaOficial({
                        <span className="text-[12px] font-bold leading-none mt-1">R$</span>
                     </div>
                   <div className="flex items-baseline leading-none flex-nowrap origin-left scale-x-[0.85]">
-                     <span className="text-[42px] font-bold tracking-tighter">{porInteger}</span>
-                     <span className="text-[32px] font-bold ml-0.5">,</span>
-                     <span className="text-[42px] font-bold tracking-tighter">{porDecimal}</span>
+                     <span className="font-bold tracking-tighter" style={{ fontSize: mainPriceSize }}>{porInteger}</span>
+                     <span className="font-bold ml-0.5" style={{ fontSize: `calc(${mainPriceSize} * 0.7)` }}>,</span>
+                     <span className="font-bold tracking-tighter" style={{ fontSize: mainPriceSize }}>{porDecimal}</span>
                      <span className="text-[9px] font-bold uppercase ml-1.5 self-end mb-1 shrink-0">un.</span>
                   </div>
                  </div>

@@ -32,10 +32,10 @@ export function PosterPreviewTotem({
 
   const isLongDesc = displayDescriptionLines.length > 1 || (displayDescriptionLines[0]?.length || 0) > 15;
   let priceFontSize = isLongDesc ? '10em' : '13em';
-  if (porInteger.length >= 6) {
-    priceFontSize = '8em';
-  } else if (porInteger.length === 5) {
-    priceFontSize = '9.5em';
+  if (porInteger.length === 4) {
+    priceFontSize = '9em';
+  } else if (porInteger.length === 3) {
+    priceFontSize = '11em';
   }
 
   return (
