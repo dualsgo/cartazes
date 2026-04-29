@@ -289,6 +289,7 @@ function PageGrid({
                 borderRight: isPrint ? 'none' : '0.1mm dashed #ccc',
                 borderTop: isTop && !isPrint ? '0.1mm dashed #ccc' : 'none',
                 borderBottom: isPrint ? 'none' : '0.1mm dashed #ccc',
+                paddingTop: '1mm',
                 boxSizing: 'border-box'
               }}
             >
