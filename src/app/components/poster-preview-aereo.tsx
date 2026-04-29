@@ -30,11 +30,11 @@ export function PosterPreviewAereo({
   const displayDescription = truncateDescription(description, 34);
 
   // Lógica de fonte dinâmica para o Aéreo (Aumentada e Comprimida)
-  let priceFontSize = '78px';
+  let priceFontSize = '70px';
   if (porInt.length === 4) {
-    priceFontSize = '72px';
+    priceFontSize = '64px';
   } else if (porInt.length === 3) {
-    priceFontSize = '78px';
+    priceFontSize = '70px';
   }
 
   const discount = hasDiscount ? Math.round(((valDe - valPor) / valDe) * 100) : 0;
@@ -45,8 +45,8 @@ export function PosterPreviewAereo({
       <div className="flex-1 flex flex-col justify-between py-[4mm] px-[8mm] overflow-hidden relative">
         
         {/* 1. TOPO: DESCRIÇÃO */}
-        <div className="w-full h-[18mm] flex items-center justify-center shrink-0">
-          <h2 className="font-headline font-medium text-[17pt] leading-[1.1] uppercase text-center overflow-hidden max-h-[2.2em]">
+        <div className="w-full h-[16mm] flex items-center justify-center shrink-0">
+          <h2 className="font-headline font-medium text-[15.5pt] leading-[1.1] uppercase text-center overflow-hidden max-h-[2.2em]">
             {displayDescription}
           </h2>
         </div>
@@ -58,10 +58,10 @@ export function PosterPreviewAereo({
             <div className="flex flex-row items-center justify-center w-full gap-x-10 relative">
               {/* SEÇÃO DE */}
               <div className="flex flex-row items-center gap-x-2">
-                <span className="font-headline font-medium text-[9.5pt] leading-none uppercase">De:</span>
+                <span className="font-headline font-medium text-[8.5pt] leading-none uppercase">De:</span>
                 
                 <div className="flex items-start">
-                  <span className="font-headline font-medium text-[9.5pt] leading-none mt-[1.5mm] mr-1">R$</span>
+                  <span className="font-headline font-medium text-[8.5pt] leading-none mt-[1mm] mr-1">R$</span>
                   <span className="font-headline font-medium leading-none tracking-tighter inline-block origin-left scale-x-70 relative" style={{ fontSize: `calc(${priceFontSize} * 0.5)` }}>
                     {formatCurrency(valDe)}
                     <div className="absolute inset-x-0 top-[45%] h-[0.5mm] bg-black -rotate-[12deg] pointer-events-none" />
@@ -71,10 +71,10 @@ export function PosterPreviewAereo({
 
               {/* SEÇÃO POR - Com Por: perto do preço e R$ expoente */}
               <div className="flex flex-row items-center gap-x-2">
-                <span className="font-headline font-medium text-[9.5pt] leading-none uppercase">Por:</span>
+                <span className="font-headline font-medium text-[8.5pt] leading-none uppercase">Por:</span>
                 
                 <div className="flex items-start">
-                  <span className="font-headline font-medium text-[12pt] leading-none mt-[1.5mm] mr-1">R$</span>
+                  <span className="font-headline font-medium text-[11pt] leading-none mt-[1mm] mr-1">R$</span>
                   <div className="flex items-end">
                     <span className="font-headline font-medium leading-none tracking-tighter inline-block origin-left scale-x-70" style={{ fontSize: `calc(${priceFontSize} * 0.9)` }}>
                       {porInt},{porDec}
@@ -89,12 +89,12 @@ export function PosterPreviewAereo({
             <div className="flex flex-col items-center justify-center w-full relative">
               {/* Rótulo Por: reduzido e deslocado para a esquerda perto da borda */}
               <div className="absolute left-0 top-1/2 -translate-y-1/2 flex flex-col items-start">
-                 <span className="font-headline font-medium text-[18pt] leading-none uppercase">Por:</span>
+                 <span className="font-headline font-medium text-[16pt] leading-none uppercase">Por:</span>
               </div>
 
               <div className="flex items-start">
                 {/* R$ como expoente no topo ajustado */}
-                <span className="font-headline font-medium text-[24pt] leading-none mt-[3mm] mr-2">R$</span>
+                <span className="font-headline font-medium text-[22pt] leading-none mt-[2mm] mr-2">R$</span>
                 <div className="flex items-end">
                   <span className="font-headline font-medium leading-none tracking-tighter inline-block origin-left scale-x-70" style={{ fontSize: priceFontSize }}>
                     {porInt},{porDec}
@@ -108,17 +108,17 @@ export function PosterPreviewAereo({
 
           {/* Parcelamento estilo CAPSULA (Pill) - Ajustado para linha única com fontes menores */}
           {showInstallment && (
-             <div className="mt-4 border-[0.4mm] border-black rounded-[3mm] px-3 py-1 flex items-center justify-center gap-x-1.5 w-full whitespace-nowrap overflow-hidden">
-                <span className="font-headline font-medium text-[10pt] uppercase">ou parcelado em até</span>
-                <span className="font-headline font-medium text-[14pt] uppercase">{maxInstallments}x sem juros</span>
-                <span className="font-headline font-medium text-[10pt] uppercase">de</span>
-                <span className="font-headline font-medium text-[17pt] uppercase">R$ {formatCurrency(installmentValue)}</span>
+             <div className="mt-2 border-[0.4mm] border-black rounded-[3mm] px-2 py-0.5 flex items-center justify-center gap-x-1 w-full whitespace-nowrap overflow-hidden">
+                <span className="font-headline font-medium text-[9pt] uppercase">ou</span>
+                <span className="font-headline font-medium text-[12.5pt] uppercase">{maxInstallments}x sem juros</span>
+                <span className="font-headline font-medium text-[9pt] uppercase">de</span>
+                <span className="font-headline font-medium text-[15pt] uppercase">R$ {formatCurrency(installmentValue)}</span>
              </div>
           )}
         </div>
 
         {/* 3. BASE: METADADOS E FORNECEDOR EM LINHA ÚNICA */}
-        <div className="w-full pt-1 flex items-center justify-center gap-x-4 flex-nowrap text-[8.5pt] font-headline font-bold uppercase overflow-hidden whitespace-nowrap">
+        <div className="w-full pt-1 flex items-center justify-center gap-x-4 flex-nowrap text-[7.5pt] font-headline font-bold uppercase overflow-hidden whitespace-nowrap">
             <span className="truncate max-w-[25%]">{supplier || 'N/A'}</span>
             <span className="opacity-30">|</span>
             <span className="shrink-0">SAP: {code || 'N/A'}</span>

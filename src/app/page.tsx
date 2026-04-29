@@ -36,10 +36,10 @@ const PER_PAGE: Record<PosterType, number> = {
 const SINGLE_DIMS: Record<PosterType, { w: number; h: number }> = {
   reliquias:            { w: 491, h: 340 },
   'ofertas-imperdiveis':{ w: 491, h: 340 },
-  aereo:                { w: 728, h: 288 },  // proporcional a 182mm x 72mm (4px/mm)
+  aereo:                { w: 658, h: 242 },  // 174mm x 64mm @ 96dpi (ajustado para margem 1.8cm)
   avaria:               { w: 491, h: 340 },
-  'etiqueta-oficial':   { w: 360, h: 136 }, // 90mm x 34.0mm (4px/mm)
-  totem:                { w: 794, h: 1123 }, // A4 a 96dpi (210×297mm em pixels de tela)
+  'etiqueta-oficial':   { w: 340, h: 128 },  // 90mm x 34mm @ 96dpi
+  totem:                { w: 794, h: 1123 }, // A4 @ 96dpi
 };
 
 // Orientação de impressão por tipo de cartaz
@@ -179,9 +179,9 @@ function FullPagePreview({
   const orientation = POSTER_ORIENTATION[posterType] || 'landscape';
   const perPage = PER_PAGE[posterType] || 4;
   
-  // Dimensões A4 em pixels (4px/mm para consistência com SINGLE_DIMS)
-  const PAGE_W = orientation === 'landscape' ? 1188 : 840;
-  const PAGE_H = orientation === 'landscape' ? 840 : 1188;
+  // Dimensões A4 em pixels (96dpi para bater com as medidas em mm do CSS)
+  const PAGE_W = orientation === 'landscape' ? 1123 : 794;
+  const PAGE_H = orientation === 'landscape' ? 794 : 1123;
 
   useEffect(() => {
     const outer = outerRef.current;
@@ -256,13 +256,14 @@ function PageGrid({
     return (
       <div style={{ 
         display: 'grid', 
-        gridTemplateColumns: '182mm', 
-        gridTemplateRows: 'repeat(4, 73.5mm)', 
+        gridTemplateColumns: '174mm', 
+        gridTemplateRows: 'repeat(4, 65.25mm)', 
         gap: '0', 
-        paddingTop: '1.5mm', 
-        paddingBottom: '1.5mm', 
-        paddingLeft: '14mm', 
-        paddingRight: '14mm', 
+        justifyContent: 'center',
+        paddingTop: '18mm', 
+        paddingBottom: '18mm', 
+        paddingLeft: '18mm', 
+        paddingRight: '18mm', 
         width: '100%', 
         height: '100%', 
         boxSizing: 'border-box', 
@@ -270,22 +271,25 @@ function PageGrid({
         border: '0.1mm solid #eee'
       }}>
         {items.map((d: PosterData, i: number) => {
-          const isBottom = i === 3;
+          const isTop = i === 0;
           return (
             <div 
               key={i} 
               style={{ 
-                width: '182mm', 
-                height: '73.5mm', 
+                width: '174mm', 
+                height: '65.25mm', 
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 overflow: 'hidden',
-                borderBottom: !isBottom ? '0.1mm dashed #ccc' : 'none',
+                borderLeft: '0.1mm dashed #ccc',
+                borderRight: '0.1mm dashed #ccc',
+                borderTop: isTop ? '0.1mm dashed #ccc' : 'none',
+                borderBottom: '0.1mm dashed #ccc',
                 boxSizing: 'border-box'
               }}
             >
-              <div style={{ width: '182mm', height: '72mm' }}>
+              <div style={{ width: '174mm', height: '64mm' }}>
                 <PosterPreviewAereo {...d} settings={settings} />
               </div>
             </div>
@@ -293,21 +297,24 @@ function PageGrid({
         })}
         {empties.map((_, i: number) => {
           const idx = items.length + i;
-          const isBottom = idx === 3;
+          const isTop = idx === 0;
           return (
             <div 
               key={`e${i}`} 
               style={{ 
-                width: '182mm', 
-                height: '73.5mm',
+                width: '174mm', 
+                height: '65.25mm',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                borderBottom: !isBottom ? '0.1mm dashed #ccc' : 'none',
+                borderLeft: '0.1mm dashed #ccc',
+                borderRight: '0.1mm dashed #ccc',
+                borderTop: isTop ? '0.1mm dashed #ccc' : 'none',
+                borderBottom: '0.1mm dashed #ccc',
                 boxSizing: 'border-box'
               }}
             >
-              <div style={{ width: '182mm', height: '72mm', backgroundColor: '#f9f9f9', border: '0.1mm dashed #ddd' }} />
+              <div style={{ width: '174mm', height: '64mm', backgroundColor: '#f9f9f9', border: '0.1mm dashed #ddd' }} />
             </div>
           );
         })}
@@ -322,6 +329,7 @@ function PageGrid({
         gridTemplateRows: 'repeat(8, 34.0mm)',
         columnGap: '2mm', 
         rowGap: '0',
+        justifyContent: 'center',
         paddingTop: '12.2mm', 
         paddingBottom: '12.8mm', 
         paddingLeft: '14mm', 
