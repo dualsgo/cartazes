@@ -440,15 +440,24 @@ export default function Home() {
 
   const perPage    = PER_PAGE[posterType as PosterType] || 4;
   
-  const filteredQueue = useMemo(() => {
-    if (queueFilter === 'all') return queue;
-    return queue.filter(item => {
-      const isOfferType = item.posterSubType === 'offer';
-      return queueFilter === 'offer' ? isOfferType : !isOfferType;
-    });
-  }, [queue, queueFilter]);
+  const expandedFilteredQueue = useMemo(() => {
+    const isOfferOnlyModel = !['aereo', 'etiqueta-oficial'].includes(posterType);
+    
+    let base = queue;
+    if (isOfferOnlyModel) {
+      base = base.filter(item => item.posterSubType === 'offer');
+    } else if (queueFilter !== 'all') {
+      base = base.filter(item => {
+        const isOfferType = item.posterSubType === 'offer';
+        return queueFilter === 'offer' ? isOfferType : !isOfferType;
+      });
+    }
+    
+    return base.flatMap(item => Array.from({ length: item.quantity || 1 }, () => item));
+  }, [queue, queueFilter, posterType]);
 
-  const totalPages = filteredQueue.length > 0 ? Math.ceil(filteredQueue.length / perPage) : 0;
+  const totalPosters = expandedFilteredQueue.length;
+  const totalPages = totalPosters > 0 ? Math.ceil(totalPosters / perPage) : 0;
 
   // Update print CSS immediately when poster type changes
   useEffect(() => {
@@ -476,9 +485,27 @@ export default function Home() {
 
   const handleAddToQueue = () => {
     if (!isProductReady) return;
-    const copies = Math.max(1, currentPoster.quantity || 1);
-    const itemsToAdd = Array.from({ length: copies }, () => ({ ...currentPoster }));
-    setQueue((prev: PosterData[]) => [...prev, ...itemsToAdd]);
+    
+    setQueue((prev: PosterData[]) => {
+      // Tenta encontrar se o produto já existe no lote (mesmo tipo e dados básicos)
+      const existingIdx = prev.findIndex(item => 
+        item.code === currentPoster.code && 
+        item.ean === currentPoster.ean && 
+        item.posterSubType === currentPoster.posterSubType &&
+        item.description === currentPoster.description
+      );
+
+      if (existingIdx > -1) {
+        const newQueue = [...prev];
+        newQueue[existingIdx] = {
+          ...newQueue[existingIdx],
+          quantity: (newQueue[existingIdx].quantity || 1) + (currentPoster.quantity || 1)
+        };
+        return newQueue;
+      }
+      return [...prev, { ...currentPoster }];
+    });
+
     setCurrentPoster({
       ...initialPosterData(),
       posterSubType: currentPoster.posterSubType,
@@ -495,46 +522,14 @@ export default function Home() {
     setQueue((prev: PosterData[]) => prev.filter((_: PosterData, i: number) => i !== index));
   };
 
-  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
 
-    const isExcel = file.name.endsWith('.xls') || file.name.endsWith('.xlsx');
-    const reader = new FileReader();
-
-    reader.onload = (event) => {
-      let imported: any[] = [];
-      
-      if (isExcel) {
-        const buffer = event.target?.result as ArrayBuffer;
-        imported = parseProductExcel(buffer);
-      } else {
-        const content = event.target?.result as string;
-        imported = parseProductCSV(content);
-      }
-
-      if (imported.length > 0) {
-        setQueue(prev => [...prev, ...imported]);
-        alert(`${imported.length} itens importados com sucesso!`);
-      } else {
-        alert('Nenhum item encontrado no arquivo. Verifique se as colunas (SAP, Mercadoria, Preços) estão presentes.');
-      }
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    };
-
-    if (isExcel) {
-      reader.readAsArrayBuffer(file);
-    } else {
-      reader.readAsText(file, 'ISO-8859-1'); // Comum em CSVs do Excel Brasil
-    }
-  };
 
   /* Print content: one div per page, each with page-break */
   const renderPrintContent = () => {
-    if (filteredQueue.length === 0) return null;
+    if (expandedFilteredQueue.length === 0) return null;
     const orientation = POSTER_ORIENTATION[posterType as PosterType];
     return Array.from({ length: totalPages }).map((_, pageIdx: number) => {
-      const pageItems = filteredQueue.slice(pageIdx * perPage, (pageIdx + 1) * perPage);
+      const pageItems = expandedFilteredQueue.slice(pageIdx * perPage, (pageIdx + 1) * perPage);
       return (
         <div
           key={pageIdx}
@@ -610,38 +605,7 @@ export default function Home() {
               ))}
             </div>
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => setShowDatabase(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all border border-border/50 hover:border-border"
-                title="Gerenciar banco de dados"
-              >
-                <Database className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Banco de Dados</span>
-              </button>
-              <button
-                onClick={() => setShowAbout(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all border border-border/50 hover:border-border"
-                title="Sobre esta ferramenta"
-              >
-                <Info className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Sobre</span>
-              </button>
-              <SettingsDialog settings={settings} onSave={saveSettings} />
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleImportFile}
-                accept=".csv, .xls, .xlsx"
-                className="hidden"
-              />
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all border border-border/50 hover:border-border"
-                title="Importar lote via CSV"
-              >
-                <Upload className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Importar Lote</span>
-              </button>
+              <SettingsDialog settings={settings} onSave={saveSettings} onOpenDatabase={() => setShowDatabase(true)} />
               <Button
                 onClick={() => window.print()}
                 disabled={queue.length === 0}
@@ -665,7 +629,7 @@ export default function Home() {
         <div className="flex-1 flex flex-col md:grid md:grid-cols-12 min-h-0">
 
           {/* ── Left: Form + Add + Queue ── */}
-          <div className="flex-none md:flex-auto md:col-span-5 lg:col-span-4 flex flex-col border-r border-border bg-muted/10 md:min-h-0 order-2 md:order-1 h-auto md:h-full overflow-x-hidden">
+          <div className="flex-none md:flex-auto md:col-span-5 lg:col-span-4 flex flex-col border-r border-border bg-muted/10 md:min-h-0 order-1 md:order-1 h-auto md:h-full overflow-x-hidden border-b border-border md:border-b-0">
             <div className="flex-1 md:overflow-y-auto overflow-y-visible overflow-x-hidden px-4 pt-4 min-h-0 custom-scrollbar">
               <div className="pb-12 space-y-3">
 
@@ -675,6 +639,28 @@ export default function Home() {
                   setData={setCurrentPoster}
                   posterType={posterType}
                   onLookupStatusChange={setIsProductReady}
+                  onImportBatch={(items) => {
+                    setQueue(prev => {
+                      const newQueue = [...prev];
+                      items.forEach(newItem => {
+                        const existingIdx = newQueue.findIndex(item => 
+                          item.code === newItem.code && 
+                          item.ean === newItem.ean && 
+                          item.posterSubType === newItem.posterSubType &&
+                          item.description === newItem.description
+                        );
+                        if (existingIdx > -1) {
+                          newQueue[existingIdx] = {
+                            ...newQueue[existingIdx],
+                            quantity: (newQueue[existingIdx].quantity || 1) + (newItem.quantity || 1)
+                          };
+                        } else {
+                          newQueue.push(newItem);
+                        }
+                      });
+                      return newQueue;
+                    });
+                  }}
                 />
 
                 {/* ── Add to queue button ── */}
@@ -706,89 +692,85 @@ export default function Home() {
                       </button>
                     </div>
 
-                    {/* Filter Toggle */}
-                    <div className="flex border-b divide-x divide-border/50">
-                      {(['all', 'offer', 'normal'] as const).map((f) => (
-                        <button
-                          key={f}
-                          onClick={() => setQueueFilter(f)}
-                          className={cn(
-                            "flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-colors",
-                            queueFilter === f ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted/50"
-                          )}
-                        >
-                          {f === 'all' ? 'Tudo' : f === 'offer' ? 'Ofertas' : 'Normal'}
-                        </button>
-                      ))}
-                    </div>
+                    {/* Filter Toggle - Only show for models that support normal/offer */}
+                    {['aereo', 'etiqueta-oficial'].includes(posterType) && (
+                      <div className="flex border-b divide-x divide-border/50">
+                        {(['all', 'offer', 'normal'] as const).map((f) => (
+                          <button
+                            key={f}
+                            onClick={() => setQueueFilter(f)}
+                            className={cn(
+                              "flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-colors",
+                              queueFilter === f ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted/50"
+                            )}
+                          >
+                            {f === 'all' ? 'Tudo' : f === 'offer' ? 'Ofertas' : 'Normal'}
+                          </button>
+                        ))}
+                      </div>
+                    )}
 
-                    <div className="divide-y divide-border/50">
-                      {Array.from({ length: totalPages }).map((_, pageIdx) => {
-                        const pageItems = queue.slice(pageIdx * perPage, (pageIdx + 1) * perPage);
-                        return (
-                          <div key={pageIdx}>
-                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider px-3 pt-2 pb-1">
-                              Página {pageIdx + 1}
-                            </p>
-                            {pageItems.map((item: PosterData, itemIdx: number) => {
-                              const globalIdxInFiltered = pageIdx * perPage + itemIdx;
-                              // Find original index in full queue for deletion
-                              // This is tricky if we have duplicates. 
-                              // For simplicity, let's just use the filtered list and update the whole queue.
-                              // Actually, if we delete from the filtered list, we should delete that specific instance.
-                              
-                              const handleRemove = () => {
-                                const newQueue = [...queue];
-                                // This finds the exact instance if we identify them by something.
-                                // Since they are plain objects, let's find the Nth occurrence that matches.
-                                let count = 0;
-                                const originalIdx = queue.findIndex(qItem => {
-                                  let matches = qItem === item; // Simple ref check if possible, but they are cloned.
-                                  // Since they are cloned, we check value equality + occurrence index
-                                  // BUT the filtered list is just a slice.
-                                  // Better: just find the index of this item in the filtered list and remove it from the total queue.
-                                  // Actually, since we want to remove the specific one clicked:
-                                  return false; // placeholder for logic below
-                                });
-                                // Revised logic: pass the item and remove it from queue by reference? No, they are clones.
-                                // Let's just filter the queue to remove exactly this instance.
-                                setQueue(prev => {
-                                  const idxToRemove = prev.indexOf(item); // Only works if we don't clone every turn.
-                                  // Let's just use indices in the filtered list to manage state.
-                                  const updated = [...prev];
-                                  const itemInPrev = filteredQueue[globalIdxInFiltered];
-                                  const realIdx = prev.indexOf(itemInPrev);
-                                  if (realIdx > -1) updated.splice(realIdx, 1);
-                                  return updated;
-                                });
+                    <div className="divide-y divide-border/50 max-h-[400px] overflow-y-auto">
+                      {queue.filter(item => {
+                        const isOfferOnlyModel = !['aereo', 'etiqueta-oficial'].includes(posterType);
+                        if (isOfferOnlyModel) return item.posterSubType === 'offer';
+                        
+                        if (queueFilter === 'all') return true;
+                        const isOfferType = item.posterSubType === 'offer';
+                        return queueFilter === 'offer' ? isOfferType : !isOfferType;
+                      }).map((item: PosterData, idx: number) => {
+                        const updateQty = (delta: number) => {
+                          setQueue(prev => {
+                            const newQueue = [...prev];
+                            const realIdx = prev.indexOf(item);
+                            if (realIdx > -1) {
+                              newQueue[realIdx] = {
+                                ...newQueue[realIdx],
+                                quantity: Math.max(1, (newQueue[realIdx].quantity || 1) + delta)
                               };
+                            }
+                            return newQueue;
+                          });
+                        };
 
-                              return (
-                                <div key={globalIdxInFiltered} className="flex items-center gap-2 px-3 py-2 hover:bg-muted/40 transition-colors">
-                                  <span className="text-[10px] font-mono text-muted-foreground w-5 shrink-0 text-right">
-                                    {globalIdxInFiltered + 1}.
-                                  </span>
-                                  <span className="text-xs font-medium flex-1 line-clamp-2 leading-tight" title={item.description}>
-                                    {item.description}
-                                  </span>
-                                  {item.priceFor && (
-                                    <span className={cn(
-                                      "text-[9px] px-1 rounded font-bold uppercase",
-                                      item.posterSubType === 'offer' ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
-                                    )}>
-                                      {item.posterSubType === 'offer' ? 'OFERTA' : 'NORMAL'}
-                                    </span>
-                                  )}
-                                  <button
-                                    onClick={handleRemove}
-                                    className="shrink-0 text-muted-foreground hover:text-destructive transition-colors ml-1"
-                                    title="Remover"
-                                  >
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                  </button>
-                                </div>
-                              );
-                            })}
+                        const handleRemove = () => {
+                          setQueue(prev => prev.filter(i => i !== item));
+                        };
+
+                        return (
+                          <div key={idx} className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted/40 transition-colors group">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[11px] font-bold text-gray-900 truncate uppercase leading-tight">
+                                {item.description}
+                              </p>
+                              <p className="text-[9px] text-muted-foreground font-medium uppercase mt-0.5">
+                                SAP: {item.code || '-'} | {item.posterSubType === 'offer' ? '🔥 Oferta' : 'Normal'}
+                              </p>
+                            </div>
+                            
+                            <div className="flex items-center bg-muted rounded-lg p-0.5 border">
+                               <button 
+                                 onClick={() => updateQty(-1)}
+                                 className="w-6 h-6 flex items-center justify-center text-xs hover:bg-background rounded shadow-sm transition-all"
+                               >
+                                 -
+                               </button>
+                               <span className="w-8 text-center text-[10px] font-black">{item.quantity || 1}</span>
+                               <button 
+                                 onClick={() => updateQty(1)}
+                                 className="w-6 h-6 flex items-center justify-center text-xs hover:bg-background rounded shadow-sm transition-all"
+                               >
+                                 +
+                               </button>
+                            </div>
+
+                            <button
+                              onClick={handleRemove}
+                              className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all opacity-0 group-hover:opacity-100"
+                              title="Remover do Lote"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
                           </div>
                         );
                       })}
@@ -801,7 +783,7 @@ export default function Home() {
           </div>
 
           {/* ── Right: Single poster preview ── */}
-          <div className="md:col-span-7 lg:col-span-8 flex flex-col p-4 gap-2 md:overflow-hidden bg-muted/20 order-1 md:order-2 border-b border-border md:border-b-0 h-[60vh] md:h-full">
+          <div className="md:col-span-7 lg:col-span-8 flex flex-col p-4 gap-2 md:overflow-hidden bg-muted/20 order-2 md:order-2 border-b border-border md:border-b-0 h-auto min-h-[450px] md:h-full">
             <div className="flex items-center justify-between px-2 shrink-0">
               <p className="text-xs text-muted-foreground">
                 Visualização — {orientation === 'landscape' ? 'Paisagem' : 'Retrato'}
@@ -840,7 +822,7 @@ export default function Home() {
                   />
                 ) : (
                   <FullPagePreview
-                    items={filteredQueue}
+                    items={expandedFilteredQueue}
                     posterType={posterType as PosterType}
                     settings={settings}
                   />

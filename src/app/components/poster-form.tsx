@@ -5,10 +5,13 @@ import type { Dispatch, SetStateAction } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import type { PosterData } from '@/app/lib/types';
 import { cn } from '@/lib/utils';
-import { Loader2, CheckCircle2, XCircle, Search, RotateCcw, PlusCircle, Info, AlertTriangle } from 'lucide-react';
+import { Loader2, CheckCircle2, XCircle, Search, RotateCcw, PlusCircle, Info, AlertTriangle, Camera, Upload } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { BarcodeScanner } from './barcode-scanner';
+import { parseProductExcel, parseProductCSV } from '@/app/lib/poster-utils';
 
 function centsToDisplay(cents: number): string {
   if (cents === 0) return '';
@@ -34,38 +37,33 @@ function useCurrencyInput(initial: string, maxCents?: number) {
 
   const display = centsToDisplay(cents);
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Backspace') {
-      e.preventDefault();
-      setCents(prev => Math.floor(prev / 10));
-    } else if (/^\d$/.test(e.key)) {
-      e.preventDefault();
-      setCents(prev => {
-        const next = prev * 10 + parseInt(e.key, 10);
-        // Bloqueia se ultrapassar 6 dígitos totais (9999,99)
-        if (next > 999999) return prev;
-        
-        // Aplica o limite relativo (ex: Preço "Por" não pode ser maior que "De")
-        const capped = maxCents !== undefined && next > maxCents ? maxCents : next;
-        return capped;
-      });
-    }
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value.replace(/\D/g, '');
+    const next = rawValue ? parseInt(rawValue, 10) : 0;
+    
+    // Bloqueia se ultrapassar 6 dígitos totais (9999,99)
+    if (next > 999999) return;
+    
+    // Aplica o limite relativo
+    const capped = maxCents !== undefined && next > maxCents ? maxCents : next;
+    setCents(capped);
   };
 
   const reset = useCallback(() => setCents(0), []);
   const setValue = useCallback((val: string) => setCents(displayToCents(val)), []);
 
-  return { display, handleKeyDown, reset, setValue, cents };
+  return { display, handleChange, reset, setValue, cents };
 }
 
 type LookupStatus = 'idle' | 'loading' | 'found' | 'notfound';
 
-type PosterFormProps = {
+interface PosterFormProps {
   data: PosterData;
   setData: Dispatch<SetStateAction<PosterData>>;
-  posterType: 'reliquias' | 'ofertas-imperdiveis' | 'aereo' | 'avaria' | 'etiqueta-oficial' | 'totem';
-  onLookupStatusChange?: (found: boolean) => void;
-};
+  posterType: string;
+  onLookupStatusChange?: (ready: boolean) => void;
+  onImportBatch?: (items: PosterData[]) => void;
+}
 
 function detectInputType(value: string): 'ean' | 'code' {
   return value.replace(/\D/g, '').length >= 8 ? 'ean' : 'code';
@@ -79,14 +77,17 @@ const defectOptions = [
   { value: 'outro', label: 'Outro (descrever)', discount: null },
 ];
 
-export function PosterForm({ data, setData, posterType, onLookupStatusChange }: PosterFormProps) {
+export function PosterForm({ data, setData, posterType, onLookupStatusChange, onImportBatch }: PosterFormProps) {
   const [lookupStatus, setLookupStatus] = useState<LookupStatus>('idle');
   const [searchValue, setSearchValue] = useState('');
   const [suggestions, setSuggestions] = useState<{ key: string; description: string }[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [priceForOverridden, setPriceForOverridden] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
   const suggestTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [regStatus, setRegStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
@@ -308,43 +309,125 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
               </button>
             )}
           </div>
-          <div className="relative">
-            <Input
-              id="search-code"
-              value={searchValue}
-              onChange={handleSearchChange}
-              onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-              onKeyDown={handleSearchKeyDown}
-              onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-              placeholder="Digite o código SAP ou EAN..."
-              className={cn(
-                'h-12 text-lg font-medium transition-all duration-200',
-                lookupStatus === 'found' && 'border-green-500 bg-green-50/10',
-                lookupStatus === 'notfound' && 'border-red-300 bg-red-50/10',
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Input
+                id="search-code"
+                value={searchValue}
+                onChange={handleSearchChange}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                onKeyDown={handleSearchKeyDown}
+                onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+                placeholder="SAP ou EAN..."
+                className={cn(
+                  'h-12 text-lg font-medium transition-all duration-200 pr-10',
+                  lookupStatus === 'found' && 'border-green-500 bg-green-50/10',
+                  lookupStatus === 'notfound' && 'border-red-300 bg-red-50/10',
+                )}
+                autoComplete="off"
+                disabled={isManualMode || isImporting}
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                {isImporting ? <Loader2 className="h-4 w-4 animate-spin text-blue-500" /> : (
+                  <>
+                    {!isManualMode && statusIcon}
+                    {isManualMode && <CheckCircle2 className="h-4 w-4 text-blue-500" />}
+                  </>
+                )}
+              </span>
+
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute z-50 w-full mt-1 bg-white border rounded-lg shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                  {suggestions.map((s, i) => (
+                    <button
+                      key={s.key}
+                      data-suggestion
+                      className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b last:border-0 flex flex-col"
+                      onMouseDown={() => handleSuggestionSelect(s.key)}
+                    >
+                      <span className="font-bold text-gray-900">{s.key}</span>
+                      <span className="text-xs text-gray-500 uppercase truncate">{s.description}</span>
+                    </button>
+                  ))}
+                </div>
               )}
-              autoComplete="off"
-              disabled={isManualMode}
-            />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none opacity-50">
-              {!isManualMode && statusIcon}
-              {isManualMode && <CheckCircle2 className="h-4 w-4 text-blue-500" />}
-            </span>
-            {showSuggestions && suggestions.length > 0 && (
-              <div className="absolute z-50 w-full mt-1 bg-white border rounded-lg shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-100">
-                {suggestions.map((s, i) => (
-                  <button
-                    key={s.key}
-                    data-suggestion
-                    className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b last:border-0 flex flex-col"
-                    onMouseDown={() => handleSuggestionSelect(s.key)}
-                  >
-                    <span className="font-bold text-gray-900">{s.key}</span>
-                    <span className="text-xs text-gray-500 uppercase truncate">{s.description}</span>
-                  </button>
-                ))}
+            </div>
+
+            {!isManualMode && (
+              <div className="flex gap-1.5">
+                <Button 
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowScanner(true)}
+                  className="h-12 w-12 p-0 border-2 hover:bg-blue-50 hover:border-blue-300 transition-all shrink-0"
+                  title="Escanear Código"
+                >
+                  <Camera className="h-5 w-5 text-blue-600" />
+                </Button>
+                
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file || !onImportBatch) return;
+
+                    setIsImporting(true);
+                    const isExcel = file.name.toLowerCase().endsWith('.xls') || file.name.toLowerCase().endsWith('.xlsx');
+                    const reader = new FileReader();
+
+                    reader.onload = (event) => {
+                      let imported: any[] = [];
+                      try {
+                        if (isExcel) {
+                          const buffer = event.target?.result as ArrayBuffer;
+                          imported = parseProductExcel(buffer);
+                        } else {
+                          const content = event.target?.result as string;
+                          imported = parseProductCSV(content);
+                        }
+
+                        if (imported.length > 0) {
+                          onImportBatch(imported);
+                        }
+                      } catch (err) {
+                        console.error("Erro na importação:", err);
+                      } finally {
+                        setTimeout(() => setIsImporting(false), 800);
+                        if (fileInputRef.current) fileInputRef.current.value = '';
+                      }
+                    };
+
+                    if (isExcel) {
+                      reader.readAsArrayBuffer(file);
+                    } else {
+                      reader.readAsText(file, 'ISO-8859-1');
+                    }
+                  }}
+                  accept=".csv, .xls, .xlsx"
+                  className="hidden"
+                />
+                <Button 
+                  type="button"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="h-12 w-12 p-0 border-2 hover:bg-emerald-50 hover:border-emerald-300 transition-all shrink-0"
+                  title="Importar CSV Alteração"
+                >
+                  <Upload className="h-5 w-5 text-emerald-600" />
+                </Button>
               </div>
             )}
           </div>
+
+          {isImporting && (
+             <div className="pt-2 animate-in fade-in slide-in-from-top-1">
+                <div className="h-1 w-full bg-gray-100 rounded-full overflow-hidden">
+                   <div className="h-full bg-blue-500 animate-progress origin-left w-full"></div>
+                </div>
+                <p className="text-[10px] font-bold text-blue-600 uppercase mt-1 text-center animate-pulse">Processando arquivo...</p>
+             </div>
+          )}
         </div>
 
         {showWarning && (
@@ -402,6 +485,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
                 </Label>
                 <Input
                   value={manualCode}
+                  inputMode="numeric"
                   onChange={e => setManualCode(e.target.value.replace(/\D/g, ''))}
                   placeholder="Código SAP"
                   className="h-10 font-mono border-blue-200"
@@ -414,6 +498,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
                 </Label>
                 <Input
                   value={manualEan}
+                  inputMode="numeric"
                   onChange={e => setManualEan(e.target.value.replace(/\D/g, ''))}
                   placeholder="Código de Barras"
                   className="h-10 font-mono border-blue-200"
@@ -505,8 +590,8 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
                   <Label className="text-[10px] font-bold text-gray-500 uppercase">Preço Anterior (DE)</Label>
                   <Input
                     value={priceFrom.display}
-                    onKeyDown={priceFrom.handleKeyDown}
-                    onChange={() => {}}
+                    inputMode="numeric"
+                    onChange={priceFrom.handleChange}
                     className="h-10 font-mono text-lg bg-gray-50/50"
                   />
                 </div>
@@ -515,8 +600,8 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
                 <Label className="text-[10px] font-bold text-gray-500 uppercase">Preço Novo (POR)</Label>
                 <Input
                   value={priceFor.display}
-                  onKeyDown={e => { if(posterType==='avaria') setPriceForOverridden(true); priceFor.handleKeyDown(e); }}
-                  onChange={() => {}}
+                  inputMode="numeric"
+                  onChange={e => { if(posterType==='avaria') setPriceForOverridden(true); priceFor.handleChange(e); }}
                   className="h-10 font-mono text-xl font-black bg-blue-50/10 border-blue-200"
                 />
               </div>
@@ -529,6 +614,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
                   <button onClick={() => setData(prev => ({ ...prev, quantity: Math.max(1, (prev.quantity || 1) - 1) }))} className="w-10 h-full border rounded-l-lg bg-gray-50 active:bg-gray-200">-</button>
                   <Input 
                     value={data.quantity} 
+                    inputMode="numeric"
                     onChange={e => setData(prev => ({ ...prev, quantity: parseInt(e.target.value.replace(/\D/g, '')) || 1 }))}
                     className="h-full text-center border-x-0 rounded-none font-bold min-w-0"
                   />
@@ -616,6 +702,16 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange }: 
               </div>
            </div>
         </div>
+      )}
+      {showScanner && (
+        <BarcodeScanner 
+          onScanSuccess={(code) => {
+            setSearchValue(code);
+            handleLookup(code);
+            setShowScanner(false);
+          }}
+          onClose={() => setShowScanner(false)}
+        />
       )}
     </div>
   );
