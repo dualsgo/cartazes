@@ -131,7 +131,7 @@ export function PosterPreviewAereo({
       {isOffer && hasDiscount && (
         <div className="w-[28mm] h-full bg-black text-white flex items-center justify-center shrink-0 z-10 border-l border-white/20">
           <div className="-rotate-90 whitespace-nowrap">
-            <span className="font-headline font-medium text-[40pt] leading-none tracking-[6px] uppercase">
+            <span className="font-headline font-medium text-[34pt] leading-none tracking-[6px] uppercase">
               Oferta
             </span>
           </div>

@@ -263,8 +263,8 @@ function PageGrid({
         gridTemplateRows: 'repeat(4, 67.75mm)', 
         gap: '0', 
         justifyContent: 'center',
-        paddingTop: '13mm', 
-        paddingBottom: '13mm', 
+        paddingTop: '15mm', 
+        paddingBottom: '11mm', 
         paddingLeft: '13mm', 
         paddingRight: '13mm', 
         width: '100%', 
@@ -333,8 +333,8 @@ function PageGrid({
         columnGap: '2mm', 
         rowGap: '0',
         justifyContent: 'center',
-        paddingTop: '12.2mm', 
-        paddingBottom: '12.8mm', 
+        paddingTop: '14.2mm', 
+        paddingBottom: '10.8mm', 
         paddingLeft: '14mm', 
         paddingRight: '14mm', 
         width: '100%', 
@@ -382,7 +382,7 @@ function PageGrid({
   }
   if (posterType === 'totem') {
     return (
-      <div style={{ width: '100%', height: '100%', backgroundColor: 'white' }}>
+      <div style={{ width: '100%', height: '100%', backgroundColor: 'white', paddingTop: '0.3cm' }}>
         <PosterPreviewTotem {...items[0]} settings={settings} />
       </div>
     );
@@ -397,7 +397,7 @@ function PageGrid({
       gridTemplateRows: 'minmax(0,1fr) minmax(0,1fr)',
       width: '100%',
       height: '100%',
-      padding: '1.5cm 1.2cm',  // Margens externas (Padrão A4 limpo)
+      padding: '1.7cm 1.2cm 1.3cm 1.2cm',  // Margens externas (Ajustadas: +0.2cm topo)
       boxSizing: 'border-box',
       backgroundColor: 'white'
     }}>
@@ -409,7 +409,7 @@ function PageGrid({
           // O espaço em branco QUE SEPARA um painel do outro fisicamente:
           // Como as margens encostam, o top de um cartaz respira pro limite
           // e o bottom respira pro mesmo limite.
-          paddingTop: '0.4cm',
+          paddingTop: '0.5cm',
           paddingBottom: '0.4cm',
           paddingLeft: '0.4cm',
           paddingRight: '0.4cm',
