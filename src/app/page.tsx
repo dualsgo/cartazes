@@ -36,7 +36,7 @@ const PER_PAGE: Record<PosterType, number> = {
 const SINGLE_DIMS: Record<PosterType, { w: number; h: number }> = {
   reliquias:            { w: 491, h: 340 },
   'ofertas-imperdiveis':{ w: 491, h: 340 },
-  aereo:                { w: 658, h: 242 },  // 174mm x 64mm @ 96dpi (ajustado para margem 1.8cm)
+  aereo:                { w: 695, h: 256 },  // 184mm x 67.75mm @ 96dpi (Margens 1.3cm)
   avaria:               { w: 491, h: 340 },
   'etiqueta-oficial':   { w: 340, h: 128 },  // 90mm x 34mm @ 96dpi
   totem:                { w: 794, h: 1123 }, // A4 @ 96dpi
@@ -232,6 +232,7 @@ function FullPagePreview({
           posterType={posterType} 
           perPage={perPage} 
           settings={settings} 
+          isPrint={false}
         />
       </div>
     </div>
@@ -243,12 +244,14 @@ function PageGrid({
   items,
   posterType,
   perPage,
-  settings
+  settings,
+  isPrint = false
 }: {
   items: PosterData[];
   posterType: PosterType;
   perPage: number;
   settings: PosterSettings;
+  isPrint?: boolean;
 }) {
   const empties = Array.from({ length: perPage - items.length });
 
@@ -256,19 +259,19 @@ function PageGrid({
     return (
       <div style={{ 
         display: 'grid', 
-        gridTemplateColumns: '174mm', 
-        gridTemplateRows: 'repeat(4, 65.25mm)', 
+        gridTemplateColumns: '184mm', 
+        gridTemplateRows: 'repeat(4, 67.75mm)', 
         gap: '0', 
         justifyContent: 'center',
-        paddingTop: '18mm', 
-        paddingBottom: '18mm', 
-        paddingLeft: '18mm', 
-        paddingRight: '18mm', 
+        paddingTop: '13mm', 
+        paddingBottom: '13mm', 
+        paddingLeft: '13mm', 
+        paddingRight: '13mm', 
         width: '100%', 
         height: '100%', 
         boxSizing: 'border-box', 
         backgroundColor: 'white',
-        border: '0.1mm solid #eee'
+        border: isPrint ? 'none' : '0.1mm solid #eee'
       }}>
         {items.map((d: PosterData, i: number) => {
           const isTop = i === 0;
@@ -276,16 +279,16 @@ function PageGrid({
             <div 
               key={i} 
               style={{ 
-                width: '174mm', 
-                height: '65.25mm', 
+                width: '184mm', 
+                height: '67.75mm', 
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 overflow: 'hidden',
-                borderLeft: '0.1mm dashed #ccc',
-                borderRight: '0.1mm dashed #ccc',
-                borderTop: isTop ? '0.1mm dashed #ccc' : 'none',
-                borderBottom: '0.1mm dashed #ccc',
+                borderLeft: isPrint ? 'none' : '0.1mm dashed #ccc',
+                borderRight: isPrint ? 'none' : '0.1mm dashed #ccc',
+                borderTop: isTop && !isPrint ? '0.1mm dashed #ccc' : 'none',
+                borderBottom: isPrint ? 'none' : '0.1mm dashed #ccc',
                 boxSizing: 'border-box'
               }}
             >
@@ -302,19 +305,19 @@ function PageGrid({
             <div 
               key={`e${i}`} 
               style={{ 
-                width: '174mm', 
-                height: '65.25mm',
+                width: '184mm', 
+                height: '67.75mm',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                borderLeft: '0.1mm dashed #ccc',
-                borderRight: '0.1mm dashed #ccc',
-                borderTop: isTop ? '0.1mm dashed #ccc' : 'none',
-                borderBottom: '0.1mm dashed #ccc',
+                borderLeft: isPrint ? 'none' : '0.1mm dashed #ccc',
+                borderRight: isPrint ? 'none' : '0.1mm dashed #ccc',
+                borderTop: isTop && !isPrint ? '0.1mm dashed #ccc' : 'none',
+                borderBottom: isPrint ? 'none' : '0.1mm dashed #ccc',
                 boxSizing: 'border-box'
               }}
             >
-              <div style={{ width: '174mm', height: '64mm', backgroundColor: '#f9f9f9', border: '0.1mm dashed #ddd' }} />
+              <div style={{ width: '174mm', height: '64mm', backgroundColor: isPrint ? 'transparent' : '#f9f9f9', border: isPrint ? 'none' : '0.1mm dashed #ddd' }} />
             </div>
           );
         })}
@@ -559,7 +562,7 @@ export default function Home() {
             breakAfter:     pageIdx < totalPages - 1    ? 'page'   : 'auto',
           }}
         >
-          <PageGrid items={pageItems} posterType={posterType as PosterType} perPage={perPage} settings={settings} />
+          <PageGrid items={pageItems} posterType={posterType as PosterType} perPage={perPage} settings={settings} isPrint={true} />
         </div>
       );
     });

@@ -42,7 +42,7 @@ export function PosterPreviewAereo({
   return (
     <div className="w-full h-full bg-white text-black font-body overflow-hidden relative flex flex-row box-border">
       {/* ── CONTEÚDO PRINCIPAL (COMPRIMIDO À ESQUERDA) ── */}
-      <div className="flex-1 flex flex-col justify-between py-[4mm] px-[8mm] overflow-hidden relative">
+      <div className="flex-1 flex flex-col justify-between p-[5mm] overflow-hidden relative">
         
         {/* 1. TOPO: DESCRIÇÃO */}
         <div className="w-full h-[16mm] flex items-center justify-center shrink-0">
