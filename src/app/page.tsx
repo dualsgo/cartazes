@@ -36,9 +36,9 @@ const PER_PAGE: Record<PosterType, number> = {
 const SINGLE_DIMS: Record<PosterType, { w: number; h: number }> = {
   reliquias:            { w: 491, h: 340 },
   'ofertas-imperdiveis':{ w: 491, h: 340 },
-  aereo:                { w: 760, h: 268 },  // proporcional a 190mm x 67mm (4px/mm)
+  aereo:                { w: 728, h: 288 },  // proporcional a 182mm x 72mm (4px/mm)
   avaria:               { w: 491, h: 340 },
-  'etiqueta-oficial':   { w: 364, h: 136 }, // 91mm x 34.0mm (4px/mm)
+  'etiqueta-oficial':   { w: 360, h: 136 }, // 90mm x 34.0mm (4px/mm)
   totem:                { w: 794, h: 1123 }, // A4 a 96dpi (210×297mm em pixels de tela)
 };
 
@@ -161,6 +161,83 @@ function SinglePosterPreview({
   );
 }
 
+/* ─────────────────────────── FullPagePreview ────────────────────────────── */
+// Mostra uma página A4 inteira (usando PageGrid) com escala reduzida.
+function FullPagePreview({
+  items,
+  posterType,
+  settings,
+}: {
+  items: PosterData[];
+  posterType: PosterType;
+  settings: PosterSettings;
+}) {
+  const outerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+  const [ready, setReady] = useState(false);
+
+  const orientation = POSTER_ORIENTATION[posterType] || 'landscape';
+  const perPage = PER_PAGE[posterType] || 4;
+  
+  // Dimensões A4 em pixels (4px/mm para consistência com SINGLE_DIMS)
+  const PAGE_W = orientation === 'landscape' ? 1188 : 840;
+  const PAGE_H = orientation === 'landscape' ? 840 : 1188;
+
+  useEffect(() => {
+    const outer = outerRef.current;
+    if (!outer) return;
+
+    const apply = () => {
+      const cw = outer.clientWidth;
+      const ch = outer.clientHeight;
+      if (cw === 0 || ch === 0) return;
+      setScale(Math.min(cw / PAGE_W, ch / PAGE_H) * 0.95);
+      setReady(true);
+    };
+
+    apply();
+    const ro = new ResizeObserver(apply);
+    ro.observe(outer);
+    return () => ro.disconnect();
+  }, [posterType, PAGE_W, PAGE_H]);
+
+  return (
+    <div
+      ref={outerRef}
+      style={{
+        width: '100%',
+        height: '100%',
+        overflow: 'hidden',
+        backgroundColor: '#b0b8c4',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <div
+        style={{
+          width: `${PAGE_W}px`,
+          height: `${PAGE_H}px`,
+          flexShrink: 0,
+          transformOrigin: 'center center',
+          transform: `scale(${scale})`,
+          visibility: ready ? 'visible' : 'hidden',
+          backgroundColor: 'white',
+          boxShadow: '0 8px 32px -4px rgb(0 0 0 / 0.35)',
+          overflow: 'hidden',
+        }}
+      >
+        <PageGrid 
+          items={items.slice(0, perPage)} 
+          posterType={posterType} 
+          perPage={perPage} 
+          settings={settings} 
+        />
+      </div>
+    </div>
+  );
+}
+
 /* ─────────────────────────── renderPageGrid ──────────────────────────────── */
 function PageGrid({
   items,
@@ -180,10 +257,10 @@ function PageGrid({
       <div style={{ 
         display: 'grid', 
         gridTemplateColumns: '182mm', 
-        gridTemplateRows: 'repeat(4, 67.6mm)', 
+        gridTemplateRows: 'repeat(4, 72mm)', 
         gap: '0', 
-        paddingTop: '12.5mm', 
-        paddingBottom: '14.1mm', 
+        paddingTop: '1.7mm', 
+        paddingBottom: '1.2mm', 
         paddingLeft: '14mm', 
         paddingRight: '14mm', 
         width: '100%', 
@@ -199,7 +276,7 @@ function PageGrid({
               key={i} 
               style={{ 
                 width: '182mm', 
-                height: '67.6mm', 
+                height: '72mm', 
                 overflow: 'hidden',
                 borderBottom: !isBottom ? '0.3mm dashed #ccc' : 'none',
                 boxSizing: 'border-box'
@@ -231,11 +308,12 @@ function PageGrid({
     return (
       <div style={{ 
         display: 'grid', 
-        gridTemplateColumns: '91mm 91mm', 
+        gridTemplateColumns: '90mm 90mm', 
         gridTemplateRows: 'repeat(8, 34.0mm)',
-        columnGap: '0', 
-        paddingTop: '12.5mm', 
-        paddingBottom: '12.5mm', 
+        columnGap: '2mm', 
+        rowGap: '0',
+        paddingTop: '12mm', 
+        paddingBottom: '13mm', 
         paddingLeft: '14mm', 
         paddingRight: '14mm', 
         width: '100%', 
@@ -251,11 +329,10 @@ function PageGrid({
             <div 
               key={i} 
               style={{ 
-                width: '91mm', 
+                width: '90mm', 
                 height: '34.0mm', 
                 overflow: 'hidden',
-                borderRight: isLeft ? '0.1mm dashed #eee' : 'none',
-                borderBottom: !isBottom ? '0.1mm dashed #eee' : 'none',
+                border: '0.1mm dashed #eee',
                 boxSizing: 'border-box'
               }}
             >
@@ -271,10 +348,9 @@ function PageGrid({
             <div 
               key={`e${i}`} 
               style={{ 
-                width: '91mm', 
+                width: '90mm', 
                 height: '34.0mm', 
-                borderRight: isLeft ? '0.1mm dashed #eee' : 'none',
-                borderBottom: !isBottom ? '0.1mm dashed #eee' : 'none',
+                border: '0.1mm dashed #eee',
                 boxSizing: 'border-box'
               }}
             />
@@ -345,6 +421,7 @@ export default function Home() {
     maxInstallments: 6,
     minInstallmentAmount: 29.99,
   });
+  const [previewMode, setPreviewMode] = useState<'single' | 'page'>('single');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -725,19 +802,49 @@ export default function Home() {
 
           {/* ── Right: Single poster preview ── */}
           <div className="md:col-span-7 lg:col-span-8 flex flex-col p-4 gap-2 md:overflow-hidden bg-muted/20 order-1 md:order-2 border-b border-border md:border-b-0 h-[60vh] md:h-full">
-            <p className="text-xs text-muted-foreground text-center shrink-0">
-              Pré-visualização — {orientation === 'landscape' ? 'Paisagem' : 'Retrato'}
-            </p>
+            <div className="flex items-center justify-between px-2 shrink-0">
+              <p className="text-xs text-muted-foreground">
+                Visualização — {orientation === 'landscape' ? 'Paisagem' : 'Retrato'}
+              </p>
+              <div className="flex bg-muted rounded-md p-0.5 border border-border">
+                <button
+                  onClick={() => setPreviewMode('single')}
+                  className={cn(
+                    "px-3 py-1 text-[10px] font-bold uppercase rounded-sm transition-all",
+                    previewMode === 'single' ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  Unidade
+                </button>
+                <button
+                  onClick={() => setPreviewMode('page')}
+                  className={cn(
+                    "px-3 py-1 text-[10px] font-bold uppercase rounded-sm transition-all",
+                    previewMode === 'page' ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  Página
+                </button>
+              </div>
+            </div>
 
             <div className="flex-1 min-h-0 relative border rounded border-border overflow-hidden">
             {/* Wrapper absoluto garante dimensões confiáveis para o ResizeObserver */}
               <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
-                <SinglePosterPreview
-                  data={currentPoster}
-                  posterType={posterType}
-                  isReady={isProductReady}
-                  settings={settings}
-                />
+                {previewMode === 'single' ? (
+                  <SinglePosterPreview
+                    data={currentPoster}
+                    posterType={posterType}
+                    isReady={isProductReady}
+                    settings={settings}
+                  />
+                ) : (
+                  <FullPagePreview
+                    items={filteredQueue}
+                    posterType={posterType as PosterType}
+                    settings={settings}
+                  />
+                )}
               </div>
             </div>
 

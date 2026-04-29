@@ -28,6 +28,7 @@ export function PosterPreviewEtiquetaOficial({
   const displayDescription = truncateDescription(description, 30);
 
   const [porInteger, porDecimal] = formatCurrency(valPor).split(',');
+  const [deInteger, deDecimal] = formatCurrency(valDe).split(',');
 
   const { maxInstallments, installmentValue } = calculateInstallments(valPor, settings);
   const hasInstallments = paymentOption === 'installment' && maxInstallments > 1;
@@ -48,7 +49,7 @@ export function PosterPreviewEtiquetaOficial({
         
         {/* 1. DESCRIÇÃO */}
         <div className="shrink-0">
-          <h2 className="font-bold text-[15px] leading-[1.1] uppercase tracking-tight overflow-hidden line-clamp-2 text-left">
+          <h2 className="font-bold text-[15px] leading-[1.1] uppercase tracking-tighter overflow-hidden line-clamp-2 text-left origin-left scale-x-[0.98]">
             {displayDescription}
           </h2>
         </div>
@@ -56,32 +57,34 @@ export function PosterPreviewEtiquetaOficial({
         {/* 2. ÁREA DE PREÇO: Ajustada para ocupar apenas o espaço restante, com respiro para equidistância */}
         <div className="flex flex-col justify-center flex-1 py-2 overflow-hidden min-h-0 min-w-0">
           <div className="flex items-center w-full justify-start">
-              {isOffer && valDe > 0 ? (
-                <div className="flex items-start w-full justify-start gap-2">
+               {isOffer && valDe > 0 ? (
+                <div className="flex items-center w-full justify-start gap-2">
                    {/* SEÇÃO DE: */}
-                   <div className="flex items-start gap-1">
-                      <div className="flex flex-col items-start leading-none mt-1.5 shrink-0">
-                         <span className="text-[11px] font-bold uppercase">De:</span>
-                         <span className="text-[11px] font-bold leading-none mt-1">R$</span>
+                   <div className="flex items-start gap-0.5">
+                      <div className="flex flex-col items-start leading-none mt-1 shrink-0">
+                         <span className="text-[10px] font-bold uppercase">De:</span>
+                         <span className="text-[9px] font-bold leading-none mt-0.5">R$</span>
                       </div>
-                      <span className="text-[32px] font-bold tracking-tighter inline-block origin-left scale-x-75 whitespace-nowrap leading-none relative">
-                         {formatCurrency(valDe)}
-                         {/* Barra inclinada preta sólida para impressoras monocromáticas - Espessura reduzida pela metade */}
-                         <div className="absolute inset-x-0 top-[45%] h-[0.75mm] bg-black -rotate-[15deg] pointer-events-none" />
-                      </span>
+                       <div className="flex items-baseline leading-none relative origin-left scale-x-[0.85]">
+                        <span className="text-[25px] font-bold tracking-tighter whitespace-nowrap leading-none">
+                            {deInteger},{deDecimal}
+                        </span>
+                        {/* Barra inclinada */}
+                        <div className="absolute inset-x-0 top-[45%] h-[0.6mm] bg-black -rotate-[15deg] pointer-events-none" />
+                      </div>
                    </div>
 
                    {/* SEÇÃO POR: */}
                    <div className="flex items-start gap-1">
-                      <div className="flex flex-col items-start leading-none mt-1.5 shrink-0">
-                         <span className="text-[11px] font-bold uppercase">Por:</span>
-                         <span className="text-[11px] font-bold leading-none mt-1">R$</span>
+                      <div className="flex flex-col items-start leading-none mt-1 shrink-0">
+                         <span className="text-[10px] font-bold uppercase">Por:</span>
+                         <span className="text-[9px] font-bold leading-none mt-0.5">R$</span>
                       </div>
-                      <div className="flex items-baseline leading-none">
-                         <span className="text-[36px] font-bold tracking-tighter inline-block origin-left scale-x-75 whitespace-nowrap leading-none">
-                            {formatCurrency(valPor)}
-                         </span>
-                         <span className="text-[8px] font-bold uppercase ml-[-6mm] self-end mb-1">un.</span>
+                      <div className="flex items-baseline leading-none flex-nowrap origin-left scale-x-[0.85]">
+                         <span className="text-[36px] font-bold tracking-tighter leading-none">{porInteger}</span>
+                         <span className="text-[25px] font-bold ml-0.5">,</span>
+                         <span className="text-[36px] font-bold tracking-tighter leading-none">{porDecimal}</span>
+                         <span className="text-[9px] font-bold uppercase ml-1 self-end mb-1 shrink-0">un.</span>
                       </div>
                    </div>
                 </div>
@@ -91,10 +94,10 @@ export function PosterPreviewEtiquetaOficial({
                        <span className="text-[12px] font-bold uppercase leading-none tracking-tight">Preço à Vista:</span>
                        <span className="text-[12px] font-bold leading-none mt-1">R$</span>
                     </div>
-                  <div className="flex items-baseline leading-none flex-nowrap">
-                     <span className="text-[42px] font-bold tracking-tighter inline-block origin-left scale-x-80">{porInteger}</span>
-                     <span className="text-[32px] font-bold ml-0.5 mr-[-0.5mm]">,</span>
-                     <span className="text-[42px] font-bold tracking-tighter inline-block origin-left scale-x-80">{porDecimal}</span>
+                  <div className="flex items-baseline leading-none flex-nowrap origin-left scale-x-[0.85]">
+                     <span className="text-[42px] font-bold tracking-tighter">{porInteger}</span>
+                     <span className="text-[32px] font-bold ml-0.5">,</span>
+                     <span className="text-[42px] font-bold tracking-tighter">{porDecimal}</span>
                      <span className="text-[9px] font-bold uppercase ml-1.5 self-end mb-1 shrink-0">un.</span>
                   </div>
                  </div>
@@ -123,11 +126,13 @@ export function PosterPreviewEtiquetaOficial({
           )}
         </div>
 
-        {/* 4. RODAPÉ - Limitado a linha única para não quebrar layout */}
-        <div className="shrink-0 pt-1 flex flex-nowrap gap-x-2 items-baseline mt-auto overflow-hidden h-[4mm]">
-           <span className="text-[7px] font-bold uppercase truncate max-w-[28mm]">REF: {reference || 'N/A'}</span>
-           {code && <span className="text-[7px] font-bold truncate max-w-[18mm]">SAP: {code}</span>}
-           {supplier && <span className="text-[7px] font-bold truncate max-w-[55mm] uppercase">FORN: {supplier}</span>}
+        {/* 4. RODAPÉ - Fornecedor | SAP | REF */}
+        <div className="shrink-0 pt-1 flex flex-nowrap gap-x-1.5 items-center mt-auto overflow-hidden h-[4mm] text-[7.5px] font-bold uppercase">
+           <span className="truncate max-w-[45mm]">{supplier || 'N/A'}</span>
+           <span className="text-black/20">|</span>
+           <span className="shrink-0">SAP: {code || 'N/A'}</span>
+           <span className="text-black/20">|</span>
+           <span className="shrink-0 text-nowrap">REF: {reference || 'N/A'}</span>
         </div>
       </div>
 

@@ -30,13 +30,13 @@ export function PosterPreviewAereo({
   const displayDescription = truncateDescription(description, 35);
 
   // Lógica de fonte dinâmica para o Aéreo (Aumentada e Comprimida)
-  let priceFontSize = '96px';
-  if (porInt.length >= 6) priceFontSize = '64px';
-  else if (porInt.length === 5) priceFontSize = '76px';
-  else if (porInt.length === 4) priceFontSize = '88px';
+  let priceFontSize = '91px';
+  if (porInt.length >= 6) priceFontSize = '61px';
+  else if (porInt.length === 5) priceFontSize = '72px';
+  else if (porInt.length === 4) priceFontSize = '84px';
 
   return (
-    <div className="w-full h-full bg-white text-black font-body overflow-hidden relative flex flex-col justify-between box-border px-[12mm] py-[2.5mm]">
+    <div className="w-full h-full bg-white text-black font-body overflow-hidden relative flex flex-col justify-between box-border px-[12mm] py-[4mm]">
       
       {/* Faixa vertical de OFERTA integrada à direita */}
       {isOffer && (
@@ -111,20 +111,21 @@ export function PosterPreviewAereo({
         {/* Parcelamento estilo CAPSULA (Pill) - Ajustado para linha única com fontes menores */}
         {showInstallment && (
            <div className="mt-4 border-[0.6mm] border-black rounded-[3mm] px-4 py-1.5 flex items-center justify-center gap-x-1.5 w-full whitespace-nowrap overflow-hidden">
-              <span className="font-headline font-medium text-[8pt] uppercase">ou parcelado em até</span>
-              <span className="font-headline font-black text-[11pt] uppercase">{maxInstallments}x sem juros</span>
-              <span className="font-headline font-medium text-[8pt] uppercase">de</span>
-              <span className="font-headline font-black text-[14pt] uppercase">R$ {formatCurrency(installmentValue)}</span>
+              <span className="font-headline font-medium text-[12pt] uppercase">ou parcelado em até</span>
+              <span className="font-headline font-medium text-[16pt] uppercase">{maxInstallments}x sem juros</span>
+              <span className="font-headline font-medium text-[12pt] uppercase">de</span>
+              <span className="font-headline font-medium text-[20pt] uppercase">R$ {formatCurrency(installmentValue)}</span>
            </div>
         )}
       </div>
 
       {/* 3. BASE: METADADOS E FORNECEDOR EM LINHA ÚNICA - Limitado para não quebrar layout */}
-      <div className={cn("w-full flex items-center justify-center gap-x-4 flex-nowrap text-[5pt] font-mono font-bold uppercase opacity-100 overflow-hidden", isOffer && "pr-[14mm]")}>
-          {code && <span className="truncate max-w-[15%]">SAP: {code}</span>}
-          {ean && <span className="truncate max-w-[25%]">EAN: {ean}</span>}
-          {reference && <span className="truncate max-w-[25%]">REF: {reference}</span>}
-          {supplier && <span className="text-black font-black whitespace-nowrap overflow-hidden text-ellipsis max-w-[50%]">| FORN: {supplier}</span>}
+      <div className={cn("w-full flex items-center justify-center gap-x-3 flex-nowrap text-[9pt] font-mono font-bold uppercase opacity-100 overflow-hidden", isOffer && "pr-[14mm]")}>
+          <span className="truncate max-w-[30%]">{supplier || 'N/A'}</span>
+          <span className="opacity-30">|</span>
+          <span className="shrink-0">SAP: {code || 'N/A'}</span>
+          <span className="shrink-0">EAN: {ean || 'N/A'}</span>
+          <span className="shrink-0">REF: {reference || 'N/A'}</span>
       </div>
     </div>
   );

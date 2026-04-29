@@ -40,7 +40,7 @@ export function PosterPreviewTotem({
 
   return (
     <Card 
-      className="w-full h-full overflow-hidden shadow-none border-none rounded-none bg-white text-black font-body relative flex flex-col items-center justify-between p-[0.8cm] box-border"
+      className="w-full h-full overflow-hidden shadow-none border-none rounded-none bg-white text-black font-body relative flex flex-col items-center justify-between pt-[0.8cm] px-[0.8cm] pb-[1cm] box-border"
       style={{ fontSize: '12px' }} 
     >
       
