@@ -502,7 +502,7 @@ export default function Home() {
     setQueue([]);
     setCurrentPoster({
       ...initialPosterData(),
-      posterSubType: ['reliquias', 'ofertas-imperdiveis', 'avaria', 'etiqueta-oficial'].includes(newType) ? 'offer' : 'normal',
+      posterSubType: ['reliquias', 'ofertas-imperdiveis', 'avaria', 'etiqueta-oficial', 'totem'].includes(newType) ? 'offer' : 'normal',
     });
     setIsProductReady(false);
     setFormKey((k: number) => k + 1);
