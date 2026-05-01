@@ -24,7 +24,6 @@ import { cn } from '@/lib/utils';
 
 const PER_PAGE: Record<PosterType, number> = {
   reliquias: 4,
-  'ofertas-imperdiveis': 4,
   aereo: 4,           // 4 por página (cada um ocupa 4 espaços de gôndola 2x2)
   avaria: 4,
   etiqueta: 16,
@@ -35,7 +34,6 @@ const PER_PAGE: Record<PosterType, number> = {
 // Dimensões do cartaz individual para o preview (px)
 const SINGLE_DIMS: Record<PosterType, { w: number; h: number }> = {
   reliquias:            { w: 491, h: 340 },
-  'ofertas-imperdiveis':{ w: 491, h: 340 },
   aereo:                { w: 695, h: 256 },  // 184mm x 67.75mm @ 96dpi (Margens 1.3cm)
   avaria:               { w: 491, h: 340 },
   'etiqueta-oficial':   { w: 340, h: 128 },  // 90mm x 34mm @ 96dpi
@@ -45,7 +43,6 @@ const SINGLE_DIMS: Record<PosterType, { w: number; h: number }> = {
 // Orientação de impressão por tipo de cartaz
 const POSTER_ORIENTATION: Record<PosterType, 'portrait' | 'landscape'> = {
   reliquias:            'landscape',
-  'ofertas-imperdiveis':'landscape',
   aereo:                'portrait',
   avaria:               'landscape',
   'etiqueta-oficial':   'portrait',
@@ -149,8 +146,7 @@ function SinglePosterPreview({
             overflow: 'hidden',
           }}
         >
-          {posterType === 'reliquias'           && <PosterPreview {...data} isImperdiveis={false} settings={settings} />}
-          {posterType === 'ofertas-imperdiveis' && <PosterPreview {...data} isImperdiveis={true}  settings={settings} />}
+          {posterType === 'reliquias'           && <PosterPreview {...data} settings={settings} />}
           {posterType === 'aereo'               && <PosterPreviewAereo {...data} settings={settings} />}
           {posterType === 'avaria'              && <PosterPreviewDefeito {...data} settings={settings} />}
           {posterType === 'etiqueta-oficial'    && <PosterPreviewEtiquetaOficial {...data} settings={settings} />}
@@ -285,10 +281,10 @@ function PageGrid({
                 alignItems: 'center',
                 justifyContent: 'center',
                 overflow: 'hidden',
-                borderLeft: isPrint ? 'none' : '0.1mm dashed #ccc',
-                borderRight: isPrint ? 'none' : '0.1mm dashed #ccc',
-                borderTop: isTop && !isPrint ? '0.1mm dashed #ccc' : 'none',
-                borderBottom: isPrint ? 'none' : '0.1mm dashed #ccc',
+                borderLeft: isPrint ? 'none' : 'none',
+                borderRight: isPrint ? 'none' : 'none',
+                borderTop: isTop && !isPrint ? 'none' : 'none',
+                borderBottom: isPrint ? 'none' : 'none',
                 paddingTop: '1mm',
                 boxSizing: 'border-box'
               }}
@@ -311,15 +307,15 @@ function PageGrid({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                borderLeft: isPrint ? 'none' : '0.1mm dashed #ccc',
-                borderRight: isPrint ? 'none' : '0.1mm dashed #ccc',
-                borderTop: isTop && !isPrint ? '0.1mm dashed #ccc' : 'none',
-                borderBottom: isPrint ? 'none' : '0.1mm dashed #ccc',
+                borderLeft: isPrint ? 'none' : 'none',
+                borderRight: isPrint ? 'none' : 'none',
+                borderTop: isTop && !isPrint ? 'none' : 'none',
+                borderBottom: isPrint ? 'none' : 'none',
                 paddingTop: '1mm',
                 boxSizing: 'border-box'
               }}
             >
-              <div style={{ width: '174mm', height: '64mm', backgroundColor: isPrint ? 'transparent' : '#f9f9f9', border: isPrint ? 'none' : '0.1mm dashed #ddd' }} />
+              <div style={{ width: '174mm', height: '64mm', backgroundColor: isPrint ? 'transparent' : '#f9f9f9', border: 'none' }} />
             </div>
           );
         })}
@@ -332,12 +328,12 @@ function PageGrid({
         display: 'grid', 
         gridTemplateColumns: '90mm 90mm', 
         gridTemplateRows: 'repeat(8, 34.0mm)',
-        columnGap: '2mm', 
+        columnGap: '0', 
         rowGap: '0',
         justifyContent: 'center',
         paddingTop: '14.2mm', 
         paddingBottom: '10.8mm', 
-        paddingLeft: '14mm', 
+        paddingLeft: '16mm', 
         paddingRight: '14mm', 
         width: '100%', 
         height: '100%', 
@@ -355,7 +351,7 @@ function PageGrid({
                 width: '90mm', 
                 height: '34.0mm', 
                 overflow: 'hidden',
-                border: '0.1mm dashed #eee',
+                border: 'none',
                 paddingTop: '1mm',
                 boxSizing: 'border-box'
               }}
@@ -374,7 +370,7 @@ function PageGrid({
               style={{ 
                 width: '90mm', 
                 height: '34.0mm', 
-                border: '0.1mm dashed #eee',
+                border: 'none',
                 paddingTop: '1mm',
                 boxSizing: 'border-box'
               }}
@@ -421,8 +417,8 @@ function PageGrid({
         }}>
           {/* O Cartaz real, posicionado nos limites do seu padding interno */}
           <div style={{ width: '100%', height: '100%', overflow: 'hidden' }}>
-            {posterType === 'reliquias' || posterType === 'ofertas-imperdiveis'
-              ? <PosterPreview {...(d as PosterData)} isImperdiveis={posterType === 'ofertas-imperdiveis'} settings={settings} />
+            {posterType === 'reliquias'
+              ? <PosterPreview {...(d as PosterData)} settings={settings} />
               : <PosterPreviewDefeito {...(d as PosterData)} settings={settings} />}
           </div>
         </div>
@@ -502,7 +498,7 @@ export default function Home() {
     setQueue([]);
     setCurrentPoster({
       ...initialPosterData(),
-      posterSubType: ['reliquias', 'ofertas-imperdiveis', 'avaria', 'etiqueta-oficial', 'totem'].includes(newType) ? 'offer' : 'normal',
+      posterSubType: ['reliquias', 'avaria', 'etiqueta-oficial', 'totem'].includes(newType) ? 'offer' : 'normal',
     });
     setIsProductReady(false);
     setFormKey((k: number) => k + 1);
@@ -576,7 +572,6 @@ export default function Home() {
 
   const typeOptions = [
     { id: 'reliquias',             label: 'Relíquias'          },
-    { id: 'ofertas-imperdiveis',   label: 'Imperdíveis'        },
     { id: 'avaria',                label: 'Avarias'            },
     { id: 'aereo',                 label: 'Aéreo'              },
     { id: 'etiqueta-oficial',      label: 'Gôndola Oficial' },

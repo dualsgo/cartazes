@@ -24,7 +24,6 @@ export type PosterSettings = {
 
 export type PosterType = 
   | 'reliquias' 
-  | 'ofertas-imperdiveis' 
   | 'aereo' 
   | 'avaria' 
   | 'etiqueta-oficial'

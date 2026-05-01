@@ -285,7 +285,6 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange, on
 
   const isOfferType = 
     posterType === 'reliquias' || 
-    posterType === 'ofertas-imperdiveis' || 
     posterType === 'totem' || 
     ((posterType === 'aereo' || posterType === 'etiqueta-oficial') && data.posterSubType === 'offer');
 

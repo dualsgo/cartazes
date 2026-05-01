@@ -51,120 +51,123 @@ export function PosterPreviewEtiquetaOficial({
 
   return (
     <div className="w-full h-full bg-white text-black font-sans overflow-hidden relative flex box-border p-[2.1mm]">
-      
-      {/* LADO ESQUERDO: Área Comercial */}
-      <div className="flex-1 flex flex-col justify-between pr-2 h-full min-w-0 overflow-hidden">
+      {/* Container de compressão (95% para segurança) */}
+      <div className="w-full h-full flex flex-row" style={{ transform: 'scale(0.95)', transformOrigin: 'center' }}>
         
-        {/* 1. DESCRIÇÃO */}
-        <div className="shrink-0">
-          <h2 className="font-bold text-[15px] leading-[1.1] uppercase tracking-tighter overflow-hidden line-clamp-2 text-left origin-left scale-x-[0.98]">
-            {displayDescription}
-          </h2>
-        </div>
+        {/* LADO ESQUERDO: Área Comercial */}
+        <div className="flex-1 flex flex-col justify-between pr-2 h-full min-w-0 overflow-hidden">
+          
+          {/* 1. DESCRIÇÃO */}
+          <div className="shrink-0">
+            <h2 className="font-bold text-[15px] leading-[1.1] uppercase tracking-tighter overflow-hidden line-clamp-2 text-left origin-left scale-x-[0.98]">
+              {displayDescription}
+            </h2>
+          </div>
 
-        {/* 2. ÁREA DE PREÇO: Ajustada para ocupar apenas o espaço restante, com respiro para equidistância */}
-        <div className="flex flex-col justify-center flex-1 py-2 overflow-hidden min-h-0 min-w-0">
-          <div className="flex items-center w-full justify-start">
-               {isOffer && valDe > 0 ? (
-                <div className="flex items-center w-full justify-start gap-2">
-                   {/* SEÇÃO DE: */}
-                   <div className="flex items-start gap-0.5">
-                      <div className="flex flex-col items-start leading-none mt-1 shrink-0">
-                         <span className="text-[10px] font-bold uppercase">De:</span>
-                         <span className="text-[9px] font-bold leading-none mt-0.5">R$</span>
-                      </div>
-                       <div className="flex items-baseline leading-none relative origin-left scale-x-[0.85]">
-                        <span className="font-bold tracking-tighter whitespace-nowrap leading-none" style={{ fontSize: dePriceSize }}>
-                            {deInteger},{deDecimal}
-                        </span>
-                        {/* Barra inclinada */}
-                        <div className="absolute inset-x-0 top-[45%] h-[0.6mm] bg-black -rotate-[15deg] pointer-events-none" />
-                      </div>
-                   </div>
+          {/* 2. ÁREA DE PREÇO: Ajustada para ocupar apenas o espaço restante, com respiro para equidistância */}
+          <div className="flex flex-col justify-center flex-1 py-2 overflow-hidden min-h-0 min-w-0">
+            <div className="flex items-center w-full justify-start">
+                 {isOffer && valDe > 0 ? (
+                  <div className="flex items-center w-full justify-start gap-2">
+                     {/* SEÇÃO DE: */}
+                     <div className="flex items-start gap-0.5">
+                        <div className="flex flex-col items-start leading-none mt-1 shrink-0">
+                           <span className="text-[10px] font-bold uppercase">De:</span>
+                           <span className="text-[9px] font-bold leading-none mt-0.5">R$</span>
+                        </div>
+                         <div className="flex items-baseline leading-none relative origin-left scale-x-[0.85]">
+                          <span className="font-bold tracking-tighter whitespace-nowrap leading-none" style={{ fontSize: dePriceSize }}>
+                              {deInteger},{deDecimal}
+                          </span>
+                          {/* Barra inclinada */}
+                          <div className="absolute inset-x-0 top-[45%] h-[0.6mm] bg-black -rotate-[15deg] pointer-events-none" />
+                        </div>
+                     </div>
 
-                   {/* SEÇÃO POR: */}
-                   <div className="flex items-start gap-1">
-                      <div className="flex flex-col items-start leading-none mt-1 shrink-0">
-                         <span className="text-[10px] font-bold uppercase">Por:</span>
-                         <span className="text-[9px] font-bold leading-none mt-0.5">R$</span>
+                     {/* SEÇÃO POR: */}
+                     <div className="flex items-start gap-1">
+                        <div className="flex flex-col items-start leading-none mt-1 shrink-0">
+                           <span className="text-[10px] font-bold uppercase">Por:</span>
+                           <span className="text-[9px] font-bold leading-none mt-0.5">R$</span>
+                        </div>
+                        <div className="flex items-baseline leading-none flex-nowrap origin-left scale-x-[0.85]">
+                           <span className="font-bold tracking-tighter leading-none" style={{ fontSize: mainPriceSize }}>{porInteger}</span>
+                           <span className="font-bold ml-0.5" style={{ fontSize: `calc(${mainPriceSize} * 0.7)` }}>,</span>
+                           <span className="font-bold tracking-tighter leading-none" style={{ fontSize: mainPriceSize }}>{porDecimal}</span>
+                           <span className="text-[9px] font-bold uppercase ml-1 self-end mb-1 shrink-0">un.</span>
+                        </div>
+                     </div>
+                  </div>
+               ) : (
+                   <div className="flex items-start w-full gap-3 justify-start overflow-hidden">
+                      <div className="flex flex-col mt-2 shrink-0">
+                         <span className="text-[12px] font-bold uppercase leading-none tracking-tight">Preço à Vista:</span>
+                         <span className="text-[12px] font-bold leading-none mt-1">R$</span>
                       </div>
-                      <div className="flex items-baseline leading-none flex-nowrap origin-left scale-x-[0.85]">
-                         <span className="font-bold tracking-tighter leading-none" style={{ fontSize: mainPriceSize }}>{porInteger}</span>
-                         <span className="font-bold ml-0.5" style={{ fontSize: `calc(${mainPriceSize} * 0.7)` }}>,</span>
-                         <span className="font-bold tracking-tighter leading-none" style={{ fontSize: mainPriceSize }}>{porDecimal}</span>
-                         <span className="text-[9px] font-bold uppercase ml-1 self-end mb-1 shrink-0">un.</span>
-                      </div>
-                   </div>
-                </div>
-             ) : (
-                 <div className="flex items-start w-full gap-3 justify-start overflow-hidden">
-                    <div className="flex flex-col mt-2 shrink-0">
-                       <span className="text-[12px] font-bold uppercase leading-none tracking-tight">Preço à Vista:</span>
-                       <span className="text-[12px] font-bold leading-none mt-1">R$</span>
+                    <div className="flex items-baseline leading-none flex-nowrap origin-left scale-x-[0.85]">
+                       <span className="font-bold tracking-tighter" style={{ fontSize: mainPriceSize }}>{porInteger}</span>
+                       <span className="font-bold ml-0.5" style={{ fontSize: `calc(${mainPriceSize} * 0.7)` }}>,</span>
+                       <span className="font-bold tracking-tighter" style={{ fontSize: mainPriceSize }}>{porDecimal}</span>
+                       <span className="text-[9px] font-bold uppercase ml-1.5 self-end mb-1 shrink-0">un.</span>
                     </div>
-                  <div className="flex items-baseline leading-none flex-nowrap origin-left scale-x-[0.85]">
-                     <span className="font-bold tracking-tighter" style={{ fontSize: mainPriceSize }}>{porInteger}</span>
-                     <span className="font-bold ml-0.5" style={{ fontSize: `calc(${mainPriceSize} * 0.7)` }}>,</span>
-                     <span className="font-bold tracking-tighter" style={{ fontSize: mainPriceSize }}>{porDecimal}</span>
-                     <span className="text-[9px] font-bold uppercase ml-1.5 self-end mb-1 shrink-0">un.</span>
-                  </div>
-                 </div>
-             )}
-          </div>
-        </div>
-
-        {/* 3. PREÇO PARCELADO (ESPAÇO RESERVADO) */}
-        <div className="shrink-0 mb-1 min-h-[1mm] flex flex-col justify-center">
-          {hasInstallments ? (
-            <div className="border-[0.2mm] border-black rounded-[3mm] px-1 py-0.5 flex flex-col justify-center min-h-[4mm] w-full">
-               <div className="flex items-center justify-center gap-2">
-                  <span className="text-[6.5px] font-bold uppercase leading-none max-w-[15mm] text-right">Parcelamento em até</span>
-                  <div className="flex flex-col items-center border-l border-black/20 pl-2">
-                     <span className="text-[14px] font-bold leading-none tracking-tighter">{maxInstallments}X</span>
-                     <span className="text-[7px] font-bold leading-none uppercase mt-0.5">Sem Juros</span>
-                  </div>
-                  <div className="flex items-baseline gap-1">
-                     <span className="text-[16px] font-bold">R$</span>
-                     <span className="text-[20px] font-bold leading-none tracking-tighter">{formatCurrency(installmentValue)}</span>
-                  </div>
-               </div>
+                   </div>
+               )}
             </div>
-          ) : (
-            <div className="w-full h-[9mm]" /> /* Espaço reservado vazio */
-          )}
+          </div>
+
+          {/* 3. PREÇO PARCELADO (ESPAÇO RESERVADO) */}
+          <div className="shrink-0 mb-1 min-h-[1mm] flex flex-col justify-center">
+            {hasInstallments ? (
+              <div className="border-[0.2mm] border-black rounded-[3mm] px-1 py-0.5 flex flex-col justify-center min-h-[4mm] w-full">
+                 <div className="flex items-center justify-center gap-2">
+                    <span className="text-[6.5px] font-bold uppercase leading-none max-w-[15mm] text-right">Parcelamento em até</span>
+                    <div className="flex flex-col items-center border-l border-black/20 pl-2">
+                       <span className="text-[14px] font-bold leading-none tracking-tighter">{maxInstallments}X</span>
+                       <span className="text-[7px] font-bold leading-none uppercase mt-0.5">Sem Juros</span>
+                    </div>
+                    <div className="flex items-baseline gap-1">
+                       <span className="text-[16px] font-bold">R$</span>
+                       <span className="text-[20px] font-bold leading-none tracking-tighter">{formatCurrency(installmentValue)}</span>
+                    </div>
+                 </div>
+              </div>
+            ) : (
+              <div className="w-full h-[9mm]" /> /* Espaço reservado vazio */
+            )}
+          </div>
+
+          {/* 4. RODAPÉ - Fornecedor | SAP | REF */}
+          <div className="shrink-0 pt-1 flex flex-nowrap gap-x-1.5 items-center mt-auto overflow-hidden h-[4mm] text-[7.5px] font-bold uppercase">
+             <span className="max-w-[45mm] overflow-hidden whitespace-nowrap">{truncateDescription(supplier || 'N/A', 25)}</span>
+             <span className="text-black/20">|</span>
+             <span className="shrink-0">SAP: {code || 'N/A'}</span>
+             <span className="text-black/20">|</span>
+             <span className="shrink-0 text-nowrap">REF: {reference || 'N/A'}</span>
+          </div>
         </div>
 
-        {/* 4. RODAPÉ - Fornecedor | SAP | REF */}
-        <div className="shrink-0 pt-1 flex flex-nowrap gap-x-1.5 items-center mt-auto overflow-hidden h-[4mm] text-[7.5px] font-bold uppercase">
-           <span className="truncate max-w-[45mm]">{supplier || 'N/A'}</span>
-           <span className="text-black/20">|</span>
-           <span className="shrink-0">SAP: {code || 'N/A'}</span>
-           <span className="text-black/20">|</span>
-           <span className="shrink-0 text-nowrap">REF: {reference || 'N/A'}</span>
+        {/* LADO DIREITO: Código de Barras (Coluna Fixa com Padding Interno) */}
+        <div className="w-[15%] flex-none flex flex-col items-center justify-center h-full">
+          {ean && ean.length >= 12 ? (
+            <div className="rotate-90 origin-center whitespace-nowrap flex flex-col items-center w-[25mm]">
+               {/* NUMERAÇÃO NA BORDA */}
+               <div className="w-full flex justify-center mb-1">
+                  <span className="text-[10px] font-mono  text-black tracking-tighter">{ean}</span>
+               </div>
+               {/* BARRAS ABAIXO DA NUMERAÇÃO */}
+               <BarcodeEAN value={ean} height="10mm" width="25mm" showText={false} />
+            </div>
+          ) : code ? (
+            <div className="rotate-90 origin-center whitespace-nowrap flex flex-col items-center w-[30mm]">
+               {/* NUMERAÇÃO NA BORDA (SAP) */}
+               <div className="w-full flex justify-center mb-1">
+                  <span className="text-[7.5px] font-mono font-bold text-black tracking-tighter">{code}</span>
+               </div>
+               {/* BARRAS SAP */}
+               <BarcodeSAP value={code} height="10mm" width="25mm" />
+            </div>
+          ) : null}
         </div>
-      </div>
-
-      {/* LADO DIREITO: Código de Barras (Coluna Fixa com Padding Interno) */}
-      <div className="w-[15%] flex-none flex flex-col items-center justify-center h-full">
-        {ean && ean.length >= 12 ? (
-          <div className="rotate-90 origin-center whitespace-nowrap flex flex-col items-center w-[25mm]">
-             {/* NUMERAÇÃO NA BORDA */}
-             <div className="w-full flex justify-center mb-1">
-                <span className="text-[10px] font-mono  text-black tracking-tighter">{ean}</span>
-             </div>
-             {/* BARRAS ABAIXO DA NUMERAÇÃO */}
-             <BarcodeEAN value={ean} height="10mm" width="25mm" showText={false} />
-          </div>
-        ) : code ? (
-          <div className="rotate-90 origin-center whitespace-nowrap flex flex-col items-center w-[30mm]">
-             {/* NUMERAÇÃO NA BORDA (SAP) */}
-             <div className="w-full flex justify-center mb-1">
-                <span className="text-[7.5px] font-mono font-bold text-black tracking-tighter">{code}</span>
-             </div>
-             {/* BARRAS SAP */}
-             <BarcodeSAP value={code} height="10mm" width="25mm" />
-          </div>
-        ) : null}
       </div>
     </div>
   );
