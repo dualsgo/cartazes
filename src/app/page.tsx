@@ -18,6 +18,8 @@ import { Printer, Plus, Trash2, FileStack, PackageOpen, Info, Database, Upload }
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { LandingPage } from '@/app/components/landing-page';
+
 
 // The PosterType definition was moved to '@/app/lib/types'
 // type PosterType = 'reliquias' | 'ofertas-imperdiveis' | 'aereo' | 'avaria' | 'etiqueta' | 'totem' | 'leve-pague-a4' | 'leve-pague-a6' | 'combo-a4' | 'combo-a6';
@@ -443,6 +445,8 @@ export default function Home() {
     minInstallmentAmount: 29.99,
   });
   const [previewMode, setPreviewMode] = useState<'single' | 'page'>('single');
+  const [showLanding, setShowLanding] = useState(true);
+
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -579,7 +583,10 @@ export default function Home() {
   ] as const;
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground md:h-screen md:overflow-hidden print:w-full print:h-auto print:min-h-0 print:block">
+    <>
+      {showLanding && <LandingPage onEnterApp={() => setShowLanding(false)} />}
+      <div className="min-h-screen flex flex-col bg-background text-foreground md:h-screen md:overflow-hidden print:w-full print:h-auto print:min-h-0 print:block">
+
 
       {/* Modais */}
       <DisclaimerModal />
@@ -859,5 +866,6 @@ export default function Home() {
         </div>
       </main>
     </div>
+    </>
   );
 }

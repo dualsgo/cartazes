@@ -84,7 +84,7 @@ export function PosterPreview({
           <div className="w-1/2 flex flex-col overflow-hidden pt-0 pr-0 pb-0 pl-[0.35cm]">
             <div className="bg-black text-white text-center font-headline flex flex-col items-center justify-center print:color-adjust-exact px-3 w-full h-[85%]">
               <div className="flex flex-col justify-center items-center">
-                <span className="text-[6.0em] leading-[0.9] font-medium tracking-tight tabular-nums">{discount}%</span>
+                <span className="text-[6.0em] leading-[0.9] font-bold tracking-tight tabular-nums">{discount}%</span>
                 <span className="text-[0.8em] leading-none uppercase mt-2 tracking-tight font-bold">DE DESCONTO</span>
               </div>
             </div>
