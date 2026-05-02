@@ -91,11 +91,11 @@ export function BarcodeEAN({
         {elements}
       </svg>
       {showText && (
-        <div className="flex justify-between px-[5%] text-[8px] font-mono font-bold mt-[-5%] bg-white">
-          <span>{ean[0]}</span>
+        <div className="flex justify-between px-[5%] text-[8px] font-normal mt-[-8%] bg-white">
+          <span className="rotate-180">{ean[0]}</span>
           <div className="flex-1 flex justify-around">
-            <span>{ean.slice(1, 7)}</span>
-            <span>{ean.slice(7, 13)}</span>
+            <span className="rotate-180">{ean.slice(1, 7)}</span>
+            <span className="rotate-180">{ean.slice(7, 13)}</span>
           </div>
         </div>
       )}

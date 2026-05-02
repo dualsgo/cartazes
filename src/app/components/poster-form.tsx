@@ -164,7 +164,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange, on
           code: manualCode.trim(),
           ean: manualEan.trim(),
           reference: manualReference.trim(),
-          supplier: manualSupplier.trim().toUpperCase(),
+          supplier: manualSupplier.replace(/[,\.-]/g, '').trim().toUpperCase(),
         }));
       }
     }

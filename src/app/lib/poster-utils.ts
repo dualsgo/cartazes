@@ -135,7 +135,7 @@ function processProductRow(row: Record<string, any>, mapping: Record<string, num
   
   if (!mercadoria || mercadoria.toLowerCase().includes('mercadoria') || mercadoria.toLowerCase().includes('descrição')) return null;
 
-  const sap        = String(getVal('sap') || '').trim().slice(0, 6);
+  const sap        = String(getVal('sap') || '').trim();
   const ean        = String(getVal('ean') || '').trim();
   const ref        = String(getVal('ref') || '').trim();
   const supplier   = currentSupplier || String(getVal('supplier') || '').trim();
@@ -153,7 +153,7 @@ function processProductRow(row: Record<string, any>, mapping: Record<string, num
     code: sap,
     ean: ean,
     reference: ref,
-    supplier: supplier.replace('FORNECEDOR:', '').trim().toUpperCase(),
+    supplier: supplier.replace('FORNECEDOR:', '').replace(/[,\.-]/g, '').trim().toUpperCase(),
     quantity: 1,
     paymentOption: 'installment',
   };
@@ -211,10 +211,10 @@ function createMapping(headers: string[]): Record<string, number> {
   // Mapeamento baseado na descrição do usuário e imagem (lidando com encoding corrompido)
   // Relatório Circular: C=2 (SAP), D=3 (EAN), E=4 (Ref), F=5 (Desc), H=7 (Ant), I=8 (Novo), J=9 (Promo)
   return {
-    sap:        findIdx(['sap', 'interno', 'código', 'codigo', 'cod.'], 2),
+    sap:        findIdx(['sap', 'int', 'interno', 'código', 'codigo', 'cod.', 'sp'], 2),
     ean:        findIdx(['ean', 'barras'], 3),
-    mercadoria: findIdx(['mercadoria', 'descrição', 'descricao', 'produto', 'nome'], 5),
-    ref:        findIdx(['referencia', 'referência', 'ref', 'fornecedor'], 4),
+    mercadoria: findIdx(['mercadoria', 'descrição', 'descricao', 'desc', 'produto', 'nome'], 5),
+    ref:        findIdx(['referencia', 'referência', 'ref', 'fornecedor', 'forn'], 4),
     precoAtual: findIdx(['anterior', 'atual', 'preÃ§o'], 7),
     novoPreco:  findIdx(['novo'], 8),
     promocao:   findIdx(['promo', 'Ã§Ã£o', 'promoção'], 9),
@@ -358,23 +358,42 @@ export function parseDatabaseImportExcel(buffer: ArrayBuffer): any[] {
   if (data.length < 1) return [];
 
   const items: any[] = [];
+  let mapping = {
+    sap: 2,
+    ean: 3,
+    ref: 4,
+    mercadoria: 5
+  };
   
-  // O usuário informou:
-  // Col C (2) para codigo SAP
-  // Col D (3) para o EAN
-  // Col E (4) para referencia
-  // Col F (5) para descrição
   for (let i = 0; i < data.length; i++) {
     const row = data[i];
-    if (!row || row.length < 6) continue;
+    if (!row || row.length === 0) continue;
 
-    const description = String(row[5] || '').trim();
+    // Detectar se é uma linha de header
+    const isHeader = row.some(c => {
+      const s = String(c || '').toLowerCase();
+      return s.includes('sap') || s.includes('código') || s.includes('interno') || s.includes('mercadoria') || s.includes('ean');
+    });
+
+    if (isHeader) {
+      const headers = row.map(h => String(h || '').trim());
+      const newMap = createMapping(headers);
+      mapping = {
+        sap: newMap.sap,
+        ean: newMap.ean,
+        ref: newMap.ref,
+        mercadoria: newMap.mercadoria
+      };
+      continue;
+    }
+
+    const description = String(row[mapping.mercadoria] || '').trim();
     if (!description || description.toLowerCase().includes('mercadoria') || description.toLowerCase().includes('descrição')) continue;
 
     items.push({
-      code: String(row[2] || '').trim(),
-      ean: String(row[3] || '').trim(),
-      reference: String(row[4] || '').trim(),
+      code: String(row[mapping.sap] || '').trim(),
+      ean: String(row[mapping.ean] || '').trim(),
+      reference: String(row[mapping.ref] || '').trim(),
       description: description.toUpperCase(),
     });
   }
