@@ -138,7 +138,7 @@ export function PosterPreviewDefeito({
       </div>
 
       {/* 5. PREÇOS EM LINHA (DE / POR) */}
-      <div className="w-full flex items-center justify-center gap-x-12 my-4 shrink-0 px-2">
+      <div className="w-full flex items-center justify-center gap-x-12 my-2 shrink-0 px-2">
         {/* Bloco DE */}
         <div className={cn("flex flex-col items-center transition-opacity shrink-0", valDe > 0 ? 'opacity-100' : 'opacity-0')}>
            <span className="text-[0.6em] font-bold text-black uppercase mb-0.5">DE:</span>
@@ -164,8 +164,11 @@ export function PosterPreviewDefeito({
         </div>
       </div>
 
-      {/* 6. RODAPÉ - Ponta de estoque + Observação */}
-      <div className="w-full flex flex-col items-center pt-3 text-center shrink-0">
+      {/* Spacer para garantir espaço para o rodapé absoluto sem empurrar o conteúdo dinamicamente */}
+      <div className="h-10 shrink-0" />
+
+      {/* 6. RODAPÉ - Ponta de estoque + Observação (Absoluto para não empurrar o conteúdo) */}
+      <div className="absolute bottom-[0.35cm] left-0 right-0 flex flex-col items-center text-center px-[0.35cm]">
         <p className="text-[0.55em] font-black text-black uppercase leading-tight tracking-tight">
           Item de ponta de estoque, vendido no estado. Não possui direito a troca.
         </p>
