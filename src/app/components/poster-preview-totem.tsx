@@ -83,7 +83,7 @@ export function PosterPreviewTotem({
           <div className="flex items-baseline justify-center w-full">
             <div className="flex items-baseline">
               <span className="font-headline text-[6.5em] font-medium mr-2">R$</span>
-              <span className="font-headline font-medium leading-[0.8] tracking-tighter inline-block origin-center scale-x-90" style={{ fontSize: priceFontSize }}>
+              <span className="font-headline font-medium leading-[0.8] inline-block origin-center scale-x-90" style={{ fontSize: priceFontSize }}>
                 {porInteger},{porDecimal}
               </span>
             </div>

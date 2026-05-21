@@ -33,10 +33,10 @@ export function PosterPreviewEtiquetaOficial({
   const { maxInstallments, installmentValue } = calculateInstallments(valPor, settings);
   const hasInstallments = paymentOption === 'installment' && maxInstallments > 1;
 
-  let mainPriceSize = hasInstallments ? '24px' : '31.2px';
-  let dePriceSize = hasInstallments ? '24px' : '31.2px';
+  let mainPriceSize = hasInstallments ? '26px' : '42px';
+  let dePriceSize = hasInstallments ? '26px' : '35px';
   let labelSize = hasInstallments ? '10px' : '13px';
-  let unSize = hasInstallments ? '7.6px' : '9.9px';
+  let unSize = hasInstallments ? '7.6px' : '14px';
 
   return (
     <div className="w-full h-full bg-white text-black font-montserrat overflow-hidden relative flex box-border p-[2.1mm]">
@@ -99,12 +99,12 @@ export function PosterPreviewEtiquetaOficial({
                         </div>
                         <div className="flex items-baseline leading-none flex-nowrap origin-left scale-x-[0.85]">
                            <span className="font-bold tracking-normal" style={{ fontSize: mainPriceSize }}>{porInteger}</span>
-                              <div className="flex items-baseline leading-none">
-                                 <span className="font-bold ml-0.5" style={{ fontSize: `calc(${mainPriceSize} * 0.7)` }}>,</span>
-                                 <div className="relative inline-block">
-                                    <span className="font-bold tracking-normal" style={{ fontSize: mainPriceSize }}>{porDecimal}</span>
-                                    <span className="font-normal uppercase absolute top-full mt-[0.2mm] right-0" style={{ fontSize: unSize }}>UN</span>
+                              <div className="flex flex-col items-center leading-none">
+                                 <div className="flex items-baseline leading-none">
+                                    <span className="font-bold ml-0.5" style={{ fontSize: `calc(${mainPriceSize} * 0.7)` }}>,</span>
+                                    <span className="font-bold tracking-normal leading-none" style={{ fontSize: mainPriceSize }}>{porDecimal}</span>
                                  </div>
+                                 <span className="font-normal uppercase leading-none whitespace-nowrap" style={{ fontSize: unSize }}>UN</span>
                               </div>
                         </div>
                    </div>
@@ -147,7 +147,7 @@ export function PosterPreviewEtiquetaOficial({
             <div className="rotate-90 origin-center whitespace-nowrap flex flex-col items-center w-[25mm]">
                {/* NUMERAÇÃO NA BORDA */}
                <div className="w-full flex justify-center mb-0">
-                  <span className="text-[5.25px] text-black tracking-tighter inline-block rotate-180 font-normal">{ean}</span>
+                  <span className="text-[7px] text-black tracking-tighter inline-block rotate-180 font-normal">{ean}</span>
                </div>
                {/* BARRAS ABAIXO DA NUMERAÇÃO */}
                <BarcodeEAN value={ean} height="10mm" width="25mm" showText={false} />
@@ -156,7 +156,7 @@ export function PosterPreviewEtiquetaOficial({
             <div className="rotate-90 origin-center whitespace-nowrap flex flex-col items-center w-[30mm]">
                {/* NUMERAÇÃO NA BORDA (SAP) */}
                <div className="w-full flex justify-center mb-0">
-                  <span className="text-[5.25px] text-black tracking-tighter inline-block rotate-180 font-normal">{code}</span>
+                  <span className="text-[7px] text-black tracking-tighter inline-block rotate-180 font-normal">{code}</span>
                </div>
                {/* BARRAS SAP */}
                <BarcodeSAP value={code} height="10mm" width="25mm" />

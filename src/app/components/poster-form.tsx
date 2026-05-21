@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import type { PosterData } from '@/app/lib/types';
 import { cn } from '@/lib/utils';
-import { Loader2, CheckCircle2, XCircle, Search, RotateCcw, PlusCircle, Info, AlertTriangle, Camera, Upload } from 'lucide-react';
+import { Loader2, CheckCircle2, XCircle, Search, RotateCcw, PlusCircle, Info, Camera, Upload } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BarcodeScanner } from './barcode-scanner';
 import { parseProductExcel, parseProductCSV } from '@/app/lib/poster-utils';
@@ -69,20 +69,11 @@ function detectInputType(value: string): 'ean' | 'code' {
   return value.replace(/\D/g, '').length >= 8 ? 'ean' : 'code';
 }
 
-const defectOptions = [
-  { value: 'embalagem_danificada', label: 'Embalagem Danificada', discount: 20 },
-  { value: 'marcas_de_uso', label: 'Marcas de Uso', discount: 30 },
-  { value: 'pelucia_suja', label: 'Pelúcia Suja', discount: 40 },
-  { value: 'peca_faltando', label: 'Peça Faltando', discount: 50 },
-  { value: 'outro', label: 'Outro (descrever)', discount: null },
-];
-
 export function PosterForm({ data, setData, posterType, onLookupStatusChange, onImportBatch }: PosterFormProps) {
   const [lookupStatus, setLookupStatus] = useState<LookupStatus>('idle');
   const [searchValue, setSearchValue] = useState('');
   const [suggestions, setSuggestions] = useState<{ key: string; description: string }[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [priceForOverridden, setPriceForOverridden] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const suggestTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -119,34 +110,6 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange, on
       paymentOption: canInstall ? 'installment' : 'normal'
     }));
   }, [priceFor.cents, setData]);
-
-  useEffect(() => {
-    if (posterType !== 'avaria') return;
-    if (priceForOverridden) return;
-
-    const fromCents = priceFrom.cents;
-    if (fromCents === 0) {
-      priceFor.setValue('');
-      return;
-    }
-
-    const selectedDefect = defectOptions.find(opt => opt.value === data.defectType);
-    let discount = 0;
-    if (selectedDefect) {
-      discount = selectedDefect.value === 'outro' ? (data.customDefectDiscount ?? 0) : (selectedDefect.discount ?? 0);
-    }
-
-    if (discount > 0) {
-      const discountedCents = Math.round(fromCents * (1 - discount / 100));
-      priceFor.setValue(centsToDisplay(discountedCents));
-    } else {
-      priceFor.setValue('');
-    }
-  }, [priceFrom.cents, data.defectType, data.customDefectDiscount, posterType, priceForOverridden, priceFor.setValue]);
-
-  useEffect(() => {
-    setPriceForOverridden(false);
-  }, [priceFrom.cents, data.defectType, data.customDefectDiscount]);
 
   // Validação para habilitar o botão "Adicionar ao Lote" no modo manual
   useEffect(() => {
@@ -584,7 +547,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange, on
            )}
 
            <div className="grid grid-cols-2 gap-4">
-              {(isOfferType || posterType === 'avaria') && (
+              {isOfferType && (
                 <div className="space-y-1">
                   <Label className="text-[10px] font-bold text-gray-500 uppercase">Preço Anterior (DE)</Label>
                   <Input
@@ -595,12 +558,12 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange, on
                   />
                 </div>
               )}
-              <div className={cn("space-y-1", !(isOfferType || posterType === 'avaria') && "col-span-2")}>
+              <div className={cn("space-y-1", !isOfferType && "col-span-2")}>
                 <Label className="text-[10px] font-bold text-gray-500 uppercase">Preço Novo (POR)</Label>
                 <Input
                   value={priceFor.display}
                   inputMode="numeric"
-                  onChange={e => { if(posterType==='avaria') setPriceForOverridden(true); priceFor.handleChange(e); }}
+                  onChange={priceFor.handleChange}
                   className="h-10 font-mono text-xl font-black bg-blue-50/10 border-blue-200"
                 />
               </div>
@@ -633,75 +596,6 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange, on
         </div>
       </fieldset>
 
-      {/* SEÇÃO 3: DETALHES DA AVARIA (Específico para o tipo Avaria) */}
-      {posterType === 'avaria' && (
-        <div className="bg-white border rounded-xl p-5 shadow-sm space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-           <div className="flex items-center gap-2 border-b pb-2">
-              <AlertTriangle className="h-4 w-4 text-amber-500" />
-              <Label className="font-bold text-gray-900 uppercase tracking-tight text-sm">
-                3. Detalhes da Avaria
-              </Label>
-           </div>
-           
-           <div className="space-y-4">
-              <div className="space-y-1.5">
-                <Label className="text-[10px] font-bold text-gray-500 uppercase">Motivo da Avaria</Label>
-                <Select 
-                  value={data.defectType} 
-                  onValueChange={(v) => setData(prev => ({ ...prev, defectType: v }))}
-                >
-                  <SelectTrigger className="h-11 bg-gray-50/50">
-                    <SelectValue placeholder="Selecione o motivo..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {defectOptions.map(opt => (
-                      <SelectItem key={opt.value} value={opt.value} className="text-xs">
-                        {opt.label} {opt.discount ? `(${opt.discount}% OFF)` : ''}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {data.defectType === 'outro' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in fade-in zoom-in-95 duration-200">
-                  <div className="space-y-1.5">
-                    <Label className="text-[10px] font-bold text-gray-500 uppercase">Descrever Motivo</Label>
-                    <Input 
-                      value={data.customDefectReason || ''} 
-                      onChange={e => setData(prev => ({ ...prev, customDefectReason: e.target.value.toUpperCase() }))}
-                      placeholder="EX: VIDRO RACHADO"
-                      className="h-10 font-bold uppercase border-amber-200 focus:ring-amber-500"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-[10px] font-bold text-gray-500 uppercase">% Desconto</Label>
-                    <Input 
-                      type="number"
-                      value={data.customDefectDiscount || ''} 
-                      onChange={e => setData(prev => ({ ...prev, customDefectDiscount: parseInt(e.target.value) || 0 }))}
-                      placeholder="Ex: 15"
-                      className="h-10 border-amber-200 focus:ring-amber-500"
-                    />
-                  </div>
-                </div>
-              )}
-
-              <div className="space-y-1.5">
-                <Label className="text-[10px] font-bold text-gray-500 uppercase">Observação Complementar</Label>
-                <Input 
-                  value={data.defectNote || ''} 
-                  onChange={e => setData(prev => ({ ...prev, defectNote: e.target.value.toUpperCase() }))}
-                  placeholder="EX: VENDIDO NO ESTADO / SEM TROCA"
-                  className="h-10 font-medium uppercase border-gray-200"
-                />
-                <p className="text-[9px] text-muted-foreground italic leading-tight">
-                  Aparecerá logo abaixo do motivo no cartaz. Use para informações cruciais sobre o estado do item.
-                </p>
-              </div>
-           </div>
-        </div>
-      )}
       {showScanner && (
         <BarcodeScanner 
           onScanSuccess={(code) => {

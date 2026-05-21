@@ -102,7 +102,6 @@ export function AboutPanel({ open, onClose }: AboutPanelProps) {
               {[
                 { label: 'Relíquias', desc: 'Réplica do modelo oficial' },
                 { label: 'Imperdíveis', desc: 'Réplica do modelo oficial' },
-                { label: 'Avarias', desc: 'Modelo adaptado para ponta de estoque com defeito' },
                 { label: 'Aéreo', desc: 'Modelo para cartazes de prateleira/aéreo' },
                 { label: 'Gôndola', desc: '16 etiquetas por folha A4' },
                 { label: 'Totem', desc: 'Cartaz A4 vertical de destaque' },

@@ -11,8 +11,8 @@ export default {
     extend: {
       fontFamily: {
         body: ['Inter', 'sans-serif'],
-        headline: ['Outfit', 'sans-serif'],
-        montserrat: ['Outfit', 'sans-serif'],
+        headline: ['Poppins', 'sans-serif'],
+        poppins: ['Poppins', 'sans-serif'],
         code: ['monospace'],
       },
       colors: {
