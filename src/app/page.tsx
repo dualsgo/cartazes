@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { PosterForm } from '@/app/components/poster-form';
 import { PosterPreview } from '@/app/components/poster-preview';
 import { PosterPreviewAereo } from '@/app/components/poster-preview-aereo';
-import { PosterPreviewAereoTeste } from '@/app/components/poster-preview-aereo-teste';
 import { PosterPreviewEtiqueta } from '@/app/components/poster-preview-etiqueta';
 import { PosterPreviewEtiquetaOficial } from '@/app/components/poster-preview-etiqueta-oficial';
 import { PosterPreviewTotem } from '@/app/components/poster-preview-totem';
@@ -27,7 +26,6 @@ import { LandingPage } from '@/app/components/landing-page';
 const PER_PAGE: Record<PosterType, number> = {
   reliquias: 4,
   aereo: 4,           // 4 por página (cada um ocupa 4 espaços de gôndola 2x2)
-  'aereo-teste': 4,
   etiqueta: 16,
   'etiqueta-oficial': 16,
   totem: 1,
@@ -37,7 +35,6 @@ const PER_PAGE: Record<PosterType, number> = {
 const SINGLE_DIMS: Record<PosterType, { w: number; h: number }> = {
   reliquias:            { w: 491, h: 340 },
   aereo:                { w: 695, h: 256 },  // 184mm x 67.75mm @ 96dpi (Margens 1.3cm)
-  'aereo-teste':        { w: 695, h: 256 },
   'etiqueta-oficial':   { w: 340, h: 128 },  // 90mm x 34mm @ 96dpi
   totem:                { w: 794, h: 1123 }, // A4 @ 96dpi
 };
@@ -46,7 +43,6 @@ const SINGLE_DIMS: Record<PosterType, { w: number; h: number }> = {
 const POSTER_ORIENTATION: Record<PosterType, 'portrait' | 'landscape'> = {
   reliquias:            'landscape',
   aereo:                'portrait',
-  'aereo-teste':        'portrait',
   'etiqueta-oficial':   'portrait',
   totem:                'portrait',
 };
@@ -150,7 +146,6 @@ function SinglePosterPreview({
         >
           {posterType === 'reliquias'           && <PosterPreview {...data} settings={settings} />}
           {posterType === 'aereo'               && <PosterPreviewAereo {...data} settings={settings} />}
-          {posterType === 'aereo-teste'          && <PosterPreviewAereoTeste {...data} settings={settings} />}
           {posterType === 'etiqueta-oficial'    && <PosterPreviewEtiquetaOficial {...data} settings={settings} />}
           {posterType === 'totem'               && <PosterPreviewTotem {...data} settings={settings} />}
         </div>
@@ -253,7 +248,7 @@ function PageGrid({
 }) {
   const empties = Array.from({ length: perPage - items.length });
 
-  if (posterType === 'aereo' || posterType === 'aereo-teste') {
+  if (posterType === 'aereo') {
     return (
       <div style={{ 
         display: 'grid', 
@@ -577,7 +572,6 @@ export default function Home() {
   const typeOptions = [
     { id: 'reliquias',             label: 'Relíquias'          },
     { id: 'aereo',                 label: 'Aéreo'              },
-    { id: 'aereo-teste',           label: 'Aéreo Teste'        },
     { id: 'etiqueta-oficial',      label: 'Gôndola Oficial' },
     { id: 'totem',                 label: 'Totem'              },
   ] as const;

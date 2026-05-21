@@ -25,7 +25,6 @@ export type PosterSettings = {
 export type PosterType = 
   | 'reliquias' 
   | 'aereo' 
-  | 'aereo-teste' 
   | 'avaria' 
   | 'etiqueta-oficial'
   | 'totem';
