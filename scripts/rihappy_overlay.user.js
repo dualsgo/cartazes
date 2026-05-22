@@ -20,7 +20,7 @@
     overlayContainer.style.position = 'fixed';
     overlayContainer.style.top = '0';
     overlayContainer.style.right = '0';
-    overlayContainer.style.width = '65vw'; // Ocupa 65% da tela por padrão
+    overlayContainer.style.width = '50vw'; // Ocupa exatamente metade da tela
     overlayContainer.style.height = '100vh';
     overlayContainer.style.zIndex = '9999999';
     overlayContainer.style.boxShadow = '-10px 0 30px rgba(0,0,0,0.5)';
@@ -54,43 +54,32 @@
     toggleBtn.style.boxShadow = '0 5px 15px rgba(225, 29, 72, 0.4)';
     
     let isOverlayOpen = false;
-    toggleBtn.onclick = () => {
-        isOverlayOpen = !isOverlayOpen;
+    window.toggleCartazesOverlay = function(forceOpen) {
+        if (forceOpen !== undefined && isOverlayOpen === forceOpen) return;
+        if (forceOpen !== undefined) isOverlayOpen = forceOpen;
+        else isOverlayOpen = !isOverlayOpen;
+        
         overlayContainer.style.transform = isOverlayOpen ? 'translateX(0)' : 'translateX(100%)';
         toggleBtn.style.backgroundColor = isOverlayOpen ? '#000' : '#e11d48';
+        
+        // Empurra a tela da Ri Happy para a metade esquerda
+        if (isOverlayOpen) {
+            document.body.style.width = '50vw';
+            document.body.style.overflowX = 'hidden';
+            overlayContainer.style.boxShadow = '-2px 0 10px rgba(0,0,0,0.1)';
+        } else {
+            document.body.style.width = '100%';
+        }
     };
-    document.body.appendChild(toggleBtn);
+    toggleBtn.onclick = () => window.toggleCartazesOverlay();
 
-    // --- 2.5 BOTÃO DE TESTE ---
-    const testBtn = document.createElement('button');
-    testBtn.innerHTML = '🧪 Testar';
-    testBtn.style.position = 'fixed';
-    testBtn.style.bottom = '90px';
-    testBtn.style.right = '30px';
-    testBtn.style.padding = '10px 15px';
-    testBtn.style.fontSize = '14px';
-    testBtn.style.backgroundColor = '#2563eb';
-    testBtn.style.color = '#fff';
-    testBtn.style.border = 'none';
-    testBtn.style.borderRadius = '20px';
-    testBtn.style.cursor = 'pointer';
-    testBtn.style.zIndex = '99999999';
-    testBtn.onclick = () => {
-        iframe.contentWindow.postMessage({
-            type: 'ADD_POSTER',
-            payload: {
-                description: 'PRODUTO TESTE MARVEL',
-                priceFrom: '999,99',
-                priceFor: '799,99',
-                code: '5142348',
-                ean: '673419406338',
-                quantity: 1,
-                posterSubType: 'offer'
-            }
-        }, '*');
-        if (!isOverlayOpen) toggleBtn.click(); // Abre o overlay se estiver fechado
-    };
-    document.body.appendChild(testBtn);
+    // Auto-abrir ao clicar em botões como "Novo cartaz"
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('button');
+        if (btn && btn.innerText && btn.innerText.toLowerCase().includes('novo cartaz')) {
+            window.toggleCartazesOverlay(true);
+        }
+    });
 
     // --- 3. PROCESSAR DADOS DA API ---
     function formatMoney(value) {
@@ -130,14 +119,15 @@
             payload: payload
         }, '*');
 
-        // Se o overlay estiver fechado, dá um feedback visual no botão
+        // Se o overlay estiver fechado, dá um feedback visual no botão e abre automaticamente
         if (!isOverlayOpen) {
             const originalText = toggleBtn.innerHTML;
             toggleBtn.innerHTML = '✅ Adicionado!';
             toggleBtn.style.backgroundColor = '#10b981'; // Verde sucesso
+            window.toggleCartazesOverlay(true);
             setTimeout(() => {
                 toggleBtn.innerHTML = originalText;
-                toggleBtn.style.backgroundColor = '#e11d48';
+                toggleBtn.style.backgroundColor = '#000';
             }, 2000);
         }
     }
