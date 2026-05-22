@@ -453,6 +453,53 @@ export default function Home() {
     }
   }, []);
 
+  // Listener para o Tampermonkey (Visão por cima)
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'ADD_POSTER') {
+        const newItem = event.data.payload;
+        
+        const posterToAdd = {
+          description: newItem.description,
+          priceFrom: newItem.priceFrom,
+          priceFor: newItem.priceFor,
+          code: newItem.code,
+          ean: newItem.ean,
+          quantity: 1,
+          posterSubType: newItem.posterSubType || 'normal',
+          paymentOption: newItem.paymentOption || 'normal',
+          defectType: newItem.defectType || '',
+          customDefectDiscount: newItem.customDefectDiscount || 0
+        };
+
+        // Autopreencher o preview para o usuário ver
+        setCurrentPoster(posterToAdd);
+        setIsProductReady(true);
+
+        // Adiciona automaticamente à fila
+        setQueue(prev => {
+          const newQueue = [...prev];
+          const existingIdx = newQueue.findIndex(item => 
+            item.code === posterToAdd.code && 
+            item.ean === posterToAdd.ean && 
+            item.posterSubType === posterToAdd.posterSubType
+          );
+          if (existingIdx > -1) {
+            newQueue[existingIdx] = {
+              ...newQueue[existingIdx],
+              quantity: (newQueue[existingIdx].quantity || 1) + 1
+            };
+          } else {
+            newQueue.push(posterToAdd);
+          }
+          return newQueue;
+        });
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
   const saveSettings = (newSettings: PosterSettings) => {
     setSettings(newSettings);
     localStorage.setItem('poster-settings', JSON.stringify(newSettings));
@@ -654,6 +701,8 @@ export default function Home() {
             <div className="flex-1 md:overflow-y-auto overflow-y-visible overflow-x-hidden px-4 pt-4 min-h-0 custom-scrollbar">
               <div className="pb-12 space-y-3">
 
+                {/* PosterForm e Adicionar ao Lote ocultos a pedido do usuário, que usará apenas a integração via página original */}
+                {/* 
                 <PosterForm
                   key={`form-${formKey}`}
                   data={currentPoster}
@@ -661,30 +710,10 @@ export default function Home() {
                   posterType={posterType}
                   onLookupStatusChange={setIsProductReady}
                   onImportBatch={(items) => {
-                    setQueue(prev => {
-                      const newQueue = [...prev];
-                      items.forEach(newItem => {
-                        const existingIdx = newQueue.findIndex(item => 
-                          item.code === newItem.code && 
-                          item.ean === newItem.ean && 
-                          item.posterSubType === newItem.posterSubType &&
-                          item.description === newItem.description
-                        );
-                        if (existingIdx > -1) {
-                          newQueue[existingIdx] = {
-                            ...newQueue[existingIdx],
-                            quantity: (newQueue[existingIdx].quantity || 1) + (newItem.quantity || 1)
-                          };
-                        } else {
-                          newQueue.push(newItem);
-                        }
-                      });
-                      return newQueue;
-                    });
+                    setQueue(prev => { ... });
                   }}
                 />
 
-                {/* ── Add to queue button ── */}
                 <Button
                   onClick={handleAddToQueue}
                   disabled={!isProductReady}
@@ -696,6 +725,7 @@ export default function Home() {
                   <Plus className="h-5 w-5" />
                   Adicionar ao Lote
                 </Button>
+                */}
 
                 {/* ── Queue list ── */}
                 {queue.length > 0 && (

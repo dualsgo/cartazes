@@ -177,6 +177,11 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange, on
     onLookupStatusChange?.(false);
 
     try {
+      // Avisa o Tampermonkey para buscar na API original da Ri Happy usando o token interceptado
+      if (typeof window !== 'undefined' && window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'SEARCH_SKU', sku: query }, '*');
+      }
+
       const res = await fetch(`/api/produto?q=${encodeURIComponent(query)}`);
       if (!res.ok) { 
         setLookupStatus('notfound'); 
