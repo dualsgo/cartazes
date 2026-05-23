@@ -1,132 +1,347 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
+import { X, Camera, RefreshCw, AlertCircle, Loader2, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Camera, X, AlertCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+export type ScanStatus = {
+  type: 'success' | 'error';
+  message: string;
+  timestamp: number;
+} | null;
 
 interface BarcodeScannerProps {
-  onScanSuccess: (decodedText: string) => void;
+  onScan: (decodedText: string) => Promise<void> | void;
   onClose: () => void;
+  scanCount?: number;
+  scanStatus?: ScanStatus;
 }
 
-export function BarcodeScanner({ onScanSuccess, onClose }: BarcodeScannerProps) {
-  const [error, setError] = useState<string | null>(null);
+export function BarcodeScanner({ onScan, onClose, scanCount = 0, scanStatus }: BarcodeScannerProps) {
   const scannerRef = useRef<Html5Qrcode | null>(null);
-  const containerId = "reader";
+  const [showFeedback, setShowFeedback] = useState(false);
+  const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Efeito para mostrar feedback temporário
+  useEffect(() => {
+    if (scanStatus) {
+      setShowFeedback(true);
+      if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
+      
+      if (scanStatus.type === 'success') {
+        feedbackTimer.current = setTimeout(() => {
+          setShowFeedback(false);
+          try {
+            if (scannerRef.current) scannerRef.current.resume();
+          } catch(e) {}
+          isProcessingRef.current = false;
+          setIsLocked(false);
+        }, 1500);
+      }
+      // Se for erro, não esconde automaticamente. Espera o clique do usuário.
+    }
+  }, [scanStatus]);
+  const [isInitializing, setIsInitializing] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [cameras, setCameras] = useState<any[]>([]);
+  const [currentCameraIndex, setCurrentCameraIndex] = useState(0);
+  const lastScannedRef = useRef<{ text: string, time: number }>({ text: '', time: 0 });
+  const isProcessingRef = useRef(false);
+  const [isLocked, setIsLocked] = useState(false);
+
+  const handleDecoded = useCallback(async (decodedText: string) => {
+    const now = Date.now();
+    
+    if (isProcessingRef.current) return;
+    
+    const { text, time } = lastScannedRef.current;
+    
+    // 1. Bloqueio global: No mínimo 1.5 segundos entre QUALQUER leitura (mesmo que seja código diferente)
+    // Isso evita o colapso por "ruído" ou múltiplas detecções rápidas
+    if (now - time < 1500) return;
+
+    // 2. Bloqueio específico: Evita bipar o mesmo código múltiplas vezes em menos de 3 segundos
+    if (text === decodedText && now - time < 3000) {
+      return;
+    }
+    
+    isProcessingRef.current = true;
+    setIsLocked(true);
+    lastScannedRef.current = { text: decodedText, time: now };
+    
+    try {
+      if (scannerRef.current) scannerRef.current.pause(true);
+    } catch(e) {
+      console.error("Erro ao pausar scanner:", e);
+    }
+    
+    try {
+      await onScan(decodedText);
+    } catch (e) {
+      console.error(e);
+      try {
+        if (scannerRef.current) scannerRef.current.resume();
+      } catch(err) {}
+      isProcessingRef.current = false;
+      setIsLocked(false);
+    }
+  }, [onScan]);
 
   useEffect(() => {
-    const html5QrCode = new Html5Qrcode(containerId);
-    scannerRef.current = html5QrCode;
+    const startScanner = async () => {
+      try {
+        const html5QrCode = new Html5Qrcode("reader");
+        scannerRef.current = html5QrCode;
 
-    const config = {
-      fps: 15,
-      qrbox: { width: 250, height: 150 },
-      aspectRatio: 1.0,
+        const availableCameras = await Html5Qrcode.getCameras();
+        setCameras(availableCameras);
+
+        if (availableCameras && availableCameras.length > 0) {
+          const defaultIndex = availableCameras.length > 1 ? availableCameras.length - 1 : 0;
+          setCurrentCameraIndex(defaultIndex);
+
+          const config = {
+            fps: 20,
+            qrbox: { width: 280, height: 160 },
+            aspectRatio: 1.0,
+            useBarCodeDetectorIfSupported: true,
+            formatsToSupport: [
+              Html5QrcodeSupportedFormats.EAN_13,
+              Html5QrcodeSupportedFormats.EAN_8,
+              Html5QrcodeSupportedFormats.CODE_128,
+            ]
+          };
+
+          await html5QrCode.start(
+            availableCameras[defaultIndex].id,
+            config,
+            (decodedText) => {
+              handleDecoded(decodedText);
+            },
+            () => {}
+          );
+        } else {
+          await html5QrCode.start(
+            { facingMode: "environment" },
+            { 
+              fps: 20, 
+              qrbox: { width: 280, height: 160 },
+              aspectRatio: 1.0,
+              useBarCodeDetectorIfSupported: true,
+              formatsToSupport: [
+                Html5QrcodeSupportedFormats.EAN_13,
+                Html5QrcodeSupportedFormats.EAN_8,
+                Html5QrcodeSupportedFormats.CODE_128,
+              ]
+            },
+            (decodedText) => {
+              handleDecoded(decodedText);
+            },
+            () => {}
+          );
+        }
+        
+        setIsInitializing(false);
+        setError(null);
+      } catch (err: any) {
+        console.error("Erro ao iniciar scanner:", err);
+        setIsInitializing(false);
+        setError("Não foi possível acessar a câmera. Verifique as permissões.");
+      }
     };
 
-    // Formatos suportados (focado em EAN e CODE128 para varejo)
-    const formats = [
-      Html5QrcodeSupportedFormats.EAN_13,
-      Html5QrcodeSupportedFormats.EAN_8,
-      Html5QrcodeSupportedFormats.CODE_128,
-      Html5QrcodeSupportedFormats.QR_CODE
-    ];
-
-    html5QrCode.start(
-      { facingMode: "environment" },
-      { ...config, formatsToSupport: formats },
-      (decodedText) => {
-        // Sucesso
-        stopScanner().then(() => {
-          onScanSuccess(decodedText);
-        });
-      },
-      (errorMessage) => {
-        // Erro silencioso durante scan
-      }
-    ).catch(err => {
-      console.error("Erro ao iniciar câmera:", err);
-      setError("Não foi possível acessar a câmera. Verifique as permissões e se está usando HTTPS.");
-    });
+    startScanner();
 
     return () => {
-      stopScanner();
-    };
-  }, [onScanSuccess]);
-
-  const stopScanner = async () => {
-    if (scannerRef.current && scannerRef.current.isScanning) {
-      try {
-        await scannerRef.current.stop();
-        scannerRef.current.clear();
-      } catch (err) {
-        console.error("Erro ao parar scanner:", err);
+      if (scannerRef.current && scannerRef.current.isScanning) {
+        scannerRef.current.stop().catch(err => console.error("Erro ao parar scanner:", err));
       }
+    };
+  }, [onScan]);
+
+  const handleSwitchCamera = async () => {
+    if (!scannerRef.current || cameras.length <= 1) return;
+
+    const nextIndex = (currentCameraIndex + 1) % cameras.length;
+    setIsInitializing(true);
+    
+    try {
+      await scannerRef.current.stop();
+      setCurrentCameraIndex(nextIndex);
+      
+      await scannerRef.current.start(
+        cameras[nextIndex].id,
+        {
+          fps: 20,
+          qrbox: { width: 280, height: 160 },
+          aspectRatio: 1.7777777778,
+        },
+        (decodedText) => {
+          handleDecoded(decodedText);
+        },
+        () => {}
+      );
+      setIsInitializing(false);
+    } catch (err) {
+      console.error("Erro ao trocar câmera:", err);
+      setError("Erro ao trocar de câmera.");
+      setIsInitializing(false);
+    }
+  };
+
+  const handleRetry = () => {
+    setIsInitializing(true);
+    setError(null);
+    if (scannerRef.current) {
+      scannerRef.current.stop().then(() => {
+        window.location.reload(); // Forma bruta mas eficaz de resetar o hardware da câmera no browser
+      }).catch(() => {
+        window.location.reload();
+      });
     }
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/90 flex flex-col items-center justify-center p-4 backdrop-blur-md">
-      <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl relative overflow-hidden">
-        {/* Botão de Fechar (Topo Direito) */}
-        <button 
-          onClick={onClose}
-          className="absolute top-4 right-4 z-20 p-2 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-900 transition-all active:scale-90"
-          title="Fechar Scanner"
-        >
-          <X className="h-5 w-5" />
-        </button>
-
+    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
+      <div className="relative w-full max-w-md bg-[#0a0a0a] rounded-2xl shadow-2xl overflow-hidden border border-white/10 flex flex-col h-[80vh] max-h-[600px]">
+        
         {/* Header */}
-        <div className="mb-6 text-center">
-          <div className="bg-blue-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
-            <Camera className="h-6 w-6 text-blue-600" />
+        <div className="p-4 flex items-center justify-between border-b border-white/5 bg-black/40">
+          <div className="flex items-center gap-2">
+            <Camera className="h-4 w-4 text-blue-400" />
+            <h3 className="text-sm font-bold text-white uppercase tracking-widest">Scanner Ao Vivo</h3>
           </div>
-          <h2 className="text-xl font-black text-gray-900 uppercase tracking-tighter">Scanner de Código</h2>
-          <p className="text-xs text-gray-500 font-medium italic">Aponte para o código de barras do produto</p>
+          <div className="flex items-center gap-3">
+            {cameras.length > 1 && (
+              <button 
+                onClick={handleSwitchCamera}
+                disabled={isInitializing}
+                className="text-white/60 hover:text-white transition-colors p-1 flex items-center gap-1 bg-white/5 rounded-md px-2"
+              >
+                <RefreshCw className={cn("h-4 w-4", isInitializing && "animate-spin")} />
+                <span className="text-[10px] font-bold uppercase tracking-tighter">Trocar</span>
+              </button>
+            )}
+            <button 
+              onClick={onClose}
+              className="text-white/40 hover:text-white transition-colors p-1"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+
         </div>
 
-        {/* Scanner Container */}
-        <div className="relative rounded-2xl overflow-hidden bg-gray-900 aspect-square border-4 border-gray-100">
-          <div id={containerId} className="w-full h-full"></div>
-          
-          {/* Mira / Crosshair Overlay */}
-          {!error && (
-            <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-              <div className="w-[260px] h-[160px] border-2 border-blue-500 rounded-lg shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]">
-                <div className="absolute top-0 left-0 w-4 h-4 border-t-4 border-l-4 border-blue-500 -mt-1 -ml-1"></div>
-                <div className="absolute top-0 right-0 w-4 h-4 border-t-4 border-r-4 border-blue-500 -mt-1 -mr-1"></div>
-                <div className="absolute bottom-0 left-0 w-4 h-4 border-b-4 border-l-4 border-blue-500 -mb-1 -ml-1"></div>
-                <div className="absolute bottom-0 right-0 w-4 h-4 border-b-4 border-r-4 border-blue-500 -mb-1 -mr-1"></div>
-                
-                {/* Linha Laser Animada */}
-                <div className="w-full h-0.5 bg-blue-500/50 shadow-[0_0_10px_#3b82f6] animate-scan-line"></div>
-              </div>
+        {/* Scanner Area */}
+        <div className="relative flex-1 bg-black flex items-center justify-center overflow-hidden">
+          {isInitializing && (
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black gap-3">
+              <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
+              <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest">Iniciando Câmera...</p>
             </div>
           )}
 
           {error && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center text-white bg-red-900/90">
-              <AlertCircle className="h-12 w-12 mb-4" />
-              <p className="text-sm font-bold uppercase mb-2">Erro de Acesso</p>
-              <p className="text-xs opacity-80">{error}</p>
-              <p className="text-[10px] mt-4 italic">Nota: Câmera requer HTTPS em dispositivos móveis.</p>
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black p-8 text-center gap-4">
+              <AlertCircle className="h-10 w-10 text-red-500" />
+              <p className="text-white/80 text-xs leading-relaxed">{error}</p>
+              <Button onClick={handleRetry} variant="outline" className="text-white border-white/20">
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Tentar Novamente
+              </Button>
+            </div>
+          )}
+
+          <div id="reader" className="w-full h-full [&>video]:object-cover"></div>
+          
+          {/* Overlay decorativo (MIRA) */}
+          <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+            <div className={cn(
+              "w-[280px] h-[160px] border-2 rounded-lg relative transition-colors duration-300",
+              isLocked ? "border-white/10" : "border-white/20"
+            )}>
+              <div className={cn("absolute -top-1 -left-1 w-8 h-8 border-t-4 border-l-4 rounded-tl-sm transition-colors", isLocked ? "border-gray-600" : "border-blue-500")}></div>
+              <div className={cn("absolute -top-1 -right-1 w-8 h-8 border-t-4 border-r-4 rounded-tr-sm transition-colors", isLocked ? "border-gray-600" : "border-blue-500")}></div>
+              <div className={cn("absolute -bottom-1 -left-1 w-8 h-8 border-b-4 border-l-4 rounded-bl-sm transition-colors", isLocked ? "border-gray-600" : "border-blue-500")}></div>
+              <div className={cn("absolute -bottom-1 -right-1 w-8 h-8 border-b-4 border-r-4 rounded-br-sm transition-colors", isLocked ? "border-gray-600" : "border-blue-500")}></div>
+              
+              {!isLocked && (
+                <div className="absolute top-1/2 left-0 w-full h-0.5 bg-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.5)] animate-pulse"></div>
+              )}
+              {isLocked && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                   <div className="flex gap-1">
+                      <div className="w-1.5 h-1.5 bg-white/40 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                      <div className="w-1.5 h-1.5 bg-white/40 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                      <div className="w-1.5 h-1.5 bg-white/40 rounded-full animate-bounce"></div>
+                   </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Feedback de Leitura */}
+          {showFeedback && scanStatus && (
+            <div className={cn(
+              "absolute inset-0 z-20 flex flex-col items-center justify-center animate-in fade-in zoom-in duration-200",
+              scanStatus.type === 'success' ? "bg-green-500/40" : "bg-red-500/80 backdrop-blur-sm"
+            )}>
+              <div className="bg-black/90 p-6 rounded-2xl flex flex-col items-center gap-4 border border-white/20 shadow-2xl max-w-[80%] text-center">
+                {scanStatus.type === 'success' ? (
+                  <CheckCircle2 className="h-12 w-12 text-green-500" />
+                ) : (
+                  <AlertCircle className="h-12 w-12 text-red-500" />
+                )}
+                <span className="text-white font-black uppercase tracking-widest text-lg">
+                  {scanStatus.type === 'success' ? 'LIDO!' : 'FALHOU!'}
+                </span>
+                <span className="text-white/90 text-sm font-bold uppercase tracking-tight">
+                  {scanStatus.message}
+                </span>
+
+                {scanStatus.type === 'error' && (
+                  <Button 
+                    onClick={() => {
+                      setShowFeedback(false);
+                      try {
+                        if (scannerRef.current) scannerRef.current.resume();
+                      } catch(e) {}
+                      isProcessingRef.current = false;
+                      setIsLocked(false);
+                    }}
+                    className="mt-4 w-full bg-white text-red-600 hover:bg-gray-100 font-bold uppercase"
+                  >
+                    Continuar Lendo
+                  </Button>
+                )}
+              </div>
             </div>
           )}
         </div>
-        
-        {/* Footer */}
-        <div className="mt-8 flex gap-3">
-          <Button variant="ghost" onClick={onClose} className="flex-1 font-bold uppercase tracking-wider text-gray-500">
-            Cancelar
-          </Button>
-          <button 
-            onClick={onClose}
-            className="flex-[2] bg-gray-900 text-white rounded-xl font-bold uppercase tracking-widest text-xs h-12 shadow-lg active:scale-95 transition-all"
+
+        {/* Footer / Info */}
+        <div className="p-4 bg-black/60 border-t border-white/5 flex flex-col items-center gap-3">
+          {scanCount > 0 && (
+            <div className="flex items-center gap-2 bg-green-500/20 text-green-400 px-4 py-2 rounded-full border border-green-500/30 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <CheckCircle2 className="h-4 w-4" />
+              <span className="text-xs font-bold uppercase tracking-widest">{scanCount} {scanCount === 1 ? 'etiqueta lida' : 'etiquetas lidas'}</span>
+            </div>
+          )}
+          
+          {scanCount === 0 && (
+            <p className="text-white/60 text-xs leading-relaxed text-center">
+              Escaneamento contínuo ativado. Os itens lidos vão direto para a fila.
+            </p>
+          )}
+
+          <Button 
+            onClick={onClose} 
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest h-12"
           >
-            Fechar
-          </button>
+            Finalizar e Ver Lote
+          </Button>
         </div>
       </div>
     </div>

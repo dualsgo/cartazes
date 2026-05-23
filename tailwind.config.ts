@@ -12,7 +12,6 @@ export default {
       fontFamily: {
         body: ['Inter', 'sans-serif'],
         headline: ['Poppins', 'sans-serif'],
-        poppins: ['Poppins', 'sans-serif'],
         code: ['monospace'],
       },
       colors: {

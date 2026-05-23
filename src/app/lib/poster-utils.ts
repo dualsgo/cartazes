@@ -6,14 +6,15 @@ export function calculateInstallments(price: number, settings: PosterSettings) {
   
   // O usuário quer "parcela mínima de X". 
   // O sistema atual usa 29.99 (R$ 30,00 na prática).
-  const minAmount = settings.minInstallmentAmount;
+  const minAmount = Math.max(settings.minInstallmentAmount, 29.99);
   
   // Quantas parcelas cabem se cada uma for pelo menos minAmount?
   // Ex: 100 / 30 = 3.33 -> 3 parcelas.
   const possibleInstallments = Math.floor(price / (minAmount - 0.01));
   
   // Mas não podemos passar do limite configurado (ex: 6x ou 10x)
-  const maxInstallments = Math.min(possibleInstallments, settings.maxInstallments);
+  const safeMaxConfigured = Math.max(6, Math.min(10, settings.maxInstallments));
+  const maxInstallments = Math.min(possibleInstallments, safeMaxConfigured);
   
   if (maxInstallments <= 1) return { maxInstallments: 0, installmentValue: 0 };
   
@@ -49,18 +50,18 @@ export function parsePrice(price: any): number {
   }
   
   const val = parseFloat(str) || 0;
-  // Limite global de 9999,99 (6 dígitos totais) para todos os modelos
+  // Limite global de 9999,99 para todos os modelos
   return Math.min(val, 9999.99);
 }
 
 export function formatCurrency(value: number): string {
-  // Limite de segurança para exibição (6 dígitos totais)
+  // Limite de segurança para exibição
   const safeValue = Math.min(value, 9999.99);
   return safeValue.toLocaleString('pt-br', {
-    useGrouping: false,
+    useGrouping: true,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).slice(0, 7);
+  });
 }
 
 /**
@@ -123,7 +124,7 @@ export function truncateMultiLine(text: string, charsPerLine: number, maxLines: 
 /**
  * Lógica comum de processamento de uma linha de dados (seja vinda de CSV ou Excel)
  */
-function processProductRow(row: Record<string, any>, mapping: Record<string, number>, currentSupplier: string): any {
+function processProductRow(row: Record<string, any>, mapping: Record<string, number>, currentSupplier: string, settings?: PosterSettings): any {
   const getVal = (key: string) => {
     const colKey = mapping[key];
     if (colKey === undefined || colKey === -1) return undefined;
@@ -148,14 +149,20 @@ function processProductRow(row: Record<string, any>, mapping: Record<string, num
   const valNovo  = parsePrice(txtNovo);
   const valPromo = parsePrice(txtPromo);
 
+  const cleanSupplier = (name: string) => {
+    if (!name) return '';
+    // Remove prefixo e números (CNPJ)
+    let clean = name.replace(/FORNECEDOR:/i, '').replace(/\d+/g, '').trim();
+    return clean.substring(0, 15).trim().toUpperCase();
+  };
+
   let poster: any = {
     description: mercadoria.toUpperCase(),
     code: sap,
     ean: ean,
     reference: ref,
-    supplier: supplier.replace('FORNECEDOR:', '').replace(/[,\.-]/g, '').trim().toUpperCase(),
+    supplier: cleanSupplier(supplier),
     quantity: 1,
-    paymentOption: 'installment',
   };
 
   /**
@@ -196,28 +203,49 @@ function processProductRow(row: Record<string, any>, mapping: Record<string, num
     poster.priceFrom = '';
   }
 
+  // Automatização do parcelamento
+  const finalPrice = parsePrice(poster.priceFor);
+  if (settings) {
+    const { maxInstallments } = calculateInstallments(finalPrice, settings);
+    poster.paymentOption = (maxInstallments > 1 && finalPrice > 59.99) ? 'installment' : 'normal';
+  } else {
+    poster.paymentOption = finalPrice > 59.99 ? 'installment' : 'normal';
+  }
+
   return poster;
 }
 
 /**
  * Cria um mapeamento de colunas baseado nos headers encontrados ou índices fixos
  */
+const normalize = (str: string) => 
+  String(str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
 function createMapping(headers: string[]): Record<string, number> {
+  const hasHeaders = headers && headers.length > 0;
+  
+
   const findIdx = (terms: string[], defaultIdx: number) => {
-    const idx = headers.findIndex(h => terms.some(t => h.toLowerCase().includes(t)));
-    return idx !== -1 ? idx : defaultIdx;
+    const normTerms = terms.map(t => normalize(t));
+    const idx = headers.findIndex(h => {
+      const normH = normalize(h);
+      return normTerms.some(t => normH.includes(t));
+    });
+    
+    if (idx !== -1) return idx;
+    // Se temos headers mas não encontramos o termo, retornamos -1 para evitar pegar coluna errada
+    return hasHeaders ? -1 : defaultIdx;
   };
   
-  // Mapeamento baseado na descrição do usuário e imagem (lidando com encoding corrompido)
-  // Relatório Circular: C=2 (SAP), D=3 (EAN), E=4 (Ref), F=5 (Desc), H=7 (Ant), I=8 (Novo), J=9 (Promo)
+  // Mapeamento baseado na descrição do usuário e imagem
   return {
-    sap:        findIdx(['sap', 'int', 'interno', 'código', 'codigo', 'cod.', 'sp'], 2),
+    sap:        findIdx(['sap', 'interno', 'código', 'codigo', 'cod.', 'cód.'], 2),
     ean:        findIdx(['ean', 'barras'], 3),
-    mercadoria: findIdx(['mercadoria', 'descrição', 'descricao', 'desc', 'produto', 'nome'], 5),
-    ref:        findIdx(['referencia', 'referência', 'ref', 'fornecedor', 'forn'], 4),
-    precoAtual: findIdx(['anterior', 'atual', 'preÃ§o'], 7),
+    mercadoria: findIdx(['mercadoria', 'descrição', 'descricao', 'produto', 'nome'], 5),
+    ref:        findIdx(['referencia', 'referência', 'ref', 'cod. forn', 'cód. forn', 'fornecedor', 'forn'], 4),
+    precoAtual: findIdx(['anterior', 'atual', 'preço', 'preÃ§o'], 7),
     novoPreco:  findIdx(['novo'], 8),
-    promocao:   findIdx(['promo', 'Ã§Ã£o', 'promoção'], 9),
+    promocao:   findIdx(['promo', 'ção', 'Ã§Ã£o', 'promoção'], 9),
     supplier:   findIdx(['fornecedor', 'forn'], -1),
   };
 }
@@ -225,7 +253,7 @@ function createMapping(headers: string[]): Record<string, number> {
 /**
  * Analisa um arquivo CSV
  */
-export function parseProductCSV(content: string): any[] {
+export function parseProductCSV(content: string, settings?: PosterSettings): any[] {
   const lines = content.split(/\r?\n/).filter(line => line.trim().length > 0);
   if (lines.length < 2) return [];
 
@@ -242,7 +270,7 @@ export function parseProductCSV(content: string): any[] {
     const rowObj: Record<number, string> = {};
     cols.forEach((val, idx) => { rowObj[idx] = val; });
     
-    const poster = processProductRow(rowObj, mapping, '');
+    const poster = processProductRow(rowObj, mapping, '', settings);
     if (poster) results.push(poster);
   }
   return results;
@@ -251,7 +279,7 @@ export function parseProductCSV(content: string): any[] {
 /**
  * Analisa um arquivo Excel (XLS/XLSX)
  */
-export function parseProductExcel(buffer: ArrayBuffer): any[] {
+export function parseProductExcel(buffer: ArrayBuffer, settings?: PosterSettings): any[] {
   let data: any[][] = [];
 
   // Muitos sistemas exportam relatórios em HTML com extensão .xls.
@@ -305,8 +333,8 @@ export function parseProductExcel(buffer: ArrayBuffer): any[] {
 
     // 2. Detectar se é uma linha de header (procura palavras-chave em qualquer coluna)
     const isHeader = cols.some(c => {
-      const s = String(c || '').toLowerCase();
-      return s.includes('sap') || s.includes('código') || s.includes('interno') || s.includes('mercadoria') || s.includes('ean');
+      const s = normalize(String(c || ''));
+      return s.includes('sap') || s.includes('codigo') || s.includes('interno') || s.includes('mercadoria') || s.includes('ean') || s.includes('forn');
     });
 
     if (isHeader) {
@@ -320,7 +348,7 @@ export function parseProductExcel(buffer: ArrayBuffer): any[] {
       const rowObj: Record<number, any> = {};
       cols.forEach((val, idx) => { rowObj[idx] = val; });
 
-      const poster = processProductRow(rowObj, mapping, currentSupplier);
+      const poster = processProductRow(rowObj, mapping, currentSupplier, settings);
       if (poster) results.push(poster);
     }
   }
@@ -358,42 +386,43 @@ export function parseDatabaseImportExcel(buffer: ArrayBuffer): any[] {
   if (data.length < 1) return [];
 
   const items: any[] = [];
-  let mapping = {
-    sap: 2,
-    ean: 3,
-    ref: 4,
-    mercadoria: 5
-  };
+  let mapping = createMapping([]); // Default mapping
   
   for (let i = 0; i < data.length; i++) {
-    const row = data[i];
-    if (!row || row.length === 0) continue;
+    const cols = data[i];
+    if (!cols || cols.length === 0) continue;
 
     // Detectar se é uma linha de header
-    const isHeader = row.some(c => {
-      const s = String(c || '').toLowerCase();
-      return s.includes('sap') || s.includes('código') || s.includes('interno') || s.includes('mercadoria') || s.includes('ean');
+    const isHeader = cols.some(c => {
+      const s = normalize(String(c || ''));
+      return s.includes('sap') || s.includes('codigo') || s.includes('interno') || s.includes('mercadoria') || s.includes('ean') || s.includes('forn');
     });
 
     if (isHeader) {
-      const headers = row.map(h => String(h || '').trim());
-      const newMap = createMapping(headers);
-      mapping = {
-        sap: newMap.sap,
-        ean: newMap.ean,
-        ref: newMap.ref,
-        mercadoria: newMap.mercadoria
-      };
+      const headers = cols.map(h => String(h || '').trim());
+      mapping = createMapping(headers);
       continue;
     }
 
-    const description = String(row[mapping.mercadoria] || '').trim();
+    const getVal = (key: string) => {
+      const idx = mapping[key];
+      if (idx === undefined || idx === -1) return '';
+      return String(cols[idx] || '').trim();
+    };
+
+    const description = getVal('mercadoria');
     if (!description || description.toLowerCase().includes('mercadoria') || description.toLowerCase().includes('descrição')) continue;
 
+    const sap = getVal('sap');
+    const ean = getVal('ean');
+    
+    // Ignora se não tiver identificação mínima
+    if (!sap && !ean) continue;
+
     items.push({
-      code: String(row[mapping.sap] || '').trim(),
-      ean: String(row[mapping.ean] || '').trim(),
-      reference: String(row[mapping.ref] || '').trim(),
+      code: sap,
+      ean: ean,
+      reference: getVal('ref'),
       description: description.toUpperCase(),
     });
   }
@@ -403,3 +432,93 @@ export function parseDatabaseImportExcel(buffer: ArrayBuffer): any[] {
 
 
 
+
+/**
+ * Analisa o relatório "Mercadoria Sem Giro" (HTML mascarado de XLS)
+ * Extrai dados completos incluindo preços para autopreenchimento
+ */
+export function parseReportSemGiro(buffer: ArrayBuffer): any[] {
+  let data: any[][] = [];
+
+  try {
+    const text = new TextDecoder("utf-8").decode(buffer);
+    if (text.toLowerCase().includes('<html') || text.toLowerCase().includes('<table')) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(text, 'text/html');
+      const rows = Array.from(doc.querySelectorAll('tr'));
+      data = rows.map(tr => Array.from(tr.querySelectorAll('th, td')).map(td => (td.textContent || '').trim()));
+    }
+  } catch (e) {
+    console.error('Erro ao decodificar HTML:', e);
+  }
+
+  // Se não for HTML, tenta SheetJS
+  if (data.length === 0) {
+    const workbook = XLSX.read(buffer, { type: 'array' });
+    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+    data = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' }) as any[][];
+  }
+
+  const items: any[] = [];
+  
+  // O relatório tem headers nas primeiras linhas, os dados começam após os headers mesclados
+  // Geralmente a linha 4 (índice 3) é o cabeçalho real
+  let headerIdx = -1;
+  for(let i=0; i < Math.min(data.length, 10); i++) {
+    const rowStr = data[i].join(' ').toLowerCase();
+    if (rowStr.includes('cod. interno') || rowStr.includes('mercadoria')) {
+      headerIdx = i;
+      break;
+    }
+  }
+
+  if (headerIdx === -1) return [];
+
+  for (let i = headerIdx + 1; i < data.length; i++) {
+    const row = data[i];
+    if (!row || row.length < 3) continue;
+
+    const sap = String(row[0] || '').trim();
+    const ean = String(row[1] || '').trim();
+    const description = String(row[2] || '').trim();
+
+    if (!sap && !ean) continue;
+    if (!description || description.toLowerCase().includes('total')) continue;
+
+    // Colunas solicitadas:
+    // D(3): Cod. Fornecedor -> Referência
+    // E(4): Marca -> Supplier
+    // F(5): Estoque -> Dividir por 1000
+    // I(8): Preço Regular
+    // J(9): Preço Oferta
+
+    const reference = String(row[3] || '').trim();
+    const supplier = String(row[4] || '').trim();
+    
+    // Estoque: 1000 vira 1
+    const estoqueRaw = parseFloat(String(row[5] || '0').replace(',', '.')) || 0;
+    const estoque = estoqueRaw / 1000;
+
+    const valRegular = parsePrice(row[8]);
+    const valOferta = parsePrice(row[9]);
+
+    // Lógica de preços para o cartaz
+    const hasOffer = valOferta > 0;
+    const priceFrom = hasOffer ? formatCurrency(valRegular) : '';
+    const priceFor = hasOffer ? formatCurrency(valOferta) : formatCurrency(valRegular);
+
+    items.push({
+      code: sap,
+      ean: ean,
+      description: description.toUpperCase(),
+      reference: reference,
+      supplier: supplier.toUpperCase(),
+      priceFrom: priceFrom,
+      priceFor: priceFor,
+      isOffer: hasOffer,
+      stock: estoque
+    });
+  }
+
+  return items;
+}

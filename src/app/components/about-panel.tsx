@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { X, AlertTriangle, Database, Sparkles, Info, ShieldAlert, ExternalLink } from 'lucide-react';
 
 interface AboutPanelProps {
@@ -8,6 +9,17 @@ interface AboutPanelProps {
 }
 
 export function AboutPanel({ open, onClose }: AboutPanelProps) {
+  const [productCount, setProductCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (open && productCount === null) {
+      fetch('/api/stats')
+        .then(res => res.json())
+        .then(data => setProductCount(data.count))
+        .catch(() => setProductCount(0));
+    }
+  }, [open, productCount]);
+
   if (!open) return null;
 
   return (
@@ -30,8 +42,8 @@ export function AboutPanel({ open, onClose }: AboutPanelProps) {
               <Info className="h-4 w-4 text-white" />
             </div>
             <div>
-              <h2 className="text-white font-bold text-base">Sobre o Gerador de Cartazes</h2>
-              <p className="text-slate-400 text-xs">Ferramenta auxiliar não oficial</p>
+              <h2 className="text-white font-bold text-base">Sobre o RD CARTAZ</h2>
+              <p className="text-slate-400 text-xs">Sistema especializado Relíquias da Diversão</p>
             </div>
           </div>
           <button
@@ -75,9 +87,9 @@ export function AboutPanel({ open, onClose }: AboutPanelProps) {
               Origem e Propósito
             </p>
             <p className="text-slate-400 text-xs leading-relaxed">
-              Com a mudança no sistema oficial da empresa, a geração de cartazes ficou comprometida. Esta ferramenta
-              nasceu como <strong className="text-white">interface gráfica auxiliar para a Planilha de Relíquias da Diversão</strong>,
-              permitindo gerar cartazes de forma prática enquanto o sistema oficial não é normalizado.
+              Com a mudança no sistema oficial, a geração de cartazes ficou comprometida. Esta ferramenta
+              nasceu como uma <strong className="text-white">interface gráfica especializada para a Planilha de Relíquias da Diversão</strong>,
+              otimizada para gerar cartazes promocionais de alto impacto visual de forma rápida e segura.
             </p>
           </div>
 
@@ -100,11 +112,10 @@ export function AboutPanel({ open, onClose }: AboutPanelProps) {
             </p>
             <div className="grid grid-cols-2 gap-2 mt-3">
               {[
-                { label: 'Relíquias', desc: 'Réplica do modelo oficial' },
-                { label: 'Imperdíveis', desc: 'Réplica do modelo oficial' },
-                { label: 'Aéreo', desc: 'Modelo para cartazes de prateleira/aéreo' },
-                { label: 'Gôndola', desc: '16 etiquetas por folha A4' },
-                { label: 'Totem', desc: 'Cartaz A4 vertical de destaque' },
+                { label: 'Relíquias A4', desc: 'Modelo oficial (2 cartazes por folha)' },
+                { label: 'Oferta Ativa', desc: 'Filtro automático que remove itens sem desconto' },
+                { label: 'Base de Dados', desc: 'Integração total com a Planilha Relíquias' },
+                { label: 'Design Premium', desc: 'Layout otimizado para máxima conversão' },
               ].map((m) => (
                 <div
                   key={m.label}
@@ -118,6 +129,58 @@ export function AboutPanel({ open, onClose }: AboutPanelProps) {
             </div>
           </div>
 
+          {/* Guia de Exportação PLENO */}
+          <div
+            className="rounded-xl p-4"
+            style={{ background: 'rgba(59,130,246,0.07)', border: '1px solid rgba(59,130,246,0.2)' }}
+          >
+            <p className="text-blue-300 font-semibold text-sm mb-3 flex items-center gap-2">
+              <ExternalLink className="h-4 w-4 text-blue-400" />
+              Automação via PLENO
+            </p>
+            <p className="text-slate-300 text-xs mb-4 leading-relaxed">
+              Você pode automatizar a criação de cartazes importando arquivos gerados pelo sistema PLENO. O RD CARTAZ processará a lista e adicionará apenas os itens promocionais ao lote.
+            </p>
+            <div className="space-y-4">
+              <div>
+                <p className="text-blue-200 text-[11px] font-bold uppercase tracking-wider mb-1">1. Alteração de Preço (Diário)</p>
+                <p className="text-slate-400 text-xs leading-relaxed">
+                  No menu <strong className="text-white">Estoque &gt; Preços a serem alterados</strong>, marque 
+                  <strong className="text-white"> "Somente com estoque"</strong> e gere a lista. 
+                  Clique no botão <strong className="text-blue-400">CSV</strong> para baixar o arquivo e importe-o no botão "Importar Lote" desta ferramenta.
+                </p>
+              </div>
+              <div>
+                <p className="text-blue-200 text-[11px] font-bold uppercase tracking-wider mb-1">2. Circular de Alteração</p>
+                <p className="text-slate-400 text-xs leading-relaxed">
+                  No menu <strong className="text-white">Circular de Alteração de Preços</strong>, filtre a data, 
+                  marque <strong className="text-white">"Com estoque"</strong> e <strong className="text-white">"Promoções"</strong>. 
+                  Salve como <strong className="text-blue-400">CSV</strong> e realize o upload aqui para criar os cartazes automaticamente.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Uso no Celular e Impressão */}
+          <div
+            className="rounded-xl p-4"
+            style={{ background: 'rgba(139,92,246,0.07)', border: '1px solid rgba(139,92,246,0.2)' }}
+          >
+            <p className="text-purple-300 font-semibold text-sm mb-2 flex items-center gap-2">
+              <span className="w-5 h-5 rounded-md bg-purple-500/20 flex items-center justify-center shrink-0">
+                <Info className="h-3 w-3 text-purple-400" />
+              </span>
+              Uso no Celular e Impressão
+            </p>
+            <p className="text-slate-400 text-xs leading-relaxed">
+              Esta ferramenta pode ser usada no celular para bipar produtos ou montar o lote no corredor. No entanto, <strong className="text-white">não há sincronização entre dispositivos</strong> (o que você faz no celular não aparece no computador automaticamente).
+              <br /><br />
+              <strong className="text-purple-300 uppercase text-[10px]">Por que não sincroniza?</strong> Para que o celular e o computador "conversassem", o sistema precisaria de um banco de dados na nuvem com login e senha. Como este projeto foca em <strong className="text-white">privacidade e agilidade local</strong>, os dados ficam salvos apenas no aparelho que você está usando.
+              <br /><br />
+              <strong className="text-purple-300 uppercase text-[10px]">Como imprimir:</strong> Ao finalizar o lote no celular, gere o arquivo <strong className="text-white">PDF</strong>, salve no dispositivo e envie para um computador que esteja conectado à impressora da loja.
+            </p>
+          </div>
+
           {/* Banco de dados */}
           <div
             className="rounded-xl p-4"
@@ -125,13 +188,14 @@ export function AboutPanel({ open, onClose }: AboutPanelProps) {
           >
             <p className="text-green-300 font-semibold text-sm mb-1.5 flex items-center gap-2">
               <Database className="h-4 w-4 text-green-400" />
-              Banco de Dados
+              Banco de Dados (Relíquias)
             </p>
             <p className="text-slate-400 text-xs leading-relaxed">
-              O acervo de produtos utilizado é o <strong className="text-white">mesmo disponibilizado oficialmente</strong> pela
-              empresa na Planilha de Relíquias da Diversão, contendo{' '}
-              <strong className="text-green-400 text-sm">141.131 produtos cadastrados</strong>.
-              Nenhuma informação foi alterada, removida ou adicionada ao banco de dados original.
+              O acervo de produtos utilizado é o <strong className="text-white">mesmo disponibilizado oficialmente</strong> na
+              Planilha de Relíquias da Diversão, contendo{' '}
+              <strong className="text-green-400 text-sm">
+                {productCount ? productCount.toLocaleString('pt-BR') : '...'} produtos cadastrados
+              </strong>.
             </p>
           </div>
 

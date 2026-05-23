@@ -22,9 +22,6 @@ export type PosterSettings = {
   minInstallmentAmount: number;
 };
 
-export type PosterType = 
-  | 'reliquias' 
-  | 'aereo' 
-  | 'avaria' 
-  | 'etiqueta-oficial'
-  | 'totem';
+export type PosterType = 'reliquias' | 'etiqueta-oficial' | 'aereo' | 'totem' | 'vitrine';
+
+

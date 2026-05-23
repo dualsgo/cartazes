@@ -5,13 +5,13 @@ import type { Dispatch, SetStateAction } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import type { PosterData } from '@/app/lib/types';
+import type { PosterData, PosterType, PosterSettings } from '@/app/lib/types';
+import { calculateInstallments } from '@/app/lib/poster-utils';
+
 import { cn } from '@/lib/utils';
-import { Loader2, CheckCircle2, XCircle, Search, RotateCcw, PlusCircle, Info, Camera, Upload } from 'lucide-react';
+import { Loader2, CheckCircle2, XCircle, Search, RotateCcw, PlusCircle, Info, AlertTriangle, Camera, Sparkles } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { BarcodeScanner } from './barcode-scanner';
-import { parseProductExcel, parseProductCSV } from '@/app/lib/poster-utils';
+import { BarcodeScanner, type ScanStatus } from './barcode-scanner';
 
 function centsToDisplay(cents: number): string {
   if (cents === 0) return '';
@@ -37,50 +37,117 @@ function useCurrencyInput(initial: string, maxCents?: number) {
 
   const display = centsToDisplay(cents);
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // No Desktop, mantemos o comportamento de apagar último dígito
+    if (e.key === 'Backspace') {
+      e.preventDefault();
+      setCents(prev => Math.floor(prev / 10));
+    }
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const rawValue = e.target.value.replace(/\D/g, '');
-    const next = rawValue ? parseInt(rawValue, 10) : 0;
+    const value = e.target.value;
+    const digits = value.replace(/\D/g, '');
+    const next = digits ? parseInt(digits, 10) : 0;
     
-    // Bloqueia se ultrapassar 6 dígitos totais (9999,99)
+    // Limite de segurança (9.999,99 - 6 dígitos)
     if (next > 999999) return;
     
-    // Aplica o limite relativo
-    const capped = maxCents !== undefined && next > maxCents ? maxCents : next;
-    setCents(capped);
+    setCents(next);
   };
 
   const reset = useCallback(() => setCents(0), []);
   const setValue = useCallback((val: string) => setCents(displayToCents(val)), []);
 
-  return { display, handleChange, reset, setValue, cents };
+  return { display, handleKeyDown, handleChange, reset, setValue, cents };
 }
 
 type LookupStatus = 'idle' | 'loading' | 'found' | 'notfound';
 
-interface PosterFormProps {
+type PosterFormProps = {
   data: PosterData;
   setData: Dispatch<SetStateAction<PosterData>>;
-  posterType: string;
-  onLookupStatusChange?: (ready: boolean) => void;
-  onImportBatch?: (items: PosterData[]) => void;
+  posterType: PosterType;
+  settings: PosterSettings;
+
+  onLookupStatusChange?: (found: boolean) => void;
+  onImportBatch?: () => void;
+  sessionProducts?: Record<string, any>;
+  onAutoAdd?: (data: PosterData) => void;
+};
+
+function playBeep(type: 'success' | 'error') {
+  try {
+    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    
+    if (type === 'success') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(800, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.1);
+      gain.gain.setValueAtTime(0, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 0.05);
+      gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.2);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.2);
+    } else {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(300, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.2);
+      gain.gain.setValueAtTime(0, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 0.05);
+      gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.3);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.3);
+    }
+  } catch (e) {
+    console.error("Audio beep failed", e);
+  }
 }
 
 function detectInputType(value: string): 'ean' | 'code' {
   return value.replace(/\D/g, '').length >= 8 ? 'ean' : 'code';
 }
 
-export function PosterForm({ data, setData, posterType, onLookupStatusChange, onImportBatch }: PosterFormProps) {
+const defectOptions = [
+  { value: 'embalagem_danificada', label: 'Embalagem Danificada', discount: 20 },
+  { value: 'marcas_de_uso', label: 'Marcas de Uso', discount: 30 },
+  { value: 'pelucia_suja', label: 'Pelúcia Suja', discount: 40 },
+  { value: 'peca_faltando', label: 'Peça Faltando', discount: 50 },
+  { value: 'outro', label: 'Outro (descrever)', discount: null },
+];
+
+export function PosterForm({ data, setData, posterType, settings, onLookupStatusChange, onImportBatch, sessionProducts, onAutoAdd }: PosterFormProps) {
   const [lookupStatus, setLookupStatus] = useState<LookupStatus>('idle');
+  const [showScanner, setShowScanner] = useState(false);
+  const [sessionScanCount, setSessionScanCount] = useState(0);
   const [searchValue, setSearchValue] = useState('');
   const [suggestions, setSuggestions] = useState<{ key: string; description: string }[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [showScanner, setShowScanner] = useState(false);
-  const [isImporting, setIsImporting] = useState(false);
+  const [priceForOverridden, setPriceForOverridden] = useState(false);
   const suggestTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [regStatus, setRegStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [scanStatus, setScanStatus] = useState<ScanStatus>(null);
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      const ua = navigator.userAgent;
+      const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+      // iPad Pro (M1/M2) se comporta como Macintosh mas tem touch
+      const isIPad = /Macintosh/i.test(ua) && navigator.maxTouchPoints > 1;
+      return isMobileUA || isIPad;
+    };
+    setIsMobileDevice(checkMobile());
+  }, []);
 
   const [showWarning, setShowWarning] = useState(false);
   const [isManualMode, setIsManualMode] = useState(false);
@@ -102,14 +169,30 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange, on
     setData(prev => ({ ...prev, priceFrom: priceFrom.display }));
   }, [priceFrom.display, setData]);
   
+  // Força o tipo 'oferta' para modelos que não possuem 'preço normal'
+  useEffect(() => {
+    if (['reliquias', 'totem'].includes(posterType)) {
+      setData(prev => ({ ...prev, posterSubType: 'offer' }));
+    }
+  }, [posterType, setData]);
+  
   // Automatização inteligente do parcelamento
   useEffect(() => {
-    const canInstall = priceFor.cents >= 6000;
-    setData(prev => ({
-      ...prev,
-      paymentOption: canInstall ? 'installment' : 'normal'
-    }));
-  }, [priceFor.cents, setData]);
+    if (posterType === 'reliquias') {
+      setData(prev => ({ ...prev, paymentOption: 'normal' }));
+    } else if (['etiqueta-oficial', 'aereo', 'totem'].includes(posterType)) {
+      const price = priceFor.cents / 100;
+      const { maxInstallments } = calculateInstallments(price, settings);
+      if (maxInstallments > 1 && price > 59.99) {
+        setData(prev => ({ ...prev, paymentOption: 'installment' }));
+      } else {
+        setData(prev => ({ ...prev, paymentOption: 'normal' }));
+      }
+    }
+  }, [setData, posterType, priceFor.cents, settings]);
+
+
+
 
   // Validação para habilitar o botão "Adicionar ao Lote" no modo manual
   useEffect(() => {
@@ -127,7 +210,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange, on
           code: manualCode.trim(),
           ean: manualEan.trim(),
           reference: manualReference.trim(),
-          supplier: manualSupplier.replace(/[,\.-]/g, '').trim().toUpperCase(),
+          supplier: manualSupplier.trim().toUpperCase(),
         }));
       }
     }
@@ -167,48 +250,136 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange, on
     fetchSuggestions(v);
   };
 
-  const handleLookup = useCallback(async (q = searchValue) => {
+  const handleLookup = useCallback(async (q = searchValue): Promise<PosterData | null> => {
     const query = q.trim();
-    if (query.length < 3) return;
+    if (query.length < 3) return null;
     setShowSuggestions(false);
     setSuggestions([]);
     const inputType = detectInputType(query);
     setLookupStatus('loading');
     onLookupStatusChange?.(false);
 
-    try {
-      // Avisa o Tampermonkey para buscar na API original da Ri Happy usando o token interceptado
-      if (typeof window !== 'undefined' && window.parent && window.parent !== window) {
-        window.parent.postMessage({ type: 'SEARCH_SKU', sku: query }, '*');
+    // 1. Prioridade: Buscar nos dados temporários da sessão
+    if (sessionProducts && sessionProducts[query]) {
+      const produto = sessionProducts[query];
+      const hasPriceFrom = !!produto.priceFrom && produto.priceFrom !== '0,00';
+      let payOption = data.paymentOption;
+      if (posterType === 'etiqueta-oficial') {
+        const cents = displayToCents(produto.priceFor ?? '');
+        const { maxInstallments } = calculateInstallments(cents / 100, settings);
+        if (maxInstallments > 1 && (cents / 100) > 59.99) payOption = 'installment';
+        else payOption = 'normal';
       }
 
-      const res = await fetch(`/api/produto?q=${encodeURIComponent(query)}`);
-      if (!res.ok) { 
-        setLookupStatus('notfound'); 
-        setShowWarning(true);
-        onLookupStatusChange?.(false); 
-        return; 
-      }
-
-      const produto = await res.json() as {
-        description: string; reference: string; ean?: string; code?: string; supplier?: string;
-      };
-
-      setData(prev => ({
-        ...prev,
+      const foundData: PosterData = {
+        ...data,
         description: produto.description,
         reference:   produto.reference,
         code:  inputType === 'code' ? query : (produto.code ?? ''),
         ean:   inputType === 'ean'  ? query : (produto.ean  ?? ''),
         supplier: produto.supplier ?? '',
-      }));
+        priceFrom: produto.priceFrom ?? '',
+        priceFor:  produto.priceFor  ?? '',
+        posterSubType: hasPriceFrom ? 'offer' : (produto.priceFor ? 'normal' : data.posterSubType),
+        paymentOption: payOption,
+      };
+
+      setData(foundData);
+      
+      if (produto.priceFrom) priceFrom.setValue(produto.priceFrom);
+      if (produto.priceFor) priceFor.setValue(produto.priceFor);
+      
       setLookupStatus('found');
       onLookupStatusChange?.(true);
+      return foundData;
+    }
+
+    // 2. Fallback: Buscar no Banco de Dados via API
+    try {
+      const res = await fetch(`/api/produto?q=${encodeURIComponent(query)}`);
+      if (!res.ok) { 
+        setLookupStatus('notfound'); 
+        setShowWarning(true);
+        onLookupStatusChange?.(false); 
+        return null; 
+      }
+
+      const produto = await res.json() as {
+        description: string; reference: string; ean?: string; code?: string; supplier?: string;
+        priceFrom?: string; priceFor?: string;
+      };
+
+      const hasPriceFrom = !!produto.priceFrom && produto.priceFrom !== '0,00';
+      let payOption = data.paymentOption;
+      if (posterType === 'etiqueta-oficial') {
+        const cents = displayToCents(produto.priceFor ?? '');
+        const { maxInstallments } = calculateInstallments(cents / 100, settings);
+        if (maxInstallments > 1 && (cents / 100) > 59.99) payOption = 'installment';
+        else payOption = 'normal';
+      }
+
+      const foundData: PosterData = {
+        ...data,
+        description: produto.description,
+        reference:   produto.reference,
+        code:  inputType === 'code' ? query : (produto.code ?? ''),
+        ean:   inputType === 'ean'  ? query : (produto.ean  ?? ''),
+        supplier: produto.supplier ?? '',
+        priceFrom: produto.priceFrom ?? '',
+        priceFor:  produto.priceFor  ?? '',
+        posterSubType: hasPriceFrom ? 'offer' : (produto.priceFor ? 'normal' : data.posterSubType),
+        paymentOption: payOption,
+      };
+
+      setData(foundData);
+
+      if (produto.priceFrom) priceFrom.setValue(produto.priceFrom);
+      if (produto.priceFor) priceFor.setValue(produto.priceFor);
+
+      setLookupStatus('found');
+      onLookupStatusChange?.(true);
+      return foundData;
     } catch {
       setLookupStatus('notfound');
       onLookupStatusChange?.(false);
+      return null;
     }
-  }, [searchValue, setData, onLookupStatusChange]);
+  }, [searchValue, setData, onLookupStatusChange, sessionProducts, posterType, priceFrom, priceFor, data]);
+
+  const handleScan = useCallback(async (code: string) => {
+    if (code.length >= 10) {
+      setManualEan(code);
+      setManualCode('');
+    } else {
+      setManualCode(code);
+      setManualEan('');
+    }
+    // Para bipar em lote, não fechamos o scanner
+    setSearchValue(code);
+    
+    const foundData = await handleLookup(code);
+    const hasPrice = foundData && displayToCents(foundData.priceFor || '') > 0;
+
+    if (foundData && hasPrice) {
+      playBeep('success');
+      setSessionScanCount(prev => prev + 1);
+      setScanStatus({
+        type: 'success',
+        message: foundData.description,
+        timestamp: Date.now()
+      });
+      if (onAutoAdd) {
+        onAutoAdd(foundData);
+      }
+    } else {
+      playBeep('error');
+      setScanStatus({
+        type: 'error',
+        message: !foundData ? 'Produto não encontrado' : 'Produto sem preço cadastrado',
+        timestamp: Date.now()
+      });
+    }
+  }, [handleLookup, onAutoAdd]);
 
   const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') { e.preventDefault(); handleLookup(); }
@@ -226,19 +397,9 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange, on
     handleLookup(key);
   };
 
-  const handleSubTypeChange = (value: string) => {
-    setData(prev => ({
-      ...prev,
-      posterSubType: value as 'offer' | 'normal',
-      priceFrom: value === 'normal' ? '' : prev.priceFrom,
-    }));
-    if (value === 'normal') priceFrom.reset();
-  };
-
   const handleDismissWarning = () => {
     setShowWarning(false);
     setIsManualMode(true);
-    // Tenta preencher o SAP ou EAN conforme o que foi pesquisado
     const query = searchValue.trim();
     if (detectInputType(query) === 'code') setManualCode(query);
     else setManualEan(query);
@@ -251,10 +412,7 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange, on
     notfound: <XCircle className="h-4 w-4 text-destructive" />,
   }[lookupStatus];
 
-  const isOfferType = 
-    posterType === 'reliquias' || 
-    posterType === 'totem' || 
-    ((posterType === 'aereo' || posterType === 'etiqueta-oficial') && data.posterSubType === 'offer');
+  const isOfferType = data.posterSubType === 'offer';
 
   const isEnabled = lookupStatus === 'found' || isManualMode;
 
@@ -263,138 +421,81 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange, on
       {/* SEÇÃO 1: BUSCA E DADOS DO PRODUTO */}
       <div className="bg-white border rounded-xl p-5 shadow-sm space-y-4">
         <div className="space-y-1" ref={wrapperRef}>
-          <div className="flex items-center justify-between mb-1">
+          <div className="flex flex-col gap-2 mb-3">
             <Label htmlFor="search-code" className="font-bold text-gray-900 uppercase tracking-tight text-sm">
               1. Encontrar Produto
             </Label>
-            {isManualMode && (
-              <button 
-                onClick={() => { setIsManualMode(false); setLookupStatus('idle'); setSearchValue(''); }}
-                className="text-xs text-blue-600 font-bold hover:underline"
-              >
-                Remover Manual
-              </button>
-            )}
-          </div>
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Input
-                id="search-code"
-                value={searchValue}
-                onChange={handleSearchChange}
-                onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-                onKeyDown={handleSearchKeyDown}
-                onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-                placeholder="SAP ou EAN..."
-                className={cn(
-                  'h-12 text-lg font-medium transition-all duration-200 pr-10',
-                  lookupStatus === 'found' && 'border-green-500 bg-green-50/10',
-                  lookupStatus === 'notfound' && 'border-red-300 bg-red-50/10',
-                )}
-                autoComplete="off"
-                disabled={isManualMode || isImporting}
-              />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                {isImporting ? <Loader2 className="h-4 w-4 animate-spin text-blue-500" /> : (
-                  <>
-                    {!isManualMode && statusIcon}
-                    {isManualMode && <CheckCircle2 className="h-4 w-4 text-blue-500" />}
-                  </>
-                )}
-              </span>
-
-              {showSuggestions && suggestions.length > 0 && (
-                <div className="absolute z-50 w-full mt-1 bg-white border rounded-lg shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-100">
-                  {suggestions.map((s, i) => (
-                    <button
-                      key={s.key}
-                      data-suggestion
-                      className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b last:border-0 flex flex-col"
-                      onMouseDown={() => handleSuggestionSelect(s.key)}
-                    >
-                      <span className="font-bold text-gray-900">{s.key}</span>
-                      <span className="text-xs text-gray-500 uppercase truncate">{s.description}</span>
-                    </button>
-                  ))}
+            <div className="flex items-center gap-2">
+              {isMobileDevice && (
+                <button
+                  onClick={(e) => { e.preventDefault(); setSessionScanCount(0); setShowScanner(true); }}
+                  className="h-10 flex-1 px-4 text-[10px] font-black text-white bg-blue-600 hover:bg-blue-700 rounded-lg flex items-center justify-center gap-2 shadow-sm transition-all active:scale-95"
+                >
+                  <Camera className="h-4 w-4" />
+                  SCANNER
+                </button>
+              )}
+              {onImportBatch && (
+                <div className="flex-1 relative group">
+                  <style>{`
+                    @keyframes pulse-soft {
+                      0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
+                      50% { box-shadow: 0 0 0 8px rgba(99, 102, 241, 0); }
+                    }
+                    .btn-animate-pulse {
+                      animation: pulse-soft 2s infinite;
+                    }
+                  `}</style>
+                  <button 
+                    onClick={(e) => { e.preventDefault(); onImportBatch(); }}
+                    className="w-full h-10 px-4 text-[10px] font-black text-primary bg-primary/5 hover:bg-primary/10 border border-primary/20 hover:border-primary/40 rounded-lg flex items-center justify-center gap-2 transition-all active:scale-95 btn-animate-pulse group-hover:scale-[1.02] group-hover:shadow-md"
+                  >
+                    <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+                    AUTOMATIZAR
+                  </button>
                 </div>
               )}
             </div>
+          </div>
+          <div className="relative">
+            <Input
+              id="search-code"
+              value={searchValue}
+              onChange={handleSearchChange}
+              onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+              onKeyDown={handleSearchKeyDown}
+              onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+              placeholder="Digite o código SAP ou EAN..."
+              className={cn(
+                'h-14 text-lg font-bold transition-all duration-300 border-2',
+                lookupStatus === 'found' && 'border-green-500 bg-green-50/20 shadow-[0_0_0_1px_rgba(34,197,94,0.1)]',
+                lookupStatus === 'notfound' && 'border-red-300 bg-red-50/20',
+                lookupStatus === 'idle' && 'focus:border-primary shadow-sm'
+              )}
+              autoComplete="off"
+              disabled={isManualMode}
+            />
 
-            {!isManualMode && (
-              <div className="flex gap-1.5">
-                <Button 
-                  type="button"
-                  variant="outline"
-                  onClick={() => setShowScanner(true)}
-                  className="h-12 w-12 p-0 border-2 hover:bg-blue-50 hover:border-blue-300 transition-all shrink-0"
-                  title="Escanear Código"
-                >
-                  <Camera className="h-5 w-5 text-blue-600" />
-                </Button>
-                
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (!file || !onImportBatch) return;
-
-                    setIsImporting(true);
-                    const isExcel = file.name.toLowerCase().endsWith('.xls') || file.name.toLowerCase().endsWith('.xlsx');
-                    const reader = new FileReader();
-
-                    reader.onload = (event) => {
-                      let imported: any[] = [];
-                      try {
-                        if (isExcel) {
-                          const buffer = event.target?.result as ArrayBuffer;
-                          imported = parseProductExcel(buffer);
-                        } else {
-                          const content = event.target?.result as string;
-                          imported = parseProductCSV(content);
-                        }
-
-                        if (imported.length > 0) {
-                          onImportBatch(imported);
-                        }
-                      } catch (err) {
-                        console.error("Erro na importação:", err);
-                      } finally {
-                        setTimeout(() => setIsImporting(false), 800);
-                        if (fileInputRef.current) fileInputRef.current.value = '';
-                      }
-                    };
-
-                    if (isExcel) {
-                      reader.readAsArrayBuffer(file);
-                    } else {
-                      reader.readAsText(file, 'ISO-8859-1');
-                    }
-                  }}
-                  accept=".csv, .xls, .xlsx"
-                  className="hidden"
-                />
-                <Button 
-                  type="button"
-                  variant="outline"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="h-12 w-12 p-0 border-2 hover:bg-emerald-50 hover:border-emerald-300 transition-all shrink-0"
-                  title="Importar CSV Alteração"
-                >
-                  <Upload className="h-5 w-5 text-emerald-600" />
-                </Button>
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none opacity-50">
+              {!isManualMode && statusIcon}
+              {isManualMode && <CheckCircle2 className="h-4 w-4 text-blue-500" />}
+            </span>
+            {showSuggestions && suggestions.length > 0 && (
+              <div className="absolute z-50 w-full mt-1 bg-white border rounded-lg shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                {suggestions.map((s, i) => (
+                  <button
+                    key={s.key}
+                    data-suggestion
+                    className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b last:border-0 flex flex-col"
+                    onMouseDown={() => handleSuggestionSelect(s.key)}
+                  >
+                    <span className="font-bold text-gray-900">{s.key}</span>
+                    <span className="text-xs text-gray-500 uppercase truncate">{s.description}</span>
+                  </button>
+                ))}
               </div>
             )}
           </div>
-
-          {isImporting && (
-             <div className="pt-2 animate-in fade-in slide-in-from-top-1">
-                <div className="h-1 w-full bg-gray-100 rounded-full overflow-hidden">
-                   <div className="h-full bg-blue-500 animate-progress origin-left w-full"></div>
-                </div>
-                <p className="text-[10px] font-bold text-blue-600 uppercase mt-1 text-center animate-pulse">Processando arquivo...</p>
-             </div>
-          )}
         </div>
 
         {showWarning && (
@@ -433,65 +534,60 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange, on
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2 space-y-1.5">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-2 space-y-1.5">
                 <Label className="text-[10px] font-bold text-gray-500 uppercase flex items-center gap-1">
-                   Descrição Completa <span className="text-red-500">*</span>
+                   Descrição Completa <span className="text-red-500 font-black">*</span>
                 </Label>
                 <Input
                   value={manualDescription}
                   onChange={e => setManualDescription(e.target.value.toUpperCase())}
                   placeholder="EX: BONECA BARBIE SEREIA MATTEL"
-                  className="h-11 font-bold uppercase border-blue-200 focus:ring-blue-500"
+                  className="h-12 font-bold uppercase border-blue-200 focus:ring-blue-500 shadow-sm"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-bold text-gray-500 uppercase flex items-center gap-1">
-                  Cód. SAP <span className="text-muted-foreground font-normal">(ou EAN)</span>
-                </Label>
+                <Label className="text-[10px] font-bold text-gray-500 uppercase">Cód. SAP</Label>
                 <Input
                   value={manualCode}
-                  inputMode="numeric"
                   onChange={e => setManualCode(e.target.value.replace(/\D/g, ''))}
-                  placeholder="Código SAP"
-                  className="h-10 font-mono border-blue-200"
+                  placeholder="000000"
+                  className="h-12 font-mono font-bold border-blue-200"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-bold text-gray-500 uppercase flex items-center gap-1">
-                  EAN <span className="text-muted-foreground font-normal">(ou SAP)</span>
-                </Label>
+                <Label className="text-[10px] font-bold text-gray-500 uppercase">EAN</Label>
                 <Input
                   value={manualEan}
-                  inputMode="numeric"
                   onChange={e => setManualEan(e.target.value.replace(/\D/g, ''))}
-                  placeholder="Código de Barras"
-                  className="h-10 font-mono border-blue-200"
+                  placeholder="0000000000000"
+                  className="h-12 font-mono font-bold border-blue-200"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-bold text-gray-500 uppercase">Referência</Label>
+                <Label className="text-[10px] font-bold text-gray-500 uppercase tracking-tighter">Referência</Label>
                 <Input
                   value={manualReference}
                   onChange={e => setManualReference(e.target.value.toUpperCase())}
                   placeholder="Opcional"
-                  className="h-10 border-blue-200"
+                  className="h-12 border-blue-200"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-bold text-gray-500 uppercase">Fornecedor</Label>
+                <Label className="text-[10px] font-bold text-gray-500 uppercase tracking-tighter">Fornecedor</Label>
                 <Input
                   value={manualSupplier}
                   onChange={e => setManualSupplier(e.target.value.toUpperCase())}
                   placeholder="Opcional"
-                  className="h-10 uppercase border-blue-200"
+                  className="h-12 uppercase border-blue-200"
                 />
               </div>
             </div>
+
             
             <p className="text-[9px] text-blue-400 font-medium italic text-right">
               * Campos obrigatórios preenchidos liberam o botão "Adicionar ao Lote"
@@ -528,87 +624,104 @@ export function PosterForm({ data, setData, posterType, onLookupStatusChange, on
         disabled={!isEnabled}
       >
         <div className="bg-white border rounded-xl p-5 shadow-sm space-y-5">
-           <Label className="font-bold text-gray-900 uppercase tracking-tight text-sm block border-b pb-2">
-              2. Preços e Formato
-           </Label>
+           <div className="flex items-center justify-between border-b pb-2 flex-wrap gap-2">
+             <Label className="font-bold text-gray-900 uppercase tracking-tight text-sm">
+                2. Preços e Formato
+             </Label>
+             <div className="flex flex-wrap gap-3">
+               {!['reliquias', 'totem'].includes(posterType) && (
+                 <div className="flex bg-muted p-1 rounded-xl shadow-inner border border-border/50">
+                   <button
+                     onClick={() => setData(prev => ({ ...prev, posterSubType: 'normal' }))}
+                     className={cn(
+                       "px-4 py-2 text-[10px] font-black rounded-lg transition-all",
+                       data.posterSubType === 'normal' ? "bg-white text-primary shadow-sm scale-105" : "text-muted-foreground hover:bg-black/5"
+                     )}
+                   >
+                     PREÇO NORMAL
+                   </button>
+                   <button
+                     onClick={() => setData(prev => ({ ...prev, posterSubType: 'offer' }))}
+                     className={cn(
+                       "px-4 py-2 text-[10px] font-black rounded-lg transition-all",
+                       data.posterSubType === 'offer' ? "bg-white text-orange-600 shadow-sm scale-105" : "text-muted-foreground hover:bg-black/5"
+                     )}
+                   >
+                     OFERTA
+                   </button>
+                 </div>
+               )}
+               {/* Opção de pagamento removida - agora é automática */}
+             </div>
 
-           {(posterType === 'aereo' || posterType === 'etiqueta-oficial') && (
-              <div className="inline-flex bg-gray-100 p-1 rounded-lg w-full">
-                <button
-                  type="button"
-                  onClick={() => handleSubTypeChange('normal')}
-                  className={cn("flex-1 py-1.5 text-[10px] font-bold uppercase rounded-md transition-all", data.posterSubType === 'normal' ? "bg-white text-gray-900 shadow-sm" : "text-gray-500")}
-                >
-                  Preço Normal
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSubTypeChange('offer')}
-                  className={cn("flex-1 py-1.5 text-[10px] font-bold uppercase rounded-md transition-all", data.posterSubType === 'offer' ? "bg-white text-gray-900 shadow-sm" : "text-gray-500")}
-                >
-                  🔥 Oferta
-                </button>
-              </div>
-           )}
+           </div>
 
            <div className="grid grid-cols-2 gap-4">
-              {isOfferType && (
+
+              {(isOfferType) && (
                 <div className="space-y-1">
                   <Label className="text-[10px] font-bold text-gray-500 uppercase">Preço Anterior (DE)</Label>
                   <Input
                     value={priceFrom.display}
-                    inputMode="numeric"
+                    onKeyDown={priceFrom.handleKeyDown}
                     onChange={priceFrom.handleChange}
-                    className="h-10 font-mono text-lg bg-gray-50/50"
+                    inputMode="numeric"
+                    placeholder="R$ 0,00"
+                    className="h-12 font-mono text-lg bg-gray-50/50 border-gray-200 focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               )}
-              <div className={cn("space-y-1", !isOfferType && "col-span-2")}>
+              <div className={cn("space-y-1", !(isOfferType) && "col-span-2")}>
                 <Label className="text-[10px] font-bold text-gray-500 uppercase">Preço Novo (POR)</Label>
                 <Input
                   value={priceFor.display}
-                  inputMode="numeric"
+                  onKeyDown={e => { priceFor.handleKeyDown(e); }}
                   onChange={priceFor.handleChange}
-                  className="h-10 font-mono text-xl font-black bg-blue-50/10 border-blue-200"
+                  inputMode="numeric"
+                  placeholder="R$ 0,00"
+                  className="h-12 font-mono text-xl font-black bg-blue-50/10 border-blue-200 focus:ring-2 focus:ring-blue-500"
                 />
               </div>
            </div>
 
-           <div className="flex items-center gap-4 pt-2">
-              <div className="flex-1 space-y-2">
-                <Label className="text-[10px] font-bold text-gray-500 uppercase">Quantidade</Label>
-                <div className="flex items-center h-10">
-                  <button onClick={() => setData(prev => ({ ...prev, quantity: Math.max(1, (prev.quantity || 1) - 1) }))} className="w-10 h-full border rounded-l-lg bg-gray-50 active:bg-gray-200">-</button>
-                  <Input 
-                    value={data.quantity} 
-                    inputMode="numeric"
-                    onChange={e => setData(prev => ({ ...prev, quantity: parseInt(e.target.value.replace(/\D/g, '')) || 1 }))}
-                    className="h-full text-center border-x-0 rounded-none font-bold min-w-0"
-                  />
-                  <button onClick={() => setData(prev => ({ ...prev, quantity: Math.min(99, (prev.quantity || 1) + 1) }))} className="w-10 h-full border rounded-r-lg bg-gray-50 active:bg-gray-200">+</button>
-                </div>
-              </div>
 
-              <div className="flex-1 pt-6">
-                <div className={cn(
-                  "h-10 flex items-center justify-center rounded-lg border px-3 text-[10px] font-bold uppercase transition-all",
-                  data.paymentOption === 'installment' ? "bg-gray-900 text-white border-gray-900 shadow-sm" : "bg-gray-50 text-gray-400 border-gray-100"
-                )}>
-                  {data.paymentOption === 'installment' ? 'Parcelamento Ativo' : 'Somente À Vista'}
-                </div>
-              </div>
-           </div>
         </div>
       </fieldset>
 
+
       {showScanner && (
         <BarcodeScanner 
-          onScanSuccess={(code) => {
-            setSearchValue(code);
-            handleLookup(code);
-            setShowScanner(false);
-          }}
-          onClose={() => setShowScanner(false)}
+          onScan={handleScan} 
+          onClose={() => { 
+            setShowScanner(false); 
+            setSessionScanCount(0); 
+            setScanStatus(null);
+            // Reseta todos os estados do formulário após fechar o scanner
+            setSearchValue('');
+            priceFrom.reset();
+            priceFor.reset();
+            setIsManualMode(false);
+            setLookupStatus('idle');
+            setShowWarning(false);
+            setData({
+              description: 'DESCRIÇÃO DO PRODUTO',
+              priceFrom: '',
+              priceFor: '',
+              code: '',
+              ean: '',
+              reference: '',
+              paymentOption: 'installment',
+              posterSubType: 'offer',
+              defectType: 'embalagem_danificada',
+              customDefectReason: '',
+              customDefectDiscount: 20,
+              defectNote: '',
+              supplier: '',
+              quantity: 1,
+            });
+          }} 
+          scanCount={sessionScanCount}
+          scanStatus={scanStatus}
         />
       )}
     </div>

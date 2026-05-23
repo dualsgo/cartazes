@@ -1,61 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
+export const dynamic = 'force-dynamic';
 import * as fs from 'fs';
 import * as path from 'path';
 import { suggestCacheValid, markSuggestCacheValid } from '../../suggest-cache';
 
-type SuggestItem = { key: string; description: string };
-
-let cacheAll: SuggestItem[] | null = null;
-
-function loadAll(): SuggestItem[] {
-    // Invalida cache se um novo produto foi salvo
-    if (!suggestCacheValid) {
-        cacheAll = null;
-        markSuggestCacheValid();
-    }
-
-    if (cacheAll) return cacheAll;
-
-    const filePath = path.join(process.cwd(), 'src', 'data', 'produtos.json');
-    if (!fs.existsSync(filePath)) {
-        cacheAll = [];
-        return cacheAll;
-    }
-
-    try {
-        const raw = fs.readFileSync(filePath, 'utf8');
-        const obj = JSON.parse(raw) as Record<string, { description?: string }>;
-        cacheAll = Object.entries(obj)
-            .filter(([k]) => /^\d+$/.test(k))   // apenas chaves numéricas (SAP e EAN)
-            .map(([k, v]) => ({ key: k, description: v?.description ?? '' }));
-    } catch {
-        cacheAll = [];
-    }
-
-    return cacheAll;
-}
+import { getSuggestCache } from '../data-manager';
 
 export async function GET(request: NextRequest) {
-    const prefix = request.nextUrl.searchParams.get('prefix')?.trim() ?? '';
+    try {
+        const prefix = request.nextUrl.searchParams.get('prefix')?.trim() ?? '';
 
-    if (!prefix || prefix.length < 2) {
-        return NextResponse.json([]);
-    }
-
-    // Limite de tamanho e apenas alfanuméricos no prefixo de busca
-    if (prefix.length > 20 || !/^[a-zA-Z0-9]+$/.test(prefix)) {
-        return NextResponse.json([]);
-    }
-
-    const all = loadAll();
-    const matches: SuggestItem[] = [];
-
-    for (const item of all) {
-        if (item.key.startsWith(prefix)) {
-            matches.push(item);
-            if (matches.length >= 10) break; // máximo 10 sugestões
+        if (!prefix || prefix.length < 2) {
+            return NextResponse.json([]);
         }
-    }
 
-    return NextResponse.json(matches);
+        // Limite de tamanho e apenas alfanuméricos no prefixo de busca
+        if (prefix.length > 20 || !/^[a-zA-Z0-9 ]+$/.test(prefix)) {
+            return NextResponse.json([]);
+        }
+
+        const all = getSuggestCache();
+        const matches: any[] = [];
+        const searchPrefix = prefix.toUpperCase();
+
+        for (const item of all) {
+            // Busca por código (início) OU descrição (contém) - Usando searchDesc pré-calculado
+            if (item.key.startsWith(prefix) || item.searchDesc.includes(searchPrefix)) {
+                matches.push({ key: item.key, description: item.description });
+                if (matches.length >= 15) break; 
+            }
+        }
+
+        return NextResponse.json(matches);
+    } catch (err) {
+        console.error('[api/produto/suggest] Error:', err);
+        return NextResponse.json([]);
+    }
 }
