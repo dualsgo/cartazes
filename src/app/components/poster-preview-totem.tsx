@@ -94,9 +94,9 @@ export function PosterPreviewTotem({
         </div>
 
         {hasInstallments && (
-          <div className="font-headline text-center font-medium mt-6 uppercase flex flex-col items-center">
+          <div className="font-headline text-center font-medium mt-6 uppercase flex flex-col items-center w-full px-8">
             <div className="text-[2.6em] mb-1">ou parcelado em</div>
-            <div className="text-[4.5em] leading-none whitespace-nowrap tracking-tight inline-block origin-center scale-x-90">
+            <div className="text-[4em] leading-[1.1] text-center break-words w-full">
                até {maxInstallments}x sem juros de R$ {formatCurrency(installmentValue)}
             </div>
           </div>
