@@ -251,7 +251,7 @@ function PageGrid({
   perPage: number;
   settings: PosterSettings;
 }) {
-  const isOfferPage = items.some(item => item.posterSubType === 'offer');
+  const isOfferPage = items.some(item => item?.posterSubType === 'offer');
   const pageBgClass = isOfferPage ? 'bg-[#FFF200] print:!bg-white' : 'bg-white';
   const allSlots = Array.from({ length: perPage }).map((_, i) => items[i] || null);
   const isPortrait = posterType !== 'reliquias';
@@ -535,7 +535,32 @@ export default function Home() {
     return result;
   }, [filteredQueue]);
 
-  const totalPages = expandedQueue.length > 0 ? Math.ceil(expandedQueue.length / perPage) : 0;
+  // Separa ofertas e itens normais garantindo quebras de página
+  const separatedQueue = useMemo(() => {
+    const offerItems = expandedQueue.filter(item => item.posterSubType === 'offer');
+    const normalItems = expandedQueue.filter(item => item.posterSubType !== 'offer');
+    
+    const pages: PosterData[][] = [];
+    
+    for (let i = 0; i < offerItems.length; i += perPage) {
+      pages.push(offerItems.slice(i, i + perPage));
+    }
+    
+    for (let i = 0; i < normalItems.length; i += perPage) {
+      pages.push(normalItems.slice(i, i + perPage));
+    }
+    
+    const result: PosterData[] = [];
+    for (const page of pages) {
+      result.push(...page);
+      while (result.length % perPage !== 0) {
+        result.push(null as any);
+      }
+    }
+    return result;
+  }, [expandedQueue, perPage]);
+
+  const totalPages = separatedQueue.length > 0 ? Math.ceil(separatedQueue.length / perPage) : 0;
 
   // Update print CSS immediately when poster type changes
   useEffect(() => {
@@ -791,10 +816,10 @@ export default function Home() {
 
   /* Print content: one div per page, each with page-break */
   const renderPrintContent = () => {
-    if (expandedQueue.length === 0) return null;
+    if (separatedQueue.length === 0) return null;
     const orientation = POSTER_ORIENTATION[posterType as PosterType];
     return Array.from({ length: totalPages }).map((_, pageIdx: number) => {
-      const pageItems = expandedQueue.slice(pageIdx * perPage, (pageIdx + 1) * perPage);
+      const pageItems = separatedQueue.slice(pageIdx * perPage, (pageIdx + 1) * perPage);
       return (
         <div
           key={pageIdx}
@@ -856,13 +881,6 @@ export default function Home() {
       <header className="no-print shrink-0 px-4 py-3 border-b bg-card">
         <div className="flex justify-between items-center flex-wrap gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">P%</span>
-            </div>
-            <h1 className="font-headline text-lg sm:text-2xl font-bold uppercase truncate max-w-[200px] sm:max-w-none">
-              <span className="sm:hidden">RD CARTAZ</span>
-              <span className="hidden sm:inline">RD CARTAZ - Cartazes Relíquias da Diversão</span>
-            </h1>
             {hasSessionData && (
               <div className="flex items-center gap-1.5 px-2 py-1 bg-blue-50 border border-blue-100 rounded-md animate-pulse">
                 <Database className="h-3 w-3 text-blue-500" />
@@ -916,16 +934,7 @@ export default function Home() {
                 accept=".csv, .xls, .xlsx"
                 className="hidden"
               />
-              <div className="hidden md:flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  onClick={handlePrint}
-                  disabled={queue.length === 0}
-                  className="transition-transform active:scale-95 px-3"
-                >
-                  <FileDown className="mr-1.5 h-4 w-4" />
-                  Salvar PDF
-                </Button>
+              <div className="flex items-center gap-2">
                 <Button
                   onClick={handlePrint}
                   disabled={queue.length === 0}
@@ -946,63 +955,10 @@ export default function Home() {
 
       {/* ── Main Area ── */}
       <main className="no-print flex-1 flex flex-col min-h-0 overflow-hidden relative">
-        <div className="flex-1 flex flex-col lg:grid lg:grid-cols-12 min-h-0 h-full overflow-hidden">
-
-
-          {/* ── COLUMN 1: FORM (EDIT) ── */}
-          <div className={cn(
-            "lg:col-span-3 flex flex-col border-r border-border bg-card lg:min-h-0 h-full overflow-hidden",
-            activeTab !== 'edit' && "hidden lg:flex"
-          )}>
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-4">
-
-              <div className="space-y-4">
-                <PosterForm
-                  key={`form-${formKey}`}
-                  data={currentPoster}
-                  setData={setCurrentPoster}
-                  posterType={posterType}
-                  settings={settings}
-                  onLookupStatusChange={setIsProductReady}
-                  onImportBatch={() => setShowAutomation(true)}
-                  sessionProducts={sessionProducts}
-                  onAutoAdd={(data) => proceedAddToQueue(data)}
-                />
-
-                <Button
-                  onClick={handleAddToQueue}
-                  disabled={!isProductReady || showAddSuccess}
-                  className={cn(
-                    'w-full h-14 text-base font-black uppercase tracking-widest gap-2 transition-all shadow-lg',
-                    showAddSuccess 
-                      ? 'bg-green-600 hover:bg-green-600 scale-[1.02] shadow-green-200' 
-                      : isProductReady 
-                        ? 'bg-primary hover:bg-primary/90 shadow-primary/20 scale-[1.01]' 
-                        : 'bg-muted text-muted-foreground'
-                  )}
-                >
-                  {showAddSuccess ? (
-                    <>
-                      <CheckCircle2 className="h-6 w-6 animate-in zoom-in duration-300" />
-                      Adicionado!
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="h-6 w-6" />
-                      Adicionar ao Lote
-                    </>
-                  )}
-                </Button>
-
-              </div>
-            </div>
-          </div>
+        <div className="flex-1 grid grid-cols-12 min-h-0 h-full overflow-hidden">
 
           {/* ── COLUMN 2: QUEUE (LOTE) ── */}
-          <div className={cn(
-            "lg:col-span-3 flex flex-col border-r border-border bg-muted/5 lg:min-h-0 h-full overflow-hidden",
-            activeTab !== 'queue' && "hidden lg:flex"
-          )}>
+          <div className="col-span-4 flex flex-col border-r border-border bg-muted/5 min-h-0 h-full overflow-hidden">
 
             <div className="shrink-0 px-4 py-3 border-b bg-muted/20 flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -1119,10 +1075,7 @@ export default function Home() {
           </div>
 
           {/* ── COLUMN 3: PREVIEW ── */}
-          <div className={cn(
-            "lg:col-span-6 flex flex-col p-2 sm:p-4 gap-2 lg:overflow-hidden bg-muted/20 h-full",
-            activeTab !== 'preview' && "hidden lg:flex"
-          )}>
+          <div className="col-span-8 flex flex-col p-2 sm:p-4 gap-2 overflow-hidden bg-muted/20 h-full">
             <div className="flex items-center justify-between shrink-0 mb-1">
               <div className="flex items-center gap-2">
                 <LayoutGrid className="h-4 w-4 text-primary" />
@@ -1166,7 +1119,7 @@ export default function Home() {
                   />
                 ) : (
                   <PagePreview
-                    items={expandedQueue}
+                    items={separatedQueue}
                     posterType={posterType}
                     perPage={perPage}
                     settings={settings}
@@ -1185,90 +1138,11 @@ export default function Home() {
                )}
             </div>
              
-             {/* Mobile Save Button & Instructions */}
-             {queue.length > 0 && (
-               <div className="lg:hidden space-y-3 mt-2">
-                 <Button
-                   onClick={handlePrint}
-                   className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest gap-2 shadow-lg active:scale-95 transition-all"
-                 >
-                   <FileDown className="h-6 w-6" />
-                   Salvar PDF para Imprimir
-                 </Button>
-                 
-                 <div className="p-4 bg-blue-50 rounded-xl border border-blue-100 space-y-2">
-                   <div className="flex items-center gap-2 text-blue-700">
-                     <Info className="h-4 w-4" />
-                     <span className="text-[10px] font-bold uppercase">Como imprimir do celular?</span>
-                   </div>
-                   <p className="text-[11px] text-blue-800 leading-relaxed">
-                     Ao clicar em <b>Salvar PDF</b>, o arquivo será baixado no seu celular. Para imprimir, envie este arquivo para o <b>WhatsApp</b> ou <b>E-mail</b> do computador que está conectado à impressora da loja.
-                   </p>
-                 </div>
-               </div>
-             )}
           </div>
 
         </div>
       </main>
 
-      <div className="lg:hidden sticky bottom-0 left-0 right-0 h-[70px] bg-white border-t border-border z-[100] flex items-center justify-around px-2 shadow-[0_-4px_12px_rgba(0,0,0,0.05)] shrink-0">
-
-        <button
-          onClick={() => setActiveTab('edit')}
-          className={cn(
-            "flex flex-col items-center justify-center gap-1 w-full h-full transition-all duration-200",
-            activeTab === 'edit' ? "text-primary translate-y-[-2px]" : "text-muted-foreground opacity-60"
-          )}
-        >
-          <div className={cn(
-            "p-1.5 rounded-xl transition-all",
-            activeTab === 'edit' ? "bg-primary/10" : ""
-          )}>
-            <Edit3 className="h-5 w-5" />
-          </div>
-          <span className="text-[10px] font-black uppercase tracking-tighter">Editar</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('queue')}
-          className={cn(
-            "flex flex-col items-center justify-center gap-1 w-full h-full transition-all duration-200",
-            activeTab === 'queue' ? "text-primary translate-y-[-2px]" : "text-muted-foreground opacity-60"
-          )}
-        >
-          <div className={cn(
-            "p-1.5 rounded-xl transition-all relative",
-            activeTab === 'queue' ? "bg-primary/10" : ""
-          )}>
-            <FileStack className="h-5 w-5" />
-            {queue.length > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 bg-primary text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-bold ring-2 ring-white">
-                {queue.length}
-              </span>
-            )}
-          </div>
-          <span className="text-[10px] font-black uppercase tracking-tighter">Lote</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('preview')}
-          className={cn(
-            "flex flex-col items-center justify-center gap-1 w-full h-full transition-all duration-200",
-            activeTab === 'preview' ? "text-primary translate-y-[-2px]" : "text-muted-foreground opacity-60"
-          )}
-        >
-          <div className={cn(
-            "p-1.5 rounded-xl transition-all",
-            activeTab === 'preview' ? "bg-primary/10" : ""
-          )}>
-            <LayoutGrid className="h-5 w-5" />
-          </div>
-          <span className="text-[10px] font-black uppercase tracking-tighter">Prévia</span>
-        </button>
-      </div>
-
-      {/* Modal de Feedback de Importação */}
       <ImportModal 
         status={importStatus} 
         mode={importMode}
