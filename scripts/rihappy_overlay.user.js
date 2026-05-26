@@ -8,7 +8,7 @@
 // @grant        GM_xmlhttpRequest
 // ==/UserScript==
 
-(function() {
+(function () {
     'use strict';
 
     console.log("🚀 [Cartazes Overlay] Iniciado!");
@@ -29,7 +29,7 @@
     overlayContainer.style.background = '#fff';
 
     const iframe = document.createElement('iframe');
-    iframe.src = 'http://localhost:9002'; // O projeto Next.js está rodando na porta 9002
+    iframe.src = 'https://rhcartazes.vercel.app/'; // O projeto Next.js está rodando na porta 9002
     iframe.style.width = '100%';
     iframe.style.height = '100%';
     iframe.style.border = 'none';
@@ -52,16 +52,16 @@
     toggleBtn.style.cursor = 'pointer';
     toggleBtn.style.zIndex = '99999999';
     toggleBtn.style.boxShadow = '0 5px 15px rgba(225, 29, 72, 0.4)';
-    
+
     let isOverlayOpen = false;
-    window.toggleCartazesOverlay = function(forceOpen) {
+    window.toggleCartazesOverlay = function (forceOpen) {
         if (forceOpen !== undefined && isOverlayOpen === forceOpen) return;
         if (forceOpen !== undefined) isOverlayOpen = forceOpen;
         else isOverlayOpen = !isOverlayOpen;
-        
+
         overlayContainer.style.transform = isOverlayOpen ? 'translateX(0)' : 'translateX(100%)';
         toggleBtn.style.backgroundColor = isOverlayOpen ? '#000' : '#e11d48';
-        
+
         // Empurra a tela da Ri Happy para a metade esquerda
         if (isOverlayOpen) {
             document.body.style.width = '50vw';
@@ -90,11 +90,11 @@
 
     function sendToCartazApp(apiResponse) {
         if (!apiResponse.skus || apiResponse.skus.length === 0) return;
-        
+
         const item = apiResponse.skus[0];
         const priceTo = item.priceInEffect?.priceTo;
         const priceFrom = item.priceInEffect?.priceFrom;
-        
+
         // Verifica se é promoção
         const isOffer = priceTo < priceFrom && priceTo > 0;
 
@@ -112,7 +112,7 @@
         };
 
         console.log("📤 Enviando produto para o Gerador de Cartazes:", payload);
-        
+
         // Envia via postMessage para o Iframe
         iframe.contentWindow.postMessage({
             type: 'ADD_POSTER',
@@ -141,7 +141,7 @@
         if (event.data?.type === 'SEARCH_SKU') {
             const sku = event.data.sku;
             console.log("✏️ [Overlay] Simulando digitação e clique no DOM da Ri Happy:", sku);
-            
+
             const input = document.querySelector('input[type="search"].ant-select-selection-search-input') || document.querySelector('#rc_select_1');
             if (input) {
                 // 1. Digita o valor
@@ -149,14 +149,14 @@
                 const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
                 nativeSetter.call(input, sku);
                 input.dispatchEvent(new Event('input', { bubbles: true }));
-                
+
                 // 2. Aguarda o dropdown abrir e clica na primeira opção
                 let attempts = 0;
                 const waitDropdown = setInterval(() => {
                     attempts++;
                     // Procura as opções da lista do Ant Design
                     const option = document.querySelector('.ant-select-dropdown:not(.ant-select-dropdown-hidden) .ant-select-item-option');
-                    
+
                     if (option) {
                         clearInterval(waitDropdown);
                         console.log("👆 Produto encontrado na lista! Simulando clique...");
@@ -176,10 +176,10 @@
     });
 
     const originalFetch = window.fetch;
-    window.fetch = async function(...args) {
+    window.fetch = async function (...args) {
         const url = typeof args[0] === 'string' ? args[0] : args[0]?.url;
         const options = args[1] || {};
-        
+
         if (options.headers) {
             const h = new Headers(options.headers);
             for (let [key, value] of h.entries()) {
@@ -190,7 +190,7 @@
 
         return originalFetch.apply(this, args).then(async response => {
             const clone = response.clone();
-            
+
             // Pega a loja
             if (url && url.includes('users/distributors')) {
                 try {
@@ -199,7 +199,7 @@
                         storeId = data[0].id;
                         console.log("🏪 [Overlay] Loja capturada:", storeId);
                     }
-                } catch(e) {}
+                } catch (e) { }
             }
 
             // Pega especificamente a chamada da API de cartazes (price-tags) ou produtos
@@ -207,7 +207,7 @@
                 try {
                     const data = await clone.json();
                     sendToCartazApp(data);
-                } catch(e) {}
+                } catch (e) { }
             }
             return response;
         });
@@ -217,37 +217,74 @@
     const originalSetRequestHeader = XMLHttpRequest.prototype.setRequestHeader;
     const originalSend = XMLHttpRequest.prototype.send;
 
-    XMLHttpRequest.prototype.open = function(method, url, ...rest) {
+    XMLHttpRequest.prototype.open = function (method, url, ...rest) {
         this._url = url;
         this._headers = {};
         return originalOpen.apply(this, [method, url, ...rest]);
     };
 
-    XMLHttpRequest.prototype.setRequestHeader = function(header, value) {
+    XMLHttpRequest.prototype.setRequestHeader = function (header, value) {
         this._headers[header] = value;
         apiHeaders[header] = value;
         if (header.toLowerCase() === 'authorization') authToken = value;
         return originalSetRequestHeader.apply(this, [header, value]);
     };
 
-    XMLHttpRequest.prototype.send = function(body) {
-        this.addEventListener('load', function() {
+    XMLHttpRequest.prototype.send = function (body) {
+        this.addEventListener('load', function () {
             if (this._url && this._url.includes('users/distributors')) {
                 try {
                     const data = JSON.parse(this.responseText);
                     if (data && data.length > 0 && data[0].id) {
                         storeId = data[0].id;
                     }
-                } catch(e) {}
+                } catch (e) { }
             }
             if (this._url && this._url.includes('price-tags/distributor')) {
                 try {
                     const data = JSON.parse(this.responseText);
                     sendToCartazApp(data);
-                } catch(e) {}
+                } catch (e) { }
             }
         });
         return originalSend.apply(this, [body]);
     };
+
+    // --- 5. ATALHO DE TECLADO (ENTER) NO CAMPO DE BUSCA ORIGINAL ---
+    document.addEventListener('keydown', (e) => {
+        // Verifica se a tecla foi Enter e se o alvo é o input de busca
+        if (e.key === 'Enter') {
+            const target = e.target;
+            const isSearchInput = target && target.classList && target.classList.contains('ant-select-selection-search-input');
+            const isRcSelect = target && target.id && target.id.includes('rc_select_');
+
+            if (isSearchInput || isRcSelect) {
+                console.log("⌨️ Enter pressionado no campo de busca. Tentando selecionar a primeira opção...");
+
+                // Evita comportamento padrão se houver (como submit de formulário)
+                e.preventDefault();
+
+                const trySelectOption = (attempts = 0) => {
+                    const option = document.querySelector('.ant-select-dropdown:not(.ant-select-dropdown-hidden) .ant-select-item-option');
+
+                    if (option) {
+                        console.log("👆 Opção encontrada via Enter! Clicando...");
+                        option.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+                        option.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+                        option.click();
+
+                        // Opcional: limpa o campo após o Enter para o próximo escaneamento
+                        // e.target.value = ''; 
+                    } else if (attempts < 15) { // Tenta por 3 segundos (15 * 200ms) aguardando a API responder
+                        setTimeout(() => trySelectOption(attempts + 1), 200);
+                    } else {
+                        console.log("⚠️ Nenhuma opção carregada a tempo após pressionar Enter.");
+                    }
+                };
+
+                trySelectOption();
+            }
+        }
+    });
 
 })();
