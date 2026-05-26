@@ -13,30 +13,72 @@
 
     console.log("🚀 [Cartazes Overlay] Iniciado!");
 
-    // --- 1. INJETAR IFRAME DO GERADOR DE CARTAZES ---
-    // Cria um container para o gerador de cartazes que vai ficar "por cima"
+    // --- 1. ESTILOS RESPONSIVOS ---
+    const style = document.createElement('style');
+    style.textContent = `
+        #cartazes-overlay-container {
+            position: fixed;
+            z-index: 9999999;
+            background: #fff;
+            transition: transform 0.3s ease-in-out;
+        }
+        
+        /* Desktop */
+        @media (min-width: 768px) {
+            #cartazes-overlay-container {
+                top: 0;
+                right: 0;
+                width: 50vw;
+                height: 100vh;
+                transform: translateX(100%);
+                box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+            }
+            #cartazes-overlay-container.open {
+                transform: translateX(0);
+                box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+            }
+            body.cartazes-open-desktop {
+                width: 50vw !important;
+                overflow-x: hidden !important;
+            }
+        }
+        
+        /* Mobile (Celular) */
+        @media (max-width: 767px) {
+            #cartazes-overlay-container {
+                bottom: 0;
+                left: 0;
+                width: 100vw;
+                height: 60vh; /* Ocupa 60% da tela, deixando a busca visível acima */
+                transform: translateY(100%);
+                box-shadow: 0 -10px 30px rgba(0,0,0,0.3);
+                border-top-left-radius: 16px;
+                border-top-right-radius: 16px;
+                overflow: hidden;
+            }
+            #cartazes-overlay-container.open {
+                transform: translateY(0);
+            }
+            body.cartazes-open-mobile {
+                padding-bottom: 60vh !important;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+
+    // --- 2. INJETAR IFRAME DO GERADOR DE CARTAZES ---
     const overlayContainer = document.createElement('div');
     overlayContainer.id = 'cartazes-overlay-container';
-    overlayContainer.style.position = 'fixed';
-    overlayContainer.style.top = '0';
-    overlayContainer.style.right = '0';
-    overlayContainer.style.width = '50vw'; // Ocupa exatamente metade da tela
-    overlayContainer.style.height = '100vh';
-    overlayContainer.style.zIndex = '9999999';
-    overlayContainer.style.boxShadow = '-10px 0 30px rgba(0,0,0,0.5)';
-    overlayContainer.style.transform = 'translateX(100%)'; // Escondido inicialmente
-    overlayContainer.style.transition = 'transform 0.3s ease-in-out';
-    overlayContainer.style.background = '#fff';
 
     const iframe = document.createElement('iframe');
-    iframe.src = 'https://rhcartazes.vercel.app/'; // O projeto Next.js está rodando na porta 9002
+    iframe.src = 'https://rhcartazes.vercel.app/'; // URL de produção ou porta local
     iframe.style.width = '100%';
     iframe.style.height = '100%';
     iframe.style.border = 'none';
     overlayContainer.appendChild(iframe);
     document.body.appendChild(overlayContainer);
 
-    // --- 2. BOTÃO PARA ABRIR/FECHAR O OVERLAY ---
+    // --- 3. BOTÃO PARA ABRIR/FECHAR O OVERLAY ---
     const toggleBtn = document.createElement('button');
     toggleBtn.innerHTML = '🖨️ Cartazes';
     toggleBtn.style.position = 'fixed';
@@ -59,16 +101,19 @@
         if (forceOpen !== undefined) isOverlayOpen = forceOpen;
         else isOverlayOpen = !isOverlayOpen;
 
-        overlayContainer.style.transform = isOverlayOpen ? 'translateX(0)' : 'translateX(100%)';
         toggleBtn.style.backgroundColor = isOverlayOpen ? '#000' : '#e11d48';
 
-        // Empurra a tela da Ri Happy para a metade esquerda
         if (isOverlayOpen) {
-            document.body.style.width = '50vw';
-            document.body.style.overflowX = 'hidden';
-            overlayContainer.style.boxShadow = '-2px 0 10px rgba(0,0,0,0.1)';
+            overlayContainer.classList.add('open');
+            if (window.innerWidth >= 768) {
+                document.body.classList.add('cartazes-open-desktop');
+            } else {
+                document.body.classList.add('cartazes-open-mobile');
+            }
         } else {
-            document.body.style.width = '100%';
+            overlayContainer.classList.remove('open');
+            document.body.classList.remove('cartazes-open-desktop');
+            document.body.classList.remove('cartazes-open-mobile');
         }
     };
     toggleBtn.onclick = () => window.toggleCartazesOverlay();
