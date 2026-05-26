@@ -17,18 +17,24 @@ type SecurityModalProps = {
   isOpen: boolean;
   onClose: () => void;
   onConfirm?: () => void;
+  onCancel?: () => void;
   type: 'error' | 'warning';
   title: string;
   message: string;
+  confirmText?: string;
+  cancelText?: string;
 };
 
 export function SecurityModal({
   isOpen,
   onClose,
   onConfirm,
+  onCancel,
   type,
   title,
   message,
+  confirmText,
+  cancelText,
 }: SecurityModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -55,21 +61,29 @@ export function SecurityModal({
             {message}
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="mt-4 gap-2 sm:gap-0">
+        <DialogFooter className="mt-6 flex flex-col-reverse sm:flex-row gap-3 sm:gap-2">
           {type === 'warning' ? (
             <>
-              <Button variant="ghost" onClick={onClose} className="font-bold">
-                CANCELAR
+              <Button 
+                variant="ghost" 
+                onClick={() => { if (onCancel) { onCancel(); } else { onClose(); } }} 
+                className="font-bold w-full sm:w-auto h-auto whitespace-normal py-2 text-center"
+              >
+                {cancelText || 'CANCELAR'}
               </Button>
               <Button 
                 onClick={onConfirm} 
-                className="bg-orange-600 hover:bg-orange-700 text-white font-bold px-8 shadow-lg shadow-orange-600/20"
+                className="bg-orange-600 hover:bg-orange-700 text-white font-bold px-4 sm:px-8 shadow-lg shadow-orange-600/20 w-full sm:w-auto h-auto whitespace-normal py-2 text-center"
               >
-                SIM, ESTÁ CORRETO
+                {confirmText || 'SIM, ESTÁ CORRETO'}
               </Button>
             </>
           ) : (
-            <Button onClick={onClose} variant="destructive" className="w-full font-bold">
+            <Button 
+              onClick={onClose} 
+              variant="destructive" 
+              className="w-full font-bold h-auto whitespace-normal py-2"
+            >
               ENTENDI
             </Button>
           )}
