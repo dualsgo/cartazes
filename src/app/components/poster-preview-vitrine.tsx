@@ -23,7 +23,7 @@ export function PosterPreviewVitrine({
   const isOffer = posterSubType === 'offer';
   const hasDiscount = valDe > 0 && valPor > 0 && valDe > valPor;
 
-  const displayDescription = truncateDescription(description, 35); // Limite um pouco maior pois ganhamos espaço horizontal
+  const displayDescription = truncateDescription(description, 25); // Limite reduzido para 25 caracteres
 
   let displaySupplier = supplier || '';
   if (displaySupplier) {
