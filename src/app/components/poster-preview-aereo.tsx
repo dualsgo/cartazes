@@ -33,7 +33,9 @@ export function PosterPreviewAereo({
 
   // Lógica de fonte dinâmica para o Aéreo (Aumentada e Comprimida)
   let priceFontSize = '70px';
-  if (porInt.length === 4) {
+  if (valPor === 0) {
+    priceFontSize = '45px';
+  } else if (porInt.length === 4) {
     priceFontSize = '64px';
   } else if (porInt.length === 3) {
     priceFontSize = '70px';
