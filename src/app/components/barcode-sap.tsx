@@ -50,19 +50,33 @@ export function BarcodeSAP({
     }
   }
 
-  const thinSize = 1.5;
-  const thickSize = 4;
+  const thinSize = 1;
+  const thickSize = 3;
+  const quietZoneSize = 10; // 10 narrow space units as required by Code 39 spec
   
   // Calculate total length (width for horizontal, height for vertical)
-  let totalLength = 0;
+  let dataLength = 0;
   for (const part of pattern) {
-    totalLength += (part === 'B' || part === 'W') ? thickSize : thinSize;
+    dataLength += (part === 'B' || part === 'W') ? thickSize : thinSize;
   }
-
-  let currentPos = 0;
-  const elements = [];
+  const totalLength = dataLength + (quietZoneSize * 2);
 
   const isVertical = orientation === 'vertical';
+  const elements = [];
+
+  // Fundo branco para garantir contraste máximo
+  elements.push(
+    <rect
+      key="bg"
+      x={0}
+      y={0}
+      width={isVertical ? 100 : totalLength}
+      height={isVertical ? totalLength : 100}
+      fill="white"
+    />
+  );
+
+  let currentPos = quietZoneSize;
 
   for (let i = 0; i < pattern.length; i++) {
     const part = pattern[i];
@@ -108,6 +122,7 @@ export function BarcodeSAP({
       <svg
         viewBox={viewBox}
         preserveAspectRatio="none"
+        shapeRendering="crispEdges"
         className="w-full h-full"
         xmlns="http://www.w3.org/2000/svg"
       >

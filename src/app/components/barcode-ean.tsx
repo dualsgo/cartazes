@@ -62,18 +62,24 @@ export function BarcodeEAN({
   
   pattern += '101'; // Right guard
 
-  const elements = [];
-  const barWidth = 100 / pattern.length;
+  // EAN-13 Quiet zones: 7 modules on left, 7 modules on right
+  const quietZone = '0000000';
+  const fullPattern = quietZone + pattern + quietZone;
 
-  for (let i = 0; i < pattern.length; i++) {
-    if (pattern[i] === '1') {
+  const elements = [];
+  elements.push(
+    <rect key="bg" x={0} y={0} width={fullPattern.length} height={100} fill="white" />
+  );
+
+  for (let i = 0; i < fullPattern.length; i++) {
+    if (fullPattern[i] === '1') {
       elements.push(
         <rect
           key={i}
-          x={`${i * barWidth}%`}
+          x={i}
           y={0}
-          width={`${barWidth}%`}
-          height="100%"
+          width={1}
+          height={100}
           fill="black"
         />
       );
@@ -83,8 +89,9 @@ export function BarcodeEAN({
   return (
     <div className={className} style={{ width, height, position: 'relative' }}>
       <svg
-        viewBox="0 0 100 100"
+        viewBox={`0 0 ${fullPattern.length} 100`}
         preserveAspectRatio="none"
+        shapeRendering="crispEdges"
         className="w-full h-full"
         xmlns="http://www.w3.org/2000/svg"
       >
